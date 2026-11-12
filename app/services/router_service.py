@@ -1307,6 +1307,7 @@ def _run_investment_pipeline(
     _outcome_notes = (_outcome_notes_mod.OutcomeNotes()
                       if getattr(_evidence_settings, "evidence_outcomes_enabled", False) is True else None)
     _filing_scratch = _afacts.Scratch() if _afacts.enabled() else None
+    _filing_conflicts: list = []
     if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
         _submissions_scope = _sec_provider.SubmissionsRequestScope()
         from .source_answer import is_decision_monitoring_request
@@ -1760,6 +1761,7 @@ def _run_investment_pipeline(
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
+    _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
         thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
         integrity=_evidence_integrity)
@@ -1842,6 +1844,7 @@ def _run_investment_pipeline(
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
+    _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
         thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
         integrity=_evidence_integrity)

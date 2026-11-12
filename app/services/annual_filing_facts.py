@@ -185,10 +185,14 @@ def reconcile(ev_results: dict, scratch: Optional[Scratch]) -> list[dict]:
             taxonomy, _, concept = claim["metric"].partition(":")
             record = latest.get((taxonomy, concept, claim["unit"], claim["period_start"], claim["period_end"]))
             if record is not None and Decimal(str(record.value)) != Decimal(str(claim["raw_value"])):
-                conflicts.append({"concept": concept, "period_end": claim["period_end"], "unit": claim["unit"],
+                proof = claim["inline_binding"]
+                conflicts.append({"concept": concept, "period_start": claim["period_start"],
+                                  "period_end": claim["period_end"], "unit": claim["unit"],
                                   "reporting_basis": claim["reporting_basis"], "filing_value": claim["raw_value"],
-                                  "company_facts_value": record.value,
-                                  "company_facts_accession": record.accession})
+                                  "filing_form": proof["form"], "filing_filed": proof["filed"],
+                                  "filing_accession": proof["accession"], "filing_fact_id": proof["fact_id"],
+                                  "company_facts_value": record.value, "company_facts_form": record.form,
+                                  "company_facts_filed": record.filed, "company_facts_accession": record.accession})
         peers = [c for c in company if metric_name(c) == name]
         if conflicts:
             company = [c for c in company if metric_name(c) != name]
@@ -207,3 +211,55 @@ def reconcile(ev_results: dict, scratch: Optional[Scratch]) -> list[dict]:
     ev_results["sec_metrics"] = company
     ev_results["thesis_disclosures"] = kept_filing
     return withheld
+
+
+# --------------------------------------------------------------------------------------------------
+# The warning the answer carries when a comparison is withheld because the sources disagree
+# --------------------------------------------------------------------------------------------------
+
+NOTICE_HEADER = "Sources disagree"
+
+
+def _amount(value, unit: str) -> str:
+    exact = format(Decimal(str(value)), ",f")
+    if "." in exact:
+        exact = exact.rstrip("0").rstrip(".")
+    return f"{exact} {unit}"
+
+
+def conflict_notice(conflicts: list[dict]) -> str:
+    """Plain wording for each disputed figure: where each value comes from, and that neither is accepted.
+
+    The values appear only here. They are never put in a claim, a comparison or a calculation.
+    """
+    lines = []
+    for row in conflicts:
+        for c in row["conflicts"]:
+            lines.append(
+                f"- {row['metric']} for the period {c['period_start']} to {c['period_end']} "
+                f"({c['reporting_basis']}, {c['unit']}): the {c['filing_form']} filed {c['filing_filed']} "
+                f"(accession {c['filing_accession']}, inline fact {c['filing_fact_id']}) reports "
+                f"{_amount(c['filing_value'], c['unit'])}; SEC Company Facts ({c['company_facts_form']} filed "
+                f"{c['company_facts_filed']}, accession {c['company_facts_accession']}) reports "
+                f"{_amount(c['company_facts_value'], c['unit'])}.")
+    measures = ", ".join(dict.fromkeys(row["metric"] for row in conflicts))
+    return (f"{NOTICE_HEADER}: the 20-F's own figures and SEC Company Facts give different values for the same period "
+            f"and reporting basis.\n" + "\n".join(lines) + f"\nNeither value is accepted or used. No comparison for "
+            f"{measures} is shown, and nothing is calculated from either figure. The retained data does not say "
+            "which is correct, or whether one is a restatement.")
+
+
+def apply_conflict_notice(thesis, source_answer, conflicts):
+    """State the disagreement in the answer itself (independent of the outcome-record flag); idempotent."""
+    if not conflicts or source_answer is None:
+        return source_answer
+    notice = conflict_notice(conflicts)
+    for field in ("direct_answer", "conclusion"):
+        text = getattr(thesis, field, None)
+        if isinstance(text, str) and NOTICE_HEADER + ":" not in text:
+            setattr(thesis, field, f"{notice}\n\n{text}" if text else notice)
+    measures = list(dict.fromkeys(row["metric"] for row in conflicts))
+    held = [f"{name} (withheld: the filing and SEC Company Facts disagree)" for name in measures]
+    parts = [p for p in source_answer.get("unanswered_parts") or [] if p not in held]
+    return {**source_answer, "status": "partial" if source_answer.get("status") == "attributed" else source_answer.get("status"),
+            "unanswered_parts": [*parts, *held]}

@@ -306,6 +306,80 @@ def test_a_conflict_also_drops_the_filings_explanations_and_reaches_the_outcome_
     assert row['reason'] == 'as_reported_comparison_withheld' and 'filing company facts conflict' in row['user_text']
 
 
+class Thesis:
+    def __init__(self, text='Original answer.'):
+        self.direct_answer = text
+        self.conclusion = text
+
+
+def disputed(requests_made):
+    changed = copy.deepcopy(FACTS['BWMX'])
+    for row in changed['facts']['ifrs-full']['Revenue']['units']['MXN']:
+        if row['end'] == '2024-12-31':
+            row['val'] += 1
+    return reconcile_with(requests_made, changed)
+
+
+def test_the_warning_attributes_each_value_to_its_source_and_accepts_neither(requests_made):
+    withheld, *_ = disputed(requests_made)
+    notice = afacts.conflict_notice(withheld)
+    assert notice.startswith('Sources disagree:')
+    assert 'revenue for the period 2024-01-01 to 2024-12-31 (IFRS, MXN)' in notice
+    # the filing, with its accession and the exact inline fact
+    assert re.search(r'the 20-F filed 2026-04-30 \(accession 0001213900-26-050248, inline fact ixv-\d+\) reports 14,100,758,000 MXN', notice)
+    # Company Facts, with its own form, filing date and accession
+    assert re.search(r'SEC Company Facts \(20-F filed 2025-04-29, accession [\d-]+\) reports 14,100,758,001 MXN', notice)
+    assert 'Neither value is accepted or used' in notice and 'does not say which is correct' in notice
+    for claim in ('is correct', 'restated to', 'the accepted'):
+        assert claim not in notice.replace('does not say which is correct', '')
+
+
+def test_with_both_filing_flags_on_and_the_outcome_flag_off_the_warning_is_visible_and_neither_value_is_used(requests_made, monkeypatch):
+    for name, value in (('annual_filing_facts_enabled', True), ('as_reported_financials_enabled', True),
+                        ('evidence_outcomes_enabled', False)):
+        monkeypatch.setattr(settings, name, value, raising=False)
+    assert afacts.enabled() and settings.evidence_outcomes_enabled is False
+    withheld, results, _ = disputed(requests_made)
+    items = results['thesis_disclosures'] + results['sec_metrics']
+    built = foundation.build_financial_foundation('BWMX', items, None, expected_cik='1788257')
+    assert built is not None  # the other measures are still shown
+    thesis = Thesis(built['answer'])
+    answer = {'status': 'partial', 'claims': built['claims'], 'unanswered_parts': list(built['unanswered_parts'])}
+    out = afacts.apply_conflict_notice(thesis, answer, withheld)
+    # visible, in the answer text and in the conclusion, and in the unanswered parts
+    for text in (thesis.direct_answer, thesis.conclusion):
+        assert text.startswith('Sources disagree:') and 'Neither value is accepted or used' in text
+    assert 'revenue (withheld: the filing and SEC Company Facts disagree)' in out['unanswered_parts']
+    assert 'evidence_outcomes' not in out  # the structured record stays behind its flag
+    # neither disputed value is used analytically: not in any claim, comparison, inference or calculation
+    analytic = json.dumps({'claims': built['claims'], 'inferences': built['inferences'],
+                           'answer': built['answer'], 'unanswered': built['unanswered_parts']})
+    for token in ('14100758000', '14100758001', '14,100,758', '14.1B'):
+        assert token not in analytic, token
+    assert not [c for c in built['claims'] if 'revenue' in c['claim'].lower()]
+    assert not [i for i in built['inferences'] if 'revenue' in i['metric']]
+    assert not [c for item in items for c in item.verified_claims if c['metric'].endswith(':Revenue')
+                or c['metric'].endswith(':RevenueFromContractsWithCustomers')]
+    # the values appear exactly where attributed: once each, in the warning
+    assert thesis.direct_answer.count('14,100,758,000 MXN') == 1 and thesis.direct_answer.count('14,100,758,001 MXN') == 1
+
+
+def test_the_warning_is_idempotent_and_absent_without_a_conflict(requests_made):
+    withheld, *_ = disputed(requests_made)
+    thesis = Thesis('Body.')
+    answer = {'status': 'attributed', 'claims': [], 'unanswered_parts': ['valuation']}
+    first = afacts.apply_conflict_notice(thesis, answer, withheld)
+    text = thesis.direct_answer
+    second = afacts.apply_conflict_notice(thesis, first, withheld)
+    assert thesis.direct_answer == text == thesis.conclusion and text.count('Sources disagree') == 1
+    assert second['unanswered_parts'].count('revenue (withheld: the filing and SEC Company Facts disagree)') == 1
+    assert first['status'] == 'partial' and answer['status'] == 'attributed'  # the input is never mutated
+    clean = Thesis('Body.')
+    same = {'status': 'attributed', 'claims': [], 'unanswered_parts': []}
+    assert afacts.apply_conflict_notice(clean, same, []) is same and clean.direct_answer == 'Body.'
+    assert afacts.apply_conflict_notice(clean, None, withheld) is None
+
+
 def test_a_period_absent_from_company_facts_is_not_a_conflict(requests_made):
     withheld, results, _ = reconcile_with(requests_made, {'cik': 1788257, 'facts': {}})
     assert withheld == [] and len(results['thesis_disclosures']) == 3
