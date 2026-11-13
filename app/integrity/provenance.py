@@ -92,7 +92,7 @@ class ClaimDocumentReference:
                 and self.section == 'Item 7. Management discussion - Annual operating cash explanation'):
             quote_limit = 1600
         if (self.provider == 'SEC EDGAR' and host == 'www.sec.gov' and self.content_hash
-                and self.section == 'Going-concern disclosure'):
+                and self.section in {'Going-concern disclosure', 'Liquidity statement'}):
             quote_limit = 900
         if self.quote is not None and (not self.quote.strip() or len(self.quote) > quote_limit):
             raise ValueError(f"document quote must contain 1-{quote_limit} characters")

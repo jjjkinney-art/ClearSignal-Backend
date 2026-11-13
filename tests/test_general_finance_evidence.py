@@ -118,6 +118,7 @@ class TestRetrievedEvidenceSchema:
             "impairment_disclosures",
             "period_explanations",
             "going_concern_disclosures",
+            "liquidity_statements",
         }
         assert d["source_type"] == "unknown"
         assert d["source_tier"] == "unverified"

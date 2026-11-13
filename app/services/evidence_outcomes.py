@@ -57,6 +57,7 @@ _CLAIM_NEED = {
     "issuer_competition_description": "business_description",
     "issuer_disclosed_risk": "risk_disclosures",
     "issuer_going_concern_disclosure": "liquidity_going_concern",
+    "issuer_liquidity_statement": "liquidity_going_concern",
 }
 # The evidence task that serves each filing-based need, and the forms that task can read.
 _NEED_TASK = {"business_description": "thesis_disclosures", "risk_disclosures": "thesis_disclosures",

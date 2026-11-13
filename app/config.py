@@ -224,6 +224,10 @@ class Settings(BaseSettings):
     # because the financial foundation needs two), and say specifically why each other measure was not compared.
     # Never applies to decision-threshold answers. Default off: with it off nothing changes.
     lone_comparison_enabled: bool = False
+    # Quotes management's own present-tense liquidity sufficiency statement from the latest periodic filing the
+    # metrics stage already reads (no additional request), with its adjacent sentences. Default off: with it off
+    # nothing changes.
+    liquidity_statements_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False
