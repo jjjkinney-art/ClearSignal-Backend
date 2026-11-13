@@ -232,7 +232,7 @@ def apply_evidence_not_applicable(thesis: object, source_answer: dict | None, re
 
 
 def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object],
-                             *, references: list[dict] | None = None) -> dict | None:
+                             *, references: list[dict] | None = None, as_reported_withheld: list | None = None) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""
     # Parsed units/order and a model-supplied 'derived' label are not an
     # evidence derivation. No producer currently supplies a validated numeric
@@ -317,8 +317,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     from .thesis_disclosures import requests_thesis_disclosures
     foundation_scope = requests_thesis_disclosures(str(getattr(thesis, "ticker", "")), question)
     if foundation_scope:
+        from .lone_comparison import enabled as _lone_enabled
         foundation = build_financial_foundation(ticker=str(getattr(thesis, "ticker", "")),
-                                               items=material, references=references)
+                                               items=material, references=references,
+                                               allow_lone=_lone_enabled(), withheld=as_reported_withheld)
         if foundation:
             from .financial_reporting_coverage import reporting_coverage
             coverage, notice, coverage_gaps = reporting_coverage(

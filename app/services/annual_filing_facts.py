@@ -108,11 +108,17 @@ class Scratch:
         self._lock = threading.Lock()
         self.company_facts: Optional[dict] = None
         self.listings: dict[str, list[dict]] = {}
+        self.withheld: list[dict] = []
 
     def set(self, data):
         with self._lock:
             if isinstance(data, dict) and self.company_facts is None:
                 self.company_facts = data
+
+    def set_withheld(self, rows):
+        with self._lock:
+            if isinstance(rows, list) and not self.withheld:
+                self.withheld = [dict(r) for r in rows if isinstance(r, dict)]
 
     def set_listing(self, cik: str, rows: list[dict]):
         with self._lock:
@@ -147,6 +153,16 @@ def note_company_facts(data) -> None:
 
 
 LISTED_FORMS = {"6-K", "6-K/A", "20-F", "20-F/A", "40-F", "40-F/A"}
+
+
+def note_withheld(rows) -> None:
+    """Keep the as-reported builder's own withheld reasons for the answer (request-scoped; no request)."""
+    scratch = _scratch.get()
+    if scratch is not None:
+        try:
+            scratch.set_withheld(rows)
+        except Exception:  # pragma: no cover - defensive
+            pass
 
 
 def note_filing_list(cik, recent) -> None:

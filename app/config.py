@@ -220,6 +220,10 @@ class Settings(BaseSettings):
     # request has already fetched for its business and risk text (that one fetch also keeps the filing's inline
     # XBRL facts and results discussion). Makes no additional request. Default off.
     annual_filing_facts_enabled: bool = False
+    # With a thesis question, deliver a partial answer built on ONE verified annual comparison (instead of dropping it
+    # because the financial foundation needs two), and say specifically why each other measure was not compared.
+    # Never applies to decision-threshold answers. Default off: with it off nothing changes.
+    lone_comparison_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False

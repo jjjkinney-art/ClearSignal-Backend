@@ -458,6 +458,8 @@ def fetch_verified_metric_evidence(
         evidence, _withheld = evidence_from_response(_response.get("data"), ticker, cik, boundary=boundary)
         note_as_reported_withheld(_withheld, [
             {"title": item.title, "period_end": item.reporting_period_end} for item in evidence])
+        from .annual_filing_facts import note_withheld
+        note_withheld(_withheld)
     if sector_names:
         # A business type's measures are kept only when its own signature pair
         # was reported, so other issuers' answers are unchanged.
