@@ -129,8 +129,10 @@ def test_fortis_uses_its_own_concepts_and_the_40f_annual_forms(facts_get):
     evidence, _ = build('FORFF', facts_get)
     assert {c['source'] for item in evidence for c in item.verified_claims} == {'40-F'}
     revenue = evidence[0]
-    assert revenue.verified_claims[0]['metric'] == 'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'
-    assert [c['raw_value'] for c in revenue.verified_claims] == [11900000000, 11243000000]
+    # Fortis reports both total revenues and a narrower contract-revenue line for these periods, with different
+    # values: total revenues are shown (see tests/test_revenue_total_selection.py).
+    assert revenue.verified_claims[0]['metric'] == 'us-gaap:Revenues'
+    assert [c['raw_value'] for c in revenue.verified_claims] == [12170000000, 11508000000]
     assert revenue.verified_claims[0]['period'] == 'FY2025'
 
 

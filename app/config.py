@@ -216,6 +216,10 @@ class Settings(BaseSettings):
     # annual comparisons only, in the filing's own currency, with no conversion. Adds taxonomy, currency and
     # reporting-basis metadata to the claims it produces. Default off: with it off nothing changes.
     as_reported_financials_enabled: bool = False
+    # With the flag above also on: reads annual comparisons and management's stated explanations from a 20-F the
+    # request has already fetched for its business and risk text (that one fetch also keeps the filing's inline
+    # XBRL facts and results discussion). Makes no additional request. Default off.
+    annual_filing_facts_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False

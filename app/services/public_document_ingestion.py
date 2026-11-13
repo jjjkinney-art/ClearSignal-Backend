@@ -141,6 +141,10 @@ class PublicDocument:
     deposit_impairment_proofs: tuple[dict, ...] = ()
     cash_flow_observations: tuple[dict, ...] = ()
     cash_reconciliation_source: object | None = None
+    # The results discussion (10-K Item 7, 10-Q Item 2, 20-F Item 5) kept as a second window of the same
+    # single fetch, with its start offset in the normalized full text (empty unless a caller asked for it).
+    results_text: str = ""
+    results_text_start: int = 0
 
 
 class _VisibleHTMLParser(HTMLParser):
@@ -594,6 +598,9 @@ def fetch_public_document(
     preserve_sec_results: bool = False,
     segment_fact_cik: str | None = None,
     inline_fact_concepts: tuple[str, ...] = (),
+    inline_fact_taxonomies: tuple[str, ...] = ("us-gaap",),
+    inline_fact_currencies="USD",
+    keep_results_window: bool = False,
 ) -> PublicDocument:
     """Fetch one public document with bounded redirects and content."""
     requested_url = _validate_public_url(url)
@@ -681,8 +688,9 @@ def fetch_public_document(
     inline_member_facts = ()
     if inline_fact_cik is not None:
         from ..providers.sec_inline_facts import parse_inline_observations, parse_member_observations
-        inline_facts = parse_inline_observations(decoded, cik=inline_fact_cik,
-                                                concepts=inline_fact_concepts)
+        _currencies = ("USD",) if inline_fact_currencies == "USD" else inline_fact_currencies
+        inline_facts = parse_inline_observations(decoded, cik=inline_fact_cik, concepts=inline_fact_concepts,
+                                                 taxonomies=inline_fact_taxonomies, currencies=_currencies)
         _stage("inline_facts_parsed")
         inline_member_facts = parse_member_observations(decoded, cik=inline_fact_cik,
                                                         concepts=inline_fact_concepts)
@@ -703,6 +711,7 @@ def fetch_public_document(
                 concepts=('NetCashProvidedByUsedInOperatingActivities',))
             _stage("cash_flow_parsed")
     tables: tuple[DocumentTable, ...] = ()
+    results_text, results_start = "", 0
     text_metadata = {}
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
@@ -725,6 +734,14 @@ def fetch_public_document(
                          "text_selection": parser.text_selection}
         links = _normalize_links(current_url, raw_links)
         method = "html"
+        results_text, results_start = "", 0
+        if keep_results_window and sec_periodic_limits:
+            from .sec_risk_sections import results_section_bounds
+            _full = parser.normalized_visible_text(preserve_sec_risk=True)
+            _bounds = results_section_bounds(_full, form=document_type)
+            if _bounds:
+                results_start = _bounds[0]
+                results_text = _full[_bounds[0]:min(_bounds[1], _bounds[0] + MAX_SEC_PERIODIC_CHARS)]
         if incorporation and incorporation[1] == "exhibit":
             table_parser = _ReviewedRiskTableExtractor(incorporation[0]["table_number"])
             table_parser.feed(decoded)
@@ -766,6 +783,7 @@ def fetch_public_document(
         deposit_impairment_proofs=impairment_proofs,
         cash_flow_observations=cash_flow_observations,
         cash_reconciliation_source=cash_source,
+        results_text=results_text, results_text_start=results_start,
         **text_metadata,
     )
 

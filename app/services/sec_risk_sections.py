@@ -159,10 +159,12 @@ BUSINESS_START = re.compile(rf"\b{_ITEM}\s+1\s*{_SEP}{_word('Business')}\b", re.
 _RESULTS_START = {
     '10-Q': re.compile(rf"\b{_ITEM}\s+2\s*{_SEP}{_word('Management')}\W{{0,2}}s?\s+{_word('Discussion')}\b", re.I),
     '10-K': re.compile(rf"\b{_ITEM}\s+7\s*{_SEP}{_word('Management')}\W{{0,2}}s?\s+{_word('Discussion')}\b", re.I),
+    '20-F': re.compile(rf"\b{_ITEM}\s+5\s*{_SEP}{_word('Operating')}\s+and\s+{_word('Financial')}\s+{_word('Review')}\b", re.I),
 }
 _RESULTS_END = {
     '10-Q': re.compile(rf"\b{_ITEM}\s+(?:3\s*{_SEP}{_word('Quantitative')}|4\s*{_SEP}{_word('Controls')})\b", re.I),
     '10-K': re.compile(rf"\b{_ITEM}\s+(?:7\s*A\s*{_SEP}{_word('Quantitative')}|8\s*{_SEP}{_word('Financial')})\b", re.I),
+    '20-F': re.compile(rf"\b{_ITEM}\s+6\s*{_SEP}{_word('Directors')}\b", re.I),
 }
 
 

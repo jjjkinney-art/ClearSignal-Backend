@@ -71,6 +71,7 @@ from .providers import retrieve_market_evidence
 from .providers import fmp_provider as _fmp_provider
 from .providers import sec_provider as _sec_provider
 from . import evidence_outcomes as _outcome_notes_mod
+from . import annual_filing_facts as _afacts
 from .providers import news_provider as _news_provider
 from ..investment_agents import (
     run_valuation_agent,
@@ -1273,8 +1274,9 @@ def _run_investment_pipeline(
         def _run():
             _t0 = time.monotonic()
             try:
-                result = _outcome_notes_mod.bind_outcome_notes(
-                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes, name)()
+                result = _afacts.bind_scratch(_outcome_notes_mod.bind_outcome_notes(
+                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes, name),
+                    _filing_scratch)()
                 if _outcome_notes is not None:
                     _outcome_notes.mark_completed(name)
             except Exception as _exc:
@@ -1304,6 +1306,8 @@ def _run_investment_pipeline(
     # Evidence outcomes (default off): notes that only watch what the SEC clients already do.
     _outcome_notes = (_outcome_notes_mod.OutcomeNotes()
                       if getattr(_evidence_settings, "evidence_outcomes_enabled", False) is True else None)
+    _filing_scratch = _afacts.Scratch() if (_afacts.enabled() or _afacts.later_reports_enabled()) else None
+    _filing_conflicts: list = []
     if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
         _submissions_scope = _sec_provider.SubmissionsRequestScope()
         from .source_answer import is_decision_monitoring_request
@@ -1325,8 +1329,9 @@ def _run_investment_pipeline(
         logger.warning("[router] evidence pool error (%r) — falling back to sequential", type(_pool_exc).__name__)
         for k, fn in _ev_tasks.items():
             try:
-                _ev_results[k] = _outcome_notes_mod.bind_outcome_notes(
-                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes, k)()
+                _ev_results[k] = _afacts.bind_scratch(_outcome_notes_mod.bind_outcome_notes(
+                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes, k),
+                    _filing_scratch)()
                 if _outcome_notes is not None:
                     _outcome_notes.mark_completed(k)
             except Exception as _e:
@@ -1357,6 +1362,12 @@ def _run_investment_pipeline(
     fred_evidence:   list = _ev_results.get("fred",      [])
     _val_ratios:     list = _ev_results.get("valuation", [])
     _analyst_ests:   list = _ev_results.get("estimates", [])
+    if _filing_scratch is not None:
+        # The 20-F's own comparisons against the Company Facts the request already fetched: conflicts are
+        # withheld and stated; otherwise a newer filing period replaces an older comparison.
+        _filing_conflicts = _afacts.reconcile(_ev_results, _filing_scratch)
+        if _outcome_notes is not None and _filing_conflicts:
+            _outcome_notes.add_as_reported_withheld(_filing_conflicts)
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
     from .filing_metric_evidence import merge_latest_filing_metrics
     # A filing's explanation of its own changes is not a metric comparison;
@@ -1750,6 +1761,12 @@ def _run_investment_pipeline(
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
+    _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
+    # Later 6-K report periods SEC lists after the annual year shown (as-reported flag; never for thresholds).
+    from .source_answer import is_decision_monitoring_request as _is_threshold
+    _later_reports = ([] if _filing_scratch is None or _is_threshold(question)
+                      else _afacts.later_reports(evidence, _filing_scratch))
+    _source_answer = _afacts.apply_later_reports_notice(thesis, _source_answer, _later_reports)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
         thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
         integrity=_evidence_integrity)
@@ -1832,6 +1849,8 @@ def _run_investment_pipeline(
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
+    _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
+    _source_answer = _afacts.apply_later_reports_notice(thesis, _source_answer, _later_reports)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
         thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
         integrity=_evidence_integrity)

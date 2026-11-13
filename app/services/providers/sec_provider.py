@@ -520,6 +520,8 @@ def _fetch_by_cik(
     entity_name = data.get("name", ticker)
     from ..evidence_outcomes import note_filings_listed
     note_filings_listed(data.get("filings", {}).get("recent", {}).get("form", []))
+    from ..annual_filing_facts import note_filing_list
+    note_filing_list(cik, data.get("filings", {}).get("recent", {}))
     if str(data.get("sic") or "").isdigit():
         _issuer_sic[str(cik).zfill(10)] = str(data["sic"])
     recent      = data.get("filings", {}).get("recent", {})
