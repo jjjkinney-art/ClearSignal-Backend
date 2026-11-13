@@ -51,6 +51,27 @@ _REFERENCE = re.compile(r"sec:(\d+):(\d{10}-\d{2}-\d{6}):(us-gaap|ifrs-full):([A
 SOURCE = "SEC EDGAR — structured XBRL fact"
 
 
+# The concept that states an issuer's total revenues, by taxonomy.
+TOTAL_REVENUE = {"us-gaap": "Revenues", "ifrs-full": "Revenue"}
+
+
+def latest_revenue(candidates):
+    """The revenue comparison to show: the latest current period; when several revenue concepts cover that
+    period and disagree in value, the issuer's total revenues, because a narrower line (such as revenue from
+    contracts with customers) does not match total operating income or profit. Equal values keep the configured
+    order. Values are never joined across concepts.
+    """
+    latest = max(candidate.reporting_period_end or "" for candidate in candidates)
+    tied = [candidate for candidate in candidates if (candidate.reporting_period_end or "") == latest]
+    values = {tuple(claim["raw_value"] for claim in candidate.verified_claims) for candidate in tied}
+    if len(tied) > 1 and len(values) > 1:
+        totals = [candidate for candidate in tied
+                  if candidate.verified_claims[0]["metric"] in {f"{tax}:{concept}" for tax, concept in TOTAL_REVENUE.items()}]
+        if len(totals) == 1:
+            return totals[0]
+    return tied[0]
+
+
 def requested_specs() -> tuple[tuple[str, str], ...]:
     """(taxonomy, concept) pairs the as-reported path reads, including the balance-sheet anchor."""
     specs = [(tax, concept) for by_tax in CORE.values() for tax, concepts in by_tax.items() for concept in concepts]
@@ -318,8 +339,10 @@ def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str
                 continue
             candidates.append(item)
         if candidates:
-            # Aliases are ordered, never joined; the latest current period wins, ties keep the configured order.
-            evidence.append(max(candidates, key=lambda c: c.reporting_period_end or ""))
+            # Aliases are ordered, never joined; the latest current period wins. For revenue, concepts that disagree
+            # for that period resolve to the issuer's total revenues; otherwise ties keep the configured order.
+            evidence.append(latest_revenue(candidates) if name == "revenue"
+                            else max(candidates, key=lambda c: c.reporting_period_end or ""))
         else:
             withheld.append({"metric": name, "reason": reasons[0][1] if reasons else "concept_not_reported",
                              "concepts": [c for c, _ in reasons] or list(by_tax.get(taxonomy, ())),
