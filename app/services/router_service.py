@@ -1758,7 +1758,8 @@ def _run_investment_pipeline(
     # Apply the source boundary before any thesis can enter legacy snapshots,
     # comparison evaluation or the final account-owned response snapshot.
     from .source_answer import apply_evidence_gaps, apply_evidence_not_applicable, apply_source_answer_gate
-    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
+    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references,
+                                               as_reported_withheld=(_filing_scratch.withheld if _filing_scratch is not None else None))
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
     _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
@@ -1846,7 +1847,8 @@ def _run_investment_pipeline(
     # Comparison/legacy processing can mutate narrative fields. Reapply the
     # same boundary at serialization so those changes cannot reintroduce an
     # unsupported Services assertion into the emitted or saved response.
-    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
+    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references,
+                                               as_reported_withheld=(_filing_scratch.withheld if _filing_scratch is not None else None))
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
     _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
