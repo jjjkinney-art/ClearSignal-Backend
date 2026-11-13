@@ -738,7 +738,7 @@ def fetch_public_document(
         if keep_results_window and sec_periodic_limits:
             from .sec_risk_sections import results_section_bounds
             _full = parser.normalized_visible_text(preserve_sec_risk=True)
-            _bounds = results_section_bounds(_full, form=document_type)
+            _bounds = results_section_bounds(_full, form=document_type, reject_cross_references=True)
             if _bounds:
                 results_start = _bounds[0]
                 results_text = _full[_bounds[0]:min(_bounds[1], _bounds[0] + MAX_SEC_PERIODIC_CHARS)]
