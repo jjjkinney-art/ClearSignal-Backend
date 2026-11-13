@@ -523,8 +523,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .cash_reconciliation_evidence import bound_cash_reconciliation
     from .current_period_explanation import bound_current_period_explanation
     from .going_concern_disclosure import bound_going_concern
+    from .liquidity_statement import bound_liquidity_statement
     period_explanations = []
     going_concern = []
+    liquidity = []
     disclosures = []
     risk_interpretations = []
     risk_financial_links = []
@@ -536,7 +538,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
               "issuer_segment_financial_context": 0, "issuer_segment_product_context": 0, "issuer_organisation_activity_context": 0,
               "issuer_deposit_impairment_context": 0, "issuer_segment_revenue_policy": 0,
               "issuer_annual_cash_flow_context": 0, "issuer_cash_reconciliation": 0,
-              "issuer_current_period_explanation": 0, "issuer_going_concern_disclosure": 0}
+              "issuer_current_period_explanation": 0, "issuer_going_concern_disclosure": 0,
+              "issuer_liquidity_statement": 0}
     current_risks = 0
     business_descriptions = []
     seen = set()
@@ -553,9 +556,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                  or bound_cash_reconciliation(item,ticker=ticker,cik=expected_cik)
                  or bound_current_period_explanation(item, ticker=ticker, cik=expected_cik)
                  or bound_going_concern(item, ticker=ticker, cik=expected_cik)
+                 or bound_liquidity_statement(item, ticker=ticker, cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if (not value or value["quote"] in seen or counts[value["claim_kind"]] >=
-                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation', 'issuer_current_period_explanation', 'issuer_going_concern_disclosure'} else 2)):
+                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation', 'issuer_current_period_explanation', 'issuer_going_concern_disclosure', 'issuer_liquidity_statement'} else 2)):
             continue
         if value['claim_kind'] == 'issuer_current_period_explanation':
             # Only the period a verified comparison describes: revenue, or for
@@ -611,6 +615,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['document_ref'] = value['document_ref']
             row['going_concern'] = {k: value[k] for k in ('conclusion', 'period_end', 'document_type')}
             going_concern.append(reference_id)
+        if value['claim_kind'] == 'issuer_liquidity_statement':
+            row['document_ref'] = value['document_ref']
+            row['liquidity_statement'] = {k: value[k] for k in ('statement', 'period_end', 'document_type')}
+            liquidity.append(reference_id)
         if value['claim_kind'] == 'issuer_cash_reconciliation':
             row['cash_reconciliation'] = value['bridge']
             row['row_references'] = value['row_references']
@@ -675,7 +683,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     # These complete statements appear once in the opening. Retain all structured
     # rows, selected evidence and original reference IDs for downstream consumers.
     remaining_disclosures = [row for row in disclosures if row['claim_kind'] not in OVERVIEW_CLAIM_KINDS
-                             and row['claim_kind'] not in {'issuer_current_period_explanation', 'issuer_going_concern_disclosure'}]
+                             and row['claim_kind'] not in {'issuer_current_period_explanation', 'issuer_going_concern_disclosure',
+                                                           'issuer_liquidity_statement'}]
     if period_explanations:
         # What changed in the latest period goes directly after the opening
         # observation, ahead of the itemised figures.
@@ -694,6 +703,12 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         gc_row = next(row for row in disclosures if row['claim_kind'] == 'issuer_going_concern_disclosure')
         section = ('\n\nGoing-concern disclosure in the latest periodic filing\n'
                    + f"{gc_row['claim']} [{going_concern[0]}]")
+        answer = answer[:len(hypothesis)] + section + answer[len(hypothesis):]
+    if liquidity and not going_concern:
+        # Management's own words on liquidity, after the opening and any explanation, before the figures.
+        liq_row = next(row for row in disclosures if row['claim_kind'] == 'issuer_liquidity_statement')
+        section = ('\n\nLiquidity, as management states it in the latest periodic filing\n'
+                   + f"{liq_row['claim']} [{liquidity[0]}]")
         answer = answer[:len(hypothesis)] + section + answer[len(hypothesis):]
     if remaining_disclosures:
         context_heading = ("Official business, competition and sampled risk context"

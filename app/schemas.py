@@ -148,6 +148,11 @@ class RetrievedEvidence(BaseModel):
         description="The latest periodic filing's current substantial-doubt going-concern conclusion, quoted with its "
                     "adjacent sentences; no inference about likelihood or consequence.",
     )
+    liquidity_statements: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Management's own present-tense liquidity sufficiency statement from the latest periodic filing, "
+                    "quoted with its adjacent sentences; not an independent liquidity or solvency assessment.",
+    )
     period_explanations: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Latest-period change explanation: an exact consolidated earnings bridge and management "
