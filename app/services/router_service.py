@@ -1306,7 +1306,7 @@ def _run_investment_pipeline(
     # Evidence outcomes (default off): notes that only watch what the SEC clients already do.
     _outcome_notes = (_outcome_notes_mod.OutcomeNotes()
                       if getattr(_evidence_settings, "evidence_outcomes_enabled", False) is True else None)
-    _filing_scratch = _afacts.Scratch() if _afacts.enabled() else None
+    _filing_scratch = _afacts.Scratch() if (_afacts.enabled() or _afacts.later_reports_enabled()) else None
     _filing_conflicts: list = []
     if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
         _submissions_scope = _sec_provider.SubmissionsRequestScope()
@@ -1762,6 +1762,11 @@ def _run_investment_pipeline(
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
     _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
+    # Later 6-K report periods SEC lists after the annual year shown (as-reported flag; never for thresholds).
+    from .source_answer import is_decision_monitoring_request as _is_threshold
+    _later_reports = ([] if _filing_scratch is None or _is_threshold(question)
+                      else _afacts.later_reports(evidence, _filing_scratch))
+    _source_answer = _afacts.apply_later_reports_notice(thesis, _source_answer, _later_reports)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
         thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
         integrity=_evidence_integrity)
@@ -1845,6 +1850,7 @@ def _run_investment_pipeline(
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
     _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
+    _source_answer = _afacts.apply_later_reports_notice(thesis, _source_answer, _later_reports)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
         thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
         integrity=_evidence_integrity)
