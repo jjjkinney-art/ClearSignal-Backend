@@ -15,6 +15,9 @@ from test_financial_thesis_foundation import pair
 
 BUSINESS = "We manufacture specialized components and distribute our products through independent dealers."
 RISK = "Supply chain disruptions could adversely affect our ability to manufacture and deliver products."
+# Broad-thesis selection presents only company-specific risks; fetch-level tests use this form.
+SPECIFIC_RISK = ("Supply chain disruptions at our key suppliers could adversely affect our ability to manufacture "
+                 "and deliver products.")
 QUESTION = "What is the investment thesis for AAPL, what supports it, and what could invalidate it? Cite material claims."
 
 
@@ -240,7 +243,8 @@ def test_named_list_does_not_suppress_a_segment_operating_description():
     'Our operations and financial results are subject to various risks and uncertainties, including those described below, that could adversely affect our business, operations, financial condition, results of operations, liquidity, and the trading price of our common stock.',
 ])
 def test_generic_risk_intro_is_withheld_by_fetch_and_final_foundation(monkeypatch, intro):
-    specific = ('Any significant losses in our investment portfolio or from market-making activities '
+    specific = ('Because market-making activities account for a significant portion of our revenues, any '
+                'significant losses in our investment portfolio or from market-making activities '
                 'could reduce our profitability and our liquidity and capital levels.')
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
                    f'{intro} {specific} Item 1B. Unresolved Staff Comments')
@@ -308,8 +312,8 @@ def test_only_generic_risk_context_cannot_close_mechanism_gap():
     ('Furthermore, such factors could materially adversely affect our liquidity and financial condition.', 'Liquidity'),
 ])
 def test_unresolved_risk_subject_is_withheld_from_broad_fetch_and_final_answer(monkeypatch, quote, scope):
-    specific = ('Supply chain disruptions could materially adversely affect our marketplace sellers, '
-                'liquidity and operating results.')
+    specific = ('Supply chain disruptions could materially adversely affect our marketplace sellers, who '
+                'account for a significant portion of our sales, and our liquidity and operating results.')
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
                    f'{quote} {specific} Item 1B. Unresolved Staff Comments')
     risks = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
@@ -366,9 +370,12 @@ def test_broad_risk_eligibility_precedes_sample_cap(monkeypatch, with_valid_risk
         'Furthermore, such factors could materially adversely affect our liquidity and financial condition.',
     ][:rejected_prefix_count]
     valid = [
-        'Our inability to refinance debt maturities could adversely affect our liquidity and operating results.',
-        'Higher refinancing costs could adversely affect our liquidity and financial condition.',
-        'Loss of funding access could adversely affect our liquidity and operating results.',
+        'Because our credit facility accounts for a significant portion of our funding, our inability to refinance '
+        'debt maturities could adversely affect our liquidity and operating results.',
+        'Because our credit facility accounts for a significant portion of our funding, higher refinancing costs '
+        'could adversely affect our liquidity and financial condition.',
+        'Because our credit facility accounts for a significant portion of our funding, loss of funding access '
+        'could adversely affect our liquidity and operating results.',
     ] if with_valid_risks else []
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
                    + ' '.join(rejected + valid) + ' Item 1B. Unresolved Staff Comments')
@@ -516,9 +523,10 @@ def test_live_fetch_spends_one_document_slot_and_keeps_both_bound_sections(monke
     monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"AAPL": "0000320193"})
     monkeypatch.setattr(service.sec_provider, "fetch_recent_filings", lambda *a, **k:
         [SimpleNamespace(url=document().final_url, timestamp='2025-08-01', document_type='10-K')])
+    text = f"Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors {SPECIFIC_RISK} Item 1B. Unresolved Staff Comments"
     def fetch(*args, **kwargs):
         calls.append(kwargs)
-        return document()
+        return document(text)
     monkeypatch.setattr(service, "fetch_public_document", fetch)
     items = service.fetch_thesis_disclosures("AAPL", question=QUESTION)
     assert len(calls) == 1 and calls[0]["preserve_sec_business"] is True
@@ -1135,3 +1143,64 @@ def test_risk_display_retains_substantive_conditions_and_internal_qualifiers(con
     result = _risk_monitoring_inference(dict(quote=f'{condition} could adversely affect our manufacturing operations.',
         scope='Supply chain'), 'E1')
     assert result['display_condition'] == condition == result['condition']
+
+
+@pytest.mark.parametrize('quote, reason', [
+    ('We offer the following energy drinks under the Fury product line: Gold Strike and Mango Mayhem and others.', 'product_catalog'),
+    ('We offer a number of brands under the Wasatch brand family including Apricot Hefeweizen and others.', 'product_catalog'),
+    ('We offer a wide array of benefits including comprehensive health and welfare insurance; generous time-off and leave; and retirement programs.', 'internal_employee_activity'),
+    ('We offer benefits programs that are designed to be competitive within local markets and compliant with applicable laws.', 'internal_employee_activity'),
+    ('We provide emotional, physical, legal and financial well-being services through our Employee Assistance Program.', 'internal_employee_activity'),
+])
+def test_catalogs_and_employee_benefits_are_not_business_descriptions(quote, reason):
+    assert service._business_quote_rejection(quote) == reason
+
+
+@pytest.mark.parametrize('quote', [
+    'Our Monster Energy Drinks segment primarily generates net operating revenues by selling ready-to-drink packaged drinks to bottlers.',
+    'The Corporation operates data center facilities and sells colocation services to enterprise customers.',
+])
+def test_segment_revenue_models_and_a_corporation_subject_describe_the_business(quote):
+    assert service._business_quote_rejection(quote) is None
+
+
+class _Issuer:
+    cik, name = 751365, 'VIRCO MFG CORPORATION'
+
+
+@pytest.fixture
+def directory_with_issuer(monkeypatch):
+    from types import SimpleNamespace
+    from app.services import issuer_identity
+    monkeypatch.setattr(issuer_identity, '_load_directory', lambda: SimpleNamespace(symbols={'VIRC': _Issuer}))
+
+
+SHORT_NAME_QUOTE = 'Virco also provides a variety of products for preschool markets and has developed products for colleges.'
+
+
+def test_a_filing_defined_short_name_selects_a_quote_only_inside_that_filing(directory_with_issuer):
+    named = service._named_issuer_quote
+    assert not named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000751365')
+    assert named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000751365', defined_name='Virco')
+    # Not a name the registrant's begins with, or another issuer's filing.
+    assert not named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000751365', defined_name='Rival')
+    assert not named('Rival also provides a variety of products for preschool markets.', ticker='VIRC',
+                     cik='0000751365', defined_name='Rival')
+    assert not named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000000001', defined_name='Virco')
+
+
+def test_a_quote_needing_the_sentence_before_it_is_not_selected(directory_with_issuer):
+    assert not service._named_issuer_quote('Virco manufactures the table bases of these items and equips them with tops.',
+                                           ticker='VIRC', cik='0000751365', defined_name='Virco')
+
+
+def test_the_short_name_comes_from_the_filing_definition():
+    assert service._defined_short_name('Virco Mfg. Corporation (“Virco” or the “Company”) designs furniture.') == 'Virco'
+    assert service._defined_short_name('Virco Mfg. Corporation designs furniture.') is None
+
+
+def test_identity_resolution_does_not_use_short_names():
+    import inspect
+    from app.services import company_detection, issuer_identity
+    for module in (company_detection, issuer_identity):
+        assert '_defined_short_name' not in inspect.getsource(module)

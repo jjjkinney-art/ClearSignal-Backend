@@ -152,8 +152,87 @@ def _requested_bound_metric(item: object, ticker: str, question: str) -> bool:
                for claim in getattr(item, "verified_claims", []) or [])
 
 
+_FILING_TASKS = frozenset({"filing_metrics", "thesis_disclosures"})
+_EVIDENCE_GAP_SOURCES = {
+    # A task lost before it chose a filing names none; see _filing_source.
+    "filing_metrics": "an SEC filing",
+    "thesis_disclosures": "an SEC filing",
+    "sec_metrics": "SEC company facts",
+    "sec": "the SEC filing list",
+}
+
+
+def _filing_source(form: str | None) -> str | None:
+    """The report a form names, never implying it is the issuer's newest filing."""
+    base = (form or "").removesuffix("/A")
+    if base in {"10-K", "20-F"}:
+        return f"the annual report (Form {form})"
+    if base == "10-Q":
+        return f"the quarterly report (Form {form})"
+    return None
+
+
+def evidence_gaps(abandoned: Iterable[str], submissions_failures: int,
+                  filing_read_failures: Iterable[str] = (),
+                  filing_too_large: Iterable[str] = (),
+                  filing_forms: dict[str, str] | None = None) -> list[dict]:
+    """What a request lost to its time limits or to a failed SEC read."""
+    abandoned = list(abandoned)
+    forms = filing_forms or {}
+
+    def source(key: str) -> str:
+        return _filing_source(forms.get(key)) or _EVIDENCE_GAP_SOURCES[key]
+
+    gaps = [{"source": source(key), "task": key, "reason": "time_limit"}
+            for key in abandoned if key in _EVIDENCE_GAP_SOURCES]
+    if submissions_failures:
+        gaps.append({"source": "the SEC filing list", "task": "sec_submissions", "reason": "retrieval_failed"})
+    too_large = set(filing_too_large)
+    gaps += [{"source": source(key), "task": key, "reason": "too_large" if key in too_large else "not_read"}
+             for key in dict.fromkeys(filing_read_failures) if key in _EVIDENCE_GAP_SOURCES and key not in abandoned]
+    return gaps
+
+
+def apply_evidence_gaps(thesis: object, source_answer: dict | None, gaps: list[dict]) -> dict | None:
+    """State plainly that this answer is missing evidence it tried to read."""
+    if not gaps or source_answer is None:
+        return source_answer
+    sources = list(dict.fromkeys(gap["source"] for gap in gaps))
+    names = sources[0] if len(sources) == 1 else ", ".join(sources[:-1]) + " and " + sources[-1]
+    drivers = ", including any drivers management states there," if any(gap["task"] in _FILING_TASKS for gap in gaps) else ""
+    # A document over the size limit stays over it, so retrying would not help.
+    too_large = all(gap["reason"] == "too_large" for gap in gaps)
+    cause = ", because the document is larger than the size limit" if too_large else ""
+    closing = "" if too_large else " Trying again may give a fuller answer."
+    notice = (f"Incomplete answer: {names} could not be read for this answer{cause}, so what it would have "
+              f"added{drivers} is missing.{closing}")
+    direct_answer = getattr(thesis, "direct_answer", "") or ""
+    if not direct_answer.startswith(notice):
+        thesis.direct_answer = f"{notice}\n\n{direct_answer}" if direct_answer else notice
+    missing = [f"evidence from {source}" for source in sources]
+    return {**source_answer, "degraded": True, "evidence_gaps": gaps,
+            "status": "partial" if source_answer.get("status") == "attributed" else source_answer.get("status"),
+            "unanswered_parts": list(dict.fromkeys([*(source_answer.get("unanswered_parts") or []), *missing]))}
+
+
+def apply_evidence_not_applicable(thesis: object, source_answer: dict | None, records: list[dict]) -> dict | None:
+    """State plainly that financial analysis is unavailable because SEC's own filing list proves
+    the registrant has no XBRL data. This is a fact about the registrant, not lost evidence: it
+    never marks the answer degraded and is never mixed with evidence_gaps."""
+    if not records or source_answer is None:
+        return source_answer
+    from .sec_registration_only import explanation
+    notice = explanation(records[0]["evidence"])
+    direct_answer = getattr(thesis, "direct_answer", "") or ""
+    if not direct_answer.startswith(notice):
+        thesis.direct_answer = f"{notice}\n\n{direct_answer}" if direct_answer else notice
+    missing = "financial performance and reported comparisons (not applicable: no XBRL filings listed)"
+    return {**source_answer, "evidence_not_applicable": [dict(record) for record in records],
+            "unanswered_parts": list(dict.fromkeys([*(source_answer.get("unanswered_parts") or []), missing]))}
+
+
 def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object],
-                             *, references: list[dict] | None = None) -> dict | None:
+                             *, references: list[dict] | None = None, as_reported_withheld: list | None = None) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""
     # Parsed units/order and a model-supplied 'derived' label are not an
     # evidence derivation. No producer currently supplies a validated numeric
@@ -182,6 +261,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             return {'status': 'partial', 'claims': foundation['claims'],
                     'reason': 'Rebuilt financial monitoring evidence; investment boundaries remain unverified.',
                     'monitoring_benchmarks': monitoring['benchmarks'],
+                    'missing_threshold_inputs': monitoring['missing_threshold_inputs'],
                     'reporting_period_coverage': monitoring.get('reporting_period_coverage'),
                     'inferences': monitoring['calculations'],
                     'unanswered_parts': monitoring.get('unanswered_parts', []) + ['valuation decision boundaries', 'expected returns',
@@ -194,6 +274,9 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "scenario assumptions and a reproducible calculation tied to those inputs. "
             "No numerical investment boundary or attractiveness conclusion is verified."
         )
+        from .decision_monitoring_evidence import MISSING_THRESHOLD_INPUTS, render_missing_threshold_inputs
+        answer += render_missing_threshold_inputs().replace(
+            'The figures above are historical baselines for monitoring. ', '')
         _restrict_evidence_thesis(thesis, answer, [], [], enough=False,
                                  scope="Decision threshold")
         # Confidence retained for ordinary evidence views must not communicate
@@ -202,6 +285,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         thesis.score_source = "not_assessed_evidence_view"
         thesis.conviction_dimensions = {}
         return {"status": "insufficient_claim_evidence", "claims": [],
+                "missing_threshold_inputs": MISSING_THRESHOLD_INPUTS,
                 "reason": "No validated producer-bound decision-threshold derivation is available.",
                 "unanswered_parts": ["numerical decision thresholds", "valuation and expected returns",
                                      "quantified earnings impact"]}
@@ -233,8 +317,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     from .thesis_disclosures import requests_thesis_disclosures
     foundation_scope = requests_thesis_disclosures(str(getattr(thesis, "ticker", "")), question)
     if foundation_scope:
+        from .lone_comparison import enabled as _lone_enabled
         foundation = build_financial_foundation(ticker=str(getattr(thesis, "ticker", "")),
-                                               items=material, references=references)
+                                               items=material, references=references,
+                                               allow_lone=_lone_enabled(), withheld=as_reported_withheld)
         if foundation:
             from .financial_reporting_coverage import reporting_coverage
             coverage, notice, coverage_gaps = reporting_coverage(
@@ -251,6 +337,21 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
                     "common_reporting_period": foundation["common_reporting_period"],
                     "business_context_coverage": foundation["business_context_coverage"],
                     **({"reporting_coverage": coverage} if coverage else {})}
+        # No financial foundation: still deliver verified business and risk disclosures,
+        # labelled as a disclosure-only answer, rather than discarding them.
+        from .disclosure_only_answer import build_disclosure_only
+        disclosures = build_disclosure_only(str(getattr(thesis, "ticker", "")), material, references)
+        if disclosures:
+            _restrict_evidence_thesis(thesis, disclosures["answer"], disclosures["claims"],
+                                     disclosures["selected_items"], enough=True,
+                                     scope="Issuer disclosure")
+            return {"status": "partial",
+                    "reason": "Source-bound issuer disclosures only; no financial analysis was completed.",
+                    "claims": disclosures["claims"], "inferences": [],
+                    "unanswered_parts": disclosures["unanswered_parts"],
+                    "business_context_coverage": disclosures["business_context_coverage"],
+                    "content_scope": disclosures["content_scope"],
+                    "financial_analysis": disclosures["financial_analysis"]}
     from .verified_sec_metric_service import _requested_metrics
     requested_metrics = _requested_metrics(question, include_defaults=False)
     # A multipart metric question must retain all requested metric slots.

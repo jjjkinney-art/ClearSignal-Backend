@@ -1,0 +1,120 @@
+{
+ "frontend_commit": "138d6461a7d6822fd9b27c784a410f55b243a40e",
+ "classifier_sha256": "6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38",
+ "resolver_sha256": "6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542",
+ "questions_sha256": "c0617b758458f25c7517393d00809a8d667ad2023b1689e16b813c19be74a4a1",
+ "backend_commit": "45f5283c9fdc714ba1720bf60098c195977bf67d",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "intents": {
+  "BP:core_thesis": "company_analysis",
+  "BP:decision_threshold": "company_analysis",
+  "MNST:core_thesis": "company_analysis",
+  "MNST:decision_threshold": "company_analysis",
+  "CRDO:core_thesis": "company_analysis",
+  "CRDO:decision_threshold": "company_analysis",
+  "LLYVA:core_thesis": "company_analysis",
+  "LLYVA:decision_threshold": "company_analysis",
+  "DGXX:core_thesis": "company_analysis",
+  "DGXX:decision_threshold": "company_analysis",
+  "VIRC:core_thesis": "company_analysis",
+  "VIRC:decision_threshold": "company_analysis"
+ },
+ "identity": [
+  {
+   "case_id": "BP:core_thesis",
+   "intent": "company_analysis",
+   "discovered": "BP",
+   "route": "research",
+   "issuer": "BP",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "BP:decision_threshold",
+   "intent": "company_analysis",
+   "discovered": "BP",
+   "route": "research",
+   "issuer": "BP",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MNST:core_thesis",
+   "intent": "company_analysis",
+   "discovered": "MNST",
+   "route": "research",
+   "issuer": "MNST",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MNST:decision_threshold",
+   "intent": "company_analysis",
+   "discovered": "MNST",
+   "route": "research",
+   "issuer": "MNST",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "CRDO:core_thesis",
+   "intent": "company_analysis",
+   "discovered": "CRDO",
+   "route": "research",
+   "issuer": "CRDO",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "CRDO:decision_threshold",
+   "intent": "company_analysis",
+   "discovered": "CRDO",
+   "route": "research",
+   "issuer": "CRDO",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "LLYVA:core_thesis",
+   "intent": "company_analysis",
+   "discovered": "None",
+   "route": "returned",
+   "issuer": "company='' pipeline=entity_suggestion suggests=True ",
+   "verdict": "no company"
+  },
+  {
+   "case_id": "LLYVA:decision_threshold",
+   "intent": "company_analysis",
+   "discovered": "None",
+   "route": "returned",
+   "issuer": "company='' pipeline=company_identity_clarification suggests=False ",
+   "verdict": "no company"
+  },
+  {
+   "case_id": "DGXX:core_thesis",
+   "intent": "company_analysis",
+   "discovered": "DGXX",
+   "route": "research",
+   "issuer": "DGXX",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "DGXX:decision_threshold",
+   "intent": "company_analysis",
+   "discovered": "DGXX",
+   "route": "research",
+   "issuer": "DGXX",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "VIRC:core_thesis",
+   "intent": "company_analysis",
+   "discovered": "VIRC",
+   "route": "research",
+   "issuer": "VIRC",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "VIRC:decision_threshold",
+   "intent": "company_analysis",
+   "discovered": "VIRC",
+   "route": "research",
+   "issuer": "VIRC",
+   "verdict": "correct issuer"
+  }
+ ]
+}

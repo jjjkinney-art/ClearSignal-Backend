@@ -9,12 +9,13 @@ from datetime import date
 from decimal import Decimal
 import re
 
-from ..integrity.sec_metric_evidence import comparable_metric_evidence
+from ..integrity.sec_metric_evidence import _value, comparable_instant_metric_evidence, comparable_metric_evidence
 from ..providers.sec_client import SecFactRecord
 from ..providers.sec_fact_policy import REPORTING_CURRENCIES, PER_SHARE_UNITS
 
 CORE_METRICS = {
-    "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
+    "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense",
+                "RevenueFromContractWithCustomerIncludingAssessedTax"),
     "operating income": ("OperatingIncomeLoss",),
     "net income": ("NetIncomeLoss", "ProfitLoss"),
     "operating cash flow": ("NetCashProvidedByUsedInOperatingActivities",),
@@ -22,6 +23,75 @@ CORE_METRICS = {
 SUPPLEMENTARY_METRICS = {
     "pretax income": ("IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",),
 }
+# Business-type measures, chosen by the issuer's SEC industry code (SIC). They
+# use only standard US-GAAP duration facts of the issuer's own consolidated
+# statements; the signature pair must be present before any is retrieved.
+SECTOR_SIC = {
+    "bank": {"6021", "6022", "6029", "6035", "6036"},
+    "insurer": {"6311", "6321", "6324", "6331", "6351", "6361", "6399", "6411"},
+    "asset manager": {"6282"},
+}
+SECTOR_METRICS = {
+    "bank": {
+        "net interest income": ("InterestIncomeExpenseNet",),
+        "provision for credit losses": ("ProvisionForLoanLeaseAndOtherLosses", "ProvisionForLoanAndLeaseLosses"),
+        "noninterest income": ("NoninterestIncome",),
+    },
+    "insurer": {
+        "premiums earned": ("PremiumsEarnedNet",),
+        "net investment income": ("NetInvestmentIncome",),
+        "policyholder benefits and claims": ("PolicyholderBenefitsAndClaimsIncurredNet",),
+    },
+    "asset manager": {},
+}
+# Point-in-time balances of a business type: the latest period-end balance against the same
+# date a year earlier, from the same consolidated XBRL facts. They are shown only when the
+# balance date is a period end of the answer's own core comparisons, so no balance from a
+# different date is presented beside them. Credit quality (allowance, nonaccrual loans) needs
+# concept continuity checks not made here, so it stays an unverified part.
+SECTOR_BALANCE_METRICS = {
+    "bank": {
+        "deposits": ("Deposits",),
+        "net loans (financing receivables, net of allowance)":
+            ("FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss",),
+    },
+}
+BANK_BALANCE_GAP_NAMES = {"deposits": "deposits",
+                          "net loans (financing receivables, net of allowance)": "loan growth"}
+BALANCE_LIMITATION = ("Balance-sheet comparisons are reported totals at two dates; acquisitions, divestitures "
+                      "and reclassifications between the dates are not adjusted for.")
+SECTOR_SIGNATURES = {
+    "bank": ("provision for credit losses", "noninterest income"),
+    "insurer": ("premiums earned", "policyholder benefits and claims"),
+}
+# Core measures a bank does not report as such: its revenue is net interest
+# and noninterest income, and it reports no operating-income line. Their
+# absence is not an unverified gap; the bank measures stand in their place.
+SECTOR_NOT_APPLICABLE = {"bank": ("revenue", "operating income")}
+# When the issuer's industry code was not retrieved, the business type is
+# unknown: say so rather than silently omitting business-type measures.
+SECTOR_UNKNOWN_GAP = "business-type measures (the issuer's SEC industry code was not retrieved)"
+BANK_PRETAX_LIMITATION = ("The cited pretax-income comparison is supplementary profitability context. "
+    "Pretax income includes credit-loss provisions and other effects; banks report no operating-income line.")
+# What a business-type answer needs but standard reported facts do not supply.
+SECTOR_GAPS = {
+    "bank": ["deposits, loan growth and credit quality"],
+    "insurer": ["reserves, spreads and underwriting results"],
+    "asset manager": ["management and performance fees (no current standard US-GAAP fact)",
+                      "assets under management (not a US-GAAP measure)"],
+}
+
+
+def issuer_sector(cik: str | None) -> str | None:
+    from .providers.sec_provider import issuer_sic
+    sic = issuer_sic(cik) if cik else None
+    return next((sector for sector, codes in SECTOR_SIC.items() if sic in codes), None)
+
+
+def issuer_sector_known(cik: str | None) -> bool:
+    """The issuer's industry code was retrieved, so issuer_sector is an answer, not a gap."""
+    from .providers.sec_provider import issuer_sic
+    return bool(cik) and issuer_sic(cik) is not None
 
 
 def financial_metric_label(name: str, concept: str) -> str:
@@ -36,6 +106,32 @@ def requests_profitability_context(question: str | None) -> bool:
 
 def requests_pretax_income(question: str | None) -> bool:
     return bool(re.search(r"\b(?:pre[- ]?tax income|income before (?:income )?taxes)\b", question or "", re.I))
+
+
+ISSUER_RISK_CAVEAT = (" This is an issuer disclosure, not an independent assessment of whether the "
+                      "described effects occurred or will occur, or of their financial impact.")
+ISSUER_DESCRIPTION_CAVEAT = (" This is an issuer description; competitive advantage and future "
+                             "performance remain unverified.")
+BASELINE_NOTE = ("These are historical comparison baselines, not valuation or investment thresholds, and "
+                 "not forecasts: a later figure below one does not by itself make the company unattractive. "
+                 "Each is comparable only with the corresponding period one year later, on the same scope, "
+                 "currency and duration. Seasonality between different quarters has not been assessed, so "
+                 "a sequential quarter is not a comparable period.")
+
+
+def _duration_label(claim):
+    period = str(claim.get("period", ""))
+    return ("quarterly period" if period.startswith("quarter") else
+            "year-to-date period" if period.startswith("year-to-date") else
+            "fiscal year" if period.startswith("FY") else "reported period")
+
+
+# Structured rows keep this on every test; rendered sections state it once.
+NOT_A_FORECAST = "; this is a monitoring condition, not a forecast."
+
+
+def _once_per_section(test):
+    return test.removesuffix(NOT_A_FORECAST) + "." if test.endswith(NOT_A_FORECAST) else test
 
 
 PRETAX_LIMITATION = ("The cited pretax-income comparison is supplementary profitability context. "
@@ -126,7 +222,7 @@ def _risk_monitoring_inference(value, reference_id):
 
 
 def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
-             expected_unit: str | None = None):
+             expected_unit: str | None = None, instant: bool = False):
     """Recheck both facts and the displayed summary with the existing producer."""
     # Explicit scenario bridges reconstruct one exact named per-share concept.
     # No mixed basic/diluted family; ordinary foundation callers retain money.
@@ -146,6 +242,15 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
     claims = getattr(item, "verified_claims", [])
     if not isinstance(claims, list) or len(claims) != 2:
         return None
+    if isinstance(claims[0], dict) and claims[0].get("taxonomy") is not None:
+        # An as-reported comparison (IFRS, or a currency other than USD/EUR): rebuilt by its own producer, and
+        # only while that slice is enabled, for the core measures, in the filing's own currency.
+        from ..config import settings
+        if (getattr(settings, "as_reported_financials_enabled", False) is not True
+                or expected_unit is not None or instant):
+            return None
+        from .as_reported_financials import rebuild_as_reported
+        return rebuild_as_reported(item, ticker=ticker, cik=cik, name=name)
     records = []
     try:
         for claim in claims:
@@ -186,10 +291,10 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
                 end=claim["period_end"], filed=ref["published_at"], form=claim["source"],
                 accession=match[2], filing_url=ref["url"],
             ))
-        rebuilt = comparable_metric_evidence(records, ticker=ticker, expected_cik=cik,
-                                             concepts=concepts,
-                                             metric_name=financial_metric_label(name, records[0].concept),
-                                             unit=records[0].unit)
+        builder = comparable_instant_metric_evidence if instant else comparable_metric_evidence
+        rebuilt = builder(records, ticker=ticker, expected_cik=cik, concepts=concepts,
+                          metric_name=financial_metric_label(name, records[0].concept),
+                          unit=records[0].unit)
         if (rebuilt is None or rebuilt.verified_claims != claims
                 or rebuilt.summary != item.summary or rebuilt.url != item.url
                 or rebuilt.timestamp != item.timestamp
@@ -202,8 +307,12 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
 
 
 def build_financial_foundation(ticker: str, items: list, references: list[dict] | None,
-                               *, expected_cik: str | None = None) -> dict | None:
-    """Return a financial foundation only after identity, fact and citation checks."""
+                               *, expected_cik: str | None = None, allow_lone: bool = False,
+                               withheld: list | None = None) -> dict | None:
+    """Return a financial foundation only after identity, fact and citation checks.
+
+    ``allow_lone`` (thesis answers with the lone-comparison flag on) lets one verified comparison stand, with the
+    reason each other core measure was not compared taken from ``withheld``; the default needs two, as before."""
     candidates = [item for item in items if getattr(item, "verified_claims", [])]
     if not candidates:
         return None
@@ -249,13 +358,16 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             text += f" The current reported {display_name} is non-positive."
         interpretations.append({"kind": "financial_inference", "metric": display_name,
             "signal": signal, "text": text, "reference_ids": [reference_id],
-            "conditional_test": f"A future comparable {display_name} below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast."})
+            "conditional_test": (f"Historical baseline: {_value(current['raw_value'], current['unit'])} for "
+                f"{current['period_start']} to {current['period_end']} ({_duration_label(current)}). A lower "
+                f"{display_name} for the corresponding period one year later would weaken this financial "
+                f"assumption; it would not by itself make the company unattractive{NOT_A_FORECAST}")})
         rows.append({"claim": rebuilt.summary, "reference_id": reference_id,
                      "claim_kind": "reported_financial_comparison"})
         selected.append(item)
         core_comparisons[name] = (item, reference_id)
     # One isolated observation does not form a multi-dimensional financial case.
-    if len(rows) < 2:
+    if len(rows) < (1 if allow_lone else 2):
         return None
     if len({item.verified_claims[0]["unit"] for item in selected}) != 1:
         # Independently valid comparisons in different currencies do not
@@ -270,8 +382,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['text'] += (' This total alone does not establish sustainable operating strength '
                             'or weakness; its underlying movements remain unverified.')
             row['conditional_test'] = ('Review the underlying cash-flow movements and their '
-                'persistence before assigning a favorable or adverse thesis signal; '
-                'this is a monitoring condition, not a forecast.')
+                f'persistence before assigning a favorable or adverse thesis signal{NOT_A_FORECAST}')
     # Use only the revenue comparison that survived reconstruction, conflicts
     # and response-reference checks. A ticker, profile or unbound claim cannot
     # authorize a different cash-flow interpretation. This measure is a narrow
@@ -285,8 +396,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                 "this cash-flow total alone does not establish stronger or weaker operating "
                 "performance, liquidity or capital adequacy. Its underlying movements remain unverified.")
             row["conditional_test"] = ("Review the underlying cash-flow movements alongside "
-                "liquidity and capital disclosures before assigning a favorable or adverse thesis signal; "
-                "this is a monitoring condition, not a forecast.")
+                f"liquidity and capital disclosures before assigning a favorable or adverse thesis signal{NOT_A_FORECAST}")
     supplemental = []
     if "operating income" in missing:
         name, concepts = next(iter(SUPPLEMENTARY_METRICS.items()))
@@ -310,11 +420,74 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             selected.append(item)
         else:
             supplemental = []
-    periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected}
+    # Business-type measures for the same period as the core comparisons; an
+    # unsupported or unreported one is an explicit gap, never a substitute.
+    sector = issuer_sector(expected_cik)
+    core_periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected}
+    for name, concepts in SECTOR_METRICS.get(sector, {}).items():
+        qualified = []
+        for index, item in enumerate(items, 1):
+            rebuilt = _rebuild(item, ticker=ticker, cik=expected_cik, name=name, concepts=concepts)
+            if rebuilt is None or (item.reporting_period_start, item.reporting_period_end) not in core_periods:
+                continue
+            ref = f"E{index}"
+            if references is not None:
+                ref = next((r.get("id") for r in references
+                    if r.get("title") == item.title.strip()[:300]
+                    and r.get("source") == item.source.strip()[:120]
+                    and r.get("url") == item.url and r.get("published_at") == item.timestamp), None)
+                if not re.fullmatch(r"E[1-9]\d*", str(ref or "")):
+                    continue
+            qualified.append((item, rebuilt, ref))
+        if not qualified or len({repr(row[1].verified_claims) for row in qualified}) != 1:
+            missing.append(f"{name} ({sector} measure)")
+            continue
+        item, rebuilt, ref = qualified[0]
+        rows.append({"claim": rebuilt.summary, "reference_id": ref, "claim_kind": "sector_financial_comparison"})
+        selected.append(item)
+    surfaced_balances = set()
+    core_ends = {end for _, end in core_periods}
+    for name, concepts in SECTOR_BALANCE_METRICS.get(sector, {}).items():
+        qualified = []
+        for index, item in enumerate(items, 1):
+            rebuilt = _rebuild(item, ticker=ticker, cik=expected_cik, name=name, concepts=concepts, instant=True)
+            if (rebuilt is None or item.reporting_period_start is not None
+                    or item.reporting_period_end not in core_ends):
+                continue
+            ref = f"E{index}"
+            if references is not None:
+                ref = next((r.get("id") for r in references
+                    if r.get("title") == item.title.strip()[:300]
+                    and r.get("source") == item.source.strip()[:120]
+                    and r.get("url") == item.url and r.get("published_at") == item.timestamp), None)
+                if not re.fullmatch(r"E[1-9]\d*", str(ref or "")):
+                    continue
+            qualified.append((item, rebuilt, ref))
+        # Anything short of one unambiguous, aligned pair stays an unverified part.
+        if not qualified or len({repr(row[1].verified_claims) for row in qualified}) != 1:
+            continue
+        item, rebuilt, ref = qualified[0]
+        rows.append({"claim": rebuilt.summary, "reference_id": ref, "claim_kind": "sector_financial_comparison"})
+        selected.append(item)
+        surfaced_balances.add(name)
+    if sector:
+        missing = [name for name in missing if name not in SECTOR_NOT_APPLICABLE.get(sector, ())]
+        if sector == "bank" and surfaced_balances:
+            parts = [label for name, label in BANK_BALANCE_GAP_NAMES.items() if name not in surfaced_balances]
+            parts.append("credit quality")
+            missing.append(", ".join(parts[:-1]) + " and " + parts[-1] if len(parts) > 1 else parts[0])
+        else:
+            missing.extend(SECTOR_GAPS[sector])
+    elif not issuer_sector_known(expected_cik):
+        missing.append(SECTOR_UNKNOWN_GAP)
+    periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected
+                if item.reporting_period_start is not None}
     limitation = ("These metrics cover different reporting durations or end dates. Evaluate each "
                   "against its own comparable prior-year period; they do not establish a common-period "
                   "margin, cash-conversion ratio or causal relationship." if len(periods) > 1 else
                   "The observations share a reporting period. No margin or cash-conversion ratio has been calculated here.")
+    if surfaced_balances:
+        limitation += " " + BALANCE_LIMITATION
     supporting = [f"{row['metric']} [{row['reference_ids'][0]}]" for row in interpretations if row["signal"] == "supporting"]
     counter = [f"{row['metric']} [{row['reference_ids'][0]}]" for row in interpretations if row["signal"] == "counter_evidence"]
     hypothesis = ("Positive, rising reported comparisons: " +
@@ -325,10 +498,16 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer = hypothesis
     answer += "\n\nReported evidence\n" + "\n\n".join(
         f"{index}. {row['claim']} [{row['reference_id']}]" for index, row in enumerate(rows, start=1))
+    if allow_lone and len(core_comparisons) == 1:
+        from .lone_comparison import section as lone_section
+        core_missing = [name for name in CORE_METRICS if name in missing]
+        answer += lone_section(next(iter(core_comparisons)), core_missing, withheld)
     if supplemental:
-        answer += "\n\n" + PRETAX_LIMITATION
+        answer += "\n\n" + (BANK_PRETAX_LIMITATION if sector == "bank" else PRETAX_LIMITATION)
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
-        f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}" for row in interpretations)
+        f"{row['text']} [{row['reference_ids'][0]}] {_once_per_section(row['conditional_test'])}"
+        for row in interpretations)
+    answer += "\n" + BASELINE_NOTE
     from .operating_margin_assessment import operating_margin_assessment
     margin = operating_margin_assessment(core_comparisons, references)
     if margin:
@@ -350,6 +529,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .segment_revenue_policy import bound_segment_revenue_policy
     from .annual_cash_flow_context import bound_annual_cash_flow_context
     from .cash_reconciliation_evidence import bound_cash_reconciliation
+    from .current_period_explanation import bound_current_period_explanation
+    from .going_concern_disclosure import bound_going_concern
+    period_explanations = []
+    going_concern = []
     disclosures = []
     risk_interpretations = []
     risk_financial_links = []
@@ -360,7 +543,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
               "issuer_competition_description": 0, "issuer_order_backlog_context": 0,
               "issuer_segment_financial_context": 0, "issuer_segment_product_context": 0, "issuer_organisation_activity_context": 0,
               "issuer_deposit_impairment_context": 0, "issuer_segment_revenue_policy": 0,
-              "issuer_annual_cash_flow_context": 0, "issuer_cash_reconciliation": 0}
+              "issuer_annual_cash_flow_context": 0, "issuer_cash_reconciliation": 0,
+              "issuer_current_period_explanation": 0, "issuer_going_concern_disclosure": 0}
     current_risks = 0
     business_descriptions = []
     seen = set()
@@ -375,10 +559,19 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                  or bound_segment_revenue_policy(item,ticker=ticker,cik=expected_cik)
                  or bound_annual_cash_flow_context(item,ticker=ticker,cik=expected_cik)
                  or bound_cash_reconciliation(item,ticker=ticker,cik=expected_cik)
+                 or bound_current_period_explanation(item, ticker=ticker, cik=expected_cik)
+                 or bound_going_concern(item, ticker=ticker, cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if (not value or value["quote"] in seen or counts[value["claim_kind"]] >=
-                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation'} else 2)):
+                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation', 'issuer_current_period_explanation', 'issuer_going_concern_disclosure'} else 2)):
             continue
+        if value['claim_kind'] == 'issuer_current_period_explanation':
+            # Only the period a verified comparison describes: revenue, or for
+            # issuers without a revenue line (banks), operating or net income.
+            anchor = next((core_comparisons[name] for name in ('revenue', 'operating income', 'net income')
+                           if name in core_comparisons), None)
+            if not anchor or value['period']['current_end'] != anchor[0].reporting_period_end:
+                continue
         reference_id = f"E{index}"
         if references is not None:
             ref = next((ref for ref in references
@@ -419,6 +612,13 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['cash_flow_context'] = value['cash_flow_context']
             row['document_ref'] = value['document_ref']
             row['observations'] = value['observations']
+        if value['claim_kind'] == 'issuer_current_period_explanation':
+            row['period_explanation'] = value
+            period_explanations.append((value, reference_id))
+        if value['claim_kind'] == 'issuer_going_concern_disclosure':
+            row['document_ref'] = value['document_ref']
+            row['going_concern'] = {k: value[k] for k in ('conclusion', 'period_end', 'document_type')}
+            going_concern.append(reference_id)
         if value['claim_kind'] == 'issuer_cash_reconciliation':
             row['cash_reconciliation'] = value['bridge']
             row['row_references'] = value['row_references']
@@ -482,18 +682,45 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .thesis_evidence_overview import OVERVIEW_CLAIM_KINDS, render_bound_overview
     # These complete statements appear once in the opening. Retain all structured
     # rows, selected evidence and original reference IDs for downstream consumers.
-    remaining_disclosures = [row for row in disclosures if row['claim_kind'] not in OVERVIEW_CLAIM_KINDS]
+    remaining_disclosures = [row for row in disclosures if row['claim_kind'] not in OVERVIEW_CLAIM_KINDS
+                             and row['claim_kind'] not in {'issuer_current_period_explanation', 'issuer_going_concern_disclosure'}]
+    if period_explanations:
+        # What changed in the latest period goes directly after the opening
+        # observation, ahead of the itemised figures.
+        value, reference_id = period_explanations[0]
+        from .current_period_explanation import monitoring_criteria, render
+        section = "\n\nWhat changed in the latest reported period\n" + render(value) + f" [{reference_id}]"
+        criteria = monitoring_criteria(value)
+        if criteria:
+            section += ("\n\nWhat to check in later filings\n"
+                        + "\n".join(f"- {line} [{reference_id}]" for line in criteria)
+                        + "\nThese restate the filing's own historical figures and management's attributions; "
+                          "they are not forecasts, valuation thresholds or investment criteria.")
+        answer = answer[:len(hypothesis)] + section + answer[len(hypothesis):]
+    if going_concern:
+        # The issuer's own going-concern conclusion is stated first, before any figure or sampled excerpt.
+        gc_row = next(row for row in disclosures if row['claim_kind'] == 'issuer_going_concern_disclosure')
+        section = ('\n\nGoing-concern disclosure in the latest periodic filing\n'
+                   + f"{gc_row['claim']} [{going_concern[0]}]")
+        answer = answer[:len(hypothesis)] + section + answer[len(hypothesis):]
     if remaining_disclosures:
         context_heading = ("Official business, competition and sampled risk context"
                            if counts['issuer_competition_description'] else
                            "Official business and sampled risk context")
         if counts['issuer_order_backlog_context']:
             context_heading += ' with historical order context'
+        # The per-excerpt producer caveats are stated once in the closing note;
+        # structured rows keep each claim's full text.
         answer += "\n\n" + context_heading + "\n" + "\n\n".join(
-            f"{row['claim']} [{row['reference_id']}]" for row in remaining_disclosures)
-        answer += ("\nThese short excerpts are partial context, not a complete business model or a ranking "
-                   "of the most material risks. Disclosed possibilities do not establish occurrence, "
-                   "probability or a quantified effect on the financial case.")
+            f"{row['claim'].removesuffix(ISSUER_RISK_CAVEAT).removesuffix(ISSUER_DESCRIPTION_CAVEAT)} "
+            f"[{row['reference_id']}]" for row in remaining_disclosures)
+        answer += ("\nThese short excerpts are issuer statements and partial context, not a complete business "
+                   "model or a ranking of the most material risks, and not independent assessments. Competitive "
+                   "advantage and future performance remain unverified; disclosed possibilities do not establish "
+                   "occurrence, probability or a quantified effect on the financial case.")
+        if not counts['issuer_disclosed_risk']:
+            answer += ("\nNo company-specific risk disclosure met the selection rules for this answer; "
+                       "material risks remain unverified.")
     if risk_interpretations:
         answer += '\n\nConditional risk monitoring\n' + '\n\n'.join(
             f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}"
@@ -536,4 +763,5 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     return {"answer": answer, "claims": rows, "selected_items": selected,
             "inferences": interpretations, "unanswered_parts": unanswered,
             "business_context_coverage": business_coverage,
-            "common_reporting_period": len(periods) == 1}
+            "common_reporting_period": len(periods) == 1,
+            "not_applicable": list(SECTOR_NOT_APPLICABLE.get(sector, ()))}

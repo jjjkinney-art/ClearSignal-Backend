@@ -68,9 +68,10 @@ def segment_persistence_case(row):
             f"while {' and '.join(negative)} reported operating losses. "
             "The case therefore depends on whether the profitable segment can sustain its "
             "reported contribution and whether the loss-making segments improve or continue "
-            "to offset it. Subsequent comparable segment results that show weakening profit "
-            "alongside persistent losses would weaken this case; sustained profit and narrowing "
-            "losses would support it. These are conditional tests, not forecasts. The filing's "
+            "to offset it. Segment results for a later period of the same length, under the same "
+            "segment definitions, that show weakening profit alongside persistent losses would "
+            "weaken this case; sustained profit and narrowing losses would support it. These are "
+            "conditional tests, not forecasts or investment thresholds. The filing's "
             "cost allocations apply; reported segment profit is not standalone earning power "
             f"or consolidated cash generation. [{row['reference_id']}]")
 

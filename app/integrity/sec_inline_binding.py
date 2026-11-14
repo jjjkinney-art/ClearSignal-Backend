@@ -5,10 +5,10 @@ import re
 from urllib.parse import urlsplit
 
 from .provenance import ClaimDocumentReference
-from ..providers.sec_inline_facts import validated_observation
+from ..providers.sec_inline_facts import _currency_ok, validated_observation
 
 
-def inline_document_reference(record, *, expected_cik):
+def inline_document_reference(record, *, expected_cik, taxonomies=('us-gaap',), currencies=('USD',)):
     proof = record.inline_binding
     try:
         parsed = urlsplit(record.filing_url)
@@ -21,12 +21,13 @@ def inline_document_reference(record, *, expected_cik):
                 or proof['filed'] != record.filed or proof['form'] != record.form
                 or proof['accession'] != record.accession
                 or not re.fullmatch(r'[0-9a-f]{64}', proof['content_hash'])
-                or record.taxonomy != 'us-gaap' or record.unit != 'USD'
+                or record.taxonomy not in taxonomies or not _currency_ok(record.unit, currencies)
                 or record.label != record.concept
                 or proof['start'] != record.start or proof['end'] != record.end
                 or not date.fromisoformat(record.end) <= date.fromisoformat(record.filed) <= date.today()):
             return None
-        amount = validated_observation(proof, cik=expected_cik, concepts=(record.concept,))
+        amount = validated_observation(proof, cik=expected_cik, concepts=(record.concept,),
+                                       taxonomies=taxonomies, currencies=currencies)
         if amount is None or isinstance(record.value, bool) or Decimal(str(record.value)) != amount:
             return None
         return ClaimDocumentReference(

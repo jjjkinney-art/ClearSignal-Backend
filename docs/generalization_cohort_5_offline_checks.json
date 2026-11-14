@@ -1,0 +1,138 @@
+{
+ "app_tree": "e3ccf3e3de9b8d1e5c95e1cbb455582b1f244888",
+ "backend_commit": "59efed3ec71e51a79fe8db5e6c109b7371f5ff53",
+ "cases_sha256": "a56e53f7a452fe92ecf7e9d367b57c0e26ffb4bbfeb46df27086766a9111e4f6",
+ "classifier_sha256": "6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "format": "generalization-cohort-5-offline-checks-v1",
+ "frontend_commit": "138d6461a7d6822fd9b27c784a410f55b243a40e",
+ "guard_refusals_during_checks": 0,
+ "identity": [
+  {
+   "case_id": "NWBI:core_thesis",
+   "discovered": "NWBI",
+   "intent": "company_analysis",
+   "issuer": "NWBI",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "NWBI:decision_threshold",
+   "discovered": "NWBI",
+   "intent": "company_analysis",
+   "issuer": "NWBI",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "VBREY:core_thesis",
+   "discovered": "VBREY",
+   "intent": "investing_education",
+   "issuer": "company='' pipeline=general_finance suggests=False ",
+   "route": "returned",
+   "verdict": "no company"
+  },
+  {
+   "case_id": "VBREY:decision_threshold",
+   "discovered": "VBREY",
+   "intent": "company_analysis",
+   "issuer": "VBREY",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "GALT:core_thesis",
+   "discovered": "GALT",
+   "intent": "company_analysis",
+   "issuer": "GALT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "GALT:decision_threshold",
+   "discovered": "GALT",
+   "intent": "company_analysis",
+   "issuer": "GALT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "AUDC:core_thesis",
+   "discovered": "AUDC",
+   "intent": "company_analysis",
+   "issuer": "AUDC",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "AUDC:decision_threshold",
+   "discovered": "AUDC",
+   "intent": "company_analysis",
+   "issuer": "AUDC",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "FORFF:core_thesis",
+   "discovered": "FTS",
+   "intent": "company_analysis",
+   "issuer": "FTS",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "FORFF:decision_threshold",
+   "discovered": "FTS",
+   "intent": "company_analysis",
+   "issuer": "FTS",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "IFCNF:core_thesis",
+   "discovered": "IFHLY",
+   "intent": "investing_education",
+   "issuer": "company='' pipeline=general_finance suggests=False ",
+   "route": "returned",
+   "verdict": "no company"
+  },
+  {
+   "case_id": "IFCNF:decision_threshold",
+   "discovered": "IFHLY",
+   "intent": "company_analysis",
+   "issuer": "IFHLY",
+   "route": "research",
+   "verdict": "correct issuer"
+  }
+ ],
+ "intents": {
+  "AUDC:core_thesis": "company_analysis",
+  "AUDC:decision_threshold": "company_analysis",
+  "FORFF:core_thesis": "company_analysis",
+  "FORFF:decision_threshold": "company_analysis",
+  "GALT:core_thesis": "company_analysis",
+  "GALT:decision_threshold": "company_analysis",
+  "IFCNF:core_thesis": "investing_education",
+  "IFCNF:decision_threshold": "company_analysis",
+  "NWBI:core_thesis": "company_analysis",
+  "NWBI:decision_threshold": "company_analysis",
+  "VBREY:core_thesis": "investing_education",
+  "VBREY:decision_threshold": "company_analysis"
+ },
+ "network_requests": 0,
+ "node": "v24.15.0",
+ "resolver_sha256": "6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542",
+ "source_binding": "ee102739d72ebe94c0f4774fbce4397ba62b138b385f1fd9583afc9582700482",
+ "source_binding_independently_recomputed": true,
+ "source_files": 461,
+ "summary": {
+  "correct_issuer_research_route": 10,
+  "investing_education_cases": [
+   "IFCNF:core_thesis",
+   "VBREY:core_thesis"
+  ],
+  "no_company_general_route": 2
+ },
+ "tree": "31580fb4c5790e3a11dbf14fbd503d69506f7cc0",
+ "validation_tree": "6122186765c7b0cdf0b9c0a131a3ef83ce37e187"
+}

@@ -1,0 +1,51 @@
+{
+ "category": "",
+ "cik": "0002035057",
+ "entityType": "other",
+ "exchanges": [
+  "OTC",
+  "OTC"
+ ],
+ "filings": {
+  "files": [],
+  "recent": {
+   "accessionNumber": [
+    "0001193805-25-000546",
+    "0001193805-24-001068"
+   ],
+   "filingDate": [
+    "2025-04-23",
+    "2024-08-27"
+   ],
+   "form": [
+    "F-6 POS",
+    "F-6EF"
+   ],
+   "isInlineXBRL": [
+    0,
+    0
+   ],
+   "isXBRL": [
+    0,
+    0
+   ],
+   "isXBRLNumeric": [
+    null,
+    null
+   ],
+   "primaryDocument": [
+    "e664431_f6pos-inficon.htm",
+    "e663857_f6ef-inficonholding.htm"
+   ]
+  }
+ },
+ "fiscalYearEnd": "1231",
+ "formerNames": [],
+ "name": "Inficon Holding AG/ADR",
+ "sic": "",
+ "sicDescription": "",
+ "tickers": [
+  "IFHLY",
+  "IFCNF"
+ ]
+}

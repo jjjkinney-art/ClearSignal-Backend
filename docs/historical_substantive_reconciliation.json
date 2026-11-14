@@ -1,0 +1,834 @@
+{
+ "classifier": "validation.ordinary_native_export.answer_content at 9725178",
+ "format": "historical-substantive-reconciliation-v1",
+ "originals_changed": false,
+ "runs": {
+  "run-1": {
+   "cases": [
+    {
+     "application_status": "partial",
+     "case_id": "NPK:core_thesis",
+     "claims": 18,
+     "consistent_with_earlier_report": null,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "NPK:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": null,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "GOOGL:core_thesis",
+     "claims": 6,
+     "consistent_with_earlier_report": null,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "insufficient_claim_evidence",
+     "case_id": "GOOGL:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "insufficient_evidence",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": null,
+     "case_id": "INGR:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "no_answer",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "halted"
+    },
+    {
+     "application_status": null,
+     "case_id": "INGR:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "NNBR:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "NNBR:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "AMZN:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "AMZN:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "MAN:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "MAN:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    }
+   ],
+   "content_counts": {
+    "insufficient_evidence": 1,
+    "no_answer": 1,
+    "not_run": 7,
+    "source_bound_claims": 3
+   },
+   "inconsistent_with_earlier_report": [],
+   "operationally_answered_label": 4,
+   "packet_outcome_counts": null,
+   "packet_sha256": "2950c138bb201b1b359ba3bf39b77c4f1e0c16a30690f9d2bbeb95f0ac017e18",
+   "report": "no per-case substantive count reported; docs/ORDINARY_RUN2_PLAN_20261030.md records the halt and the 7 cases not answered"
+  },
+  "run-2": {
+   "cases": [
+    {
+     "application_status": "partial",
+     "case_id": "NPK:core_thesis",
+     "claims": 19,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "NPK:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "GOOGL:core_thesis",
+     "claims": 8,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "GOOGL:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "INGR:core_thesis",
+     "claims": 8,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "INGR:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "NNBR:core_thesis",
+     "claims": 9,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "NNBR:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "AMZN:core_thesis",
+     "claims": 8,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "AMZN:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "MAN:core_thesis",
+     "claims": 8,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "MAN:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "partial, source-bound",
+     "packet_status": "answered_unadjudicated"
+    }
+   ],
+   "content_counts": {
+    "source_bound_claims": 12
+   },
+   "inconsistent_with_earlier_report": [],
+   "operationally_answered_label": 12,
+   "packet_outcome_counts": {
+    "degraded_answer": 0,
+    "full_answer": 12,
+    "operational_failure": 0,
+    "unanswered": 0
+   },
+   "packet_sha256": "2fab178952355c01ae39cf46d85a66800a1b3322caa6ebee8f77a212e068ed51",
+   "report": "offline-review/RUN2_ASSESSMENT_20261030.md: \"Full answer\" is operational completeness only; every source answer is partial"
+  },
+  "run-3": {
+   "cases": [
+    {
+     "application_status": null,
+     "case_id": "SCCO:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "identity_unresolved",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "identity_unresolved"
+    },
+    {
+     "application_status": null,
+     "case_id": "SCCO:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "identity_unresolved",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "identity_unresolved"
+    },
+    {
+     "application_status": null,
+     "case_id": "BX:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "no_answer",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "halted"
+    },
+    {
+     "application_status": null,
+     "case_id": "BX:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "LNC:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "LNC:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "LVS:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "LVS:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "USCB:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "USCB:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "BWMX:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "BWMX:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": null,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": null,
+     "packet_status": "not_run_after_halt"
+    }
+   ],
+   "content_counts": {
+    "identity_unresolved": 2,
+    "no_answer": 1,
+    "not_run": 9
+   },
+   "inconsistent_with_earlier_report": [],
+   "operationally_answered_label": 0,
+   "packet_outcome_counts": {
+    "degraded_answer": 0,
+    "full_answer": 0,
+    "operational_failure": 10,
+    "unanswered": 2
+   },
+   "packet_sha256": "486cc4c4b04a27fa600184ffb9e1e471049c2fd6005d2bcc33869052a9171585",
+   "report": "no answered cases; no substantive count needed"
+  },
+  "run-4": {
+   "cases": [
+    {
+     "application_status": "partial",
+     "case_id": "SCCO:core_thesis",
+     "claims": 7,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "SCCO:decision_threshold",
+     "claims": 3,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "BX:core_thesis",
+     "claims": 8,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_degraded_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "BX:decision_threshold",
+     "claims": 3,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "LNC:core_thesis",
+     "claims": 9,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "LNC:decision_threshold",
+     "claims": 3,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "LVS:core_thesis",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "LVS:decision_threshold",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "USCB:core_thesis",
+     "claims": 4,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "verified answer",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "insufficient_claim_evidence",
+     "case_id": "USCB:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "insufficient_evidence",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "honest refusal",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "insufficient_claim_evidence",
+     "case_id": "BWMX:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "insufficient_evidence",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "honest refusal",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "insufficient_claim_evidence",
+     "case_id": "BWMX:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "insufficient_evidence",
+     "corrected_status": "answered_unadjudicated",
+     "earlier_report": "honest refusal",
+     "packet_status": "answered_unadjudicated"
+    }
+   ],
+   "content_counts": {
+    "insufficient_evidence": 3,
+    "source_bound_claims": 9
+   },
+   "inconsistent_with_earlier_report": [],
+   "operationally_answered_label": 12,
+   "packet_outcome_counts": {
+    "degraded_answer": 0,
+    "full_answer": 12,
+    "operational_failure": 0,
+    "unanswered": 0
+   },
+   "packet_sha256": "4a35ba79e7194762465260d6043253966524e7211836aa3151b669be50177caa",
+   "report": "offline-review/RUN4_ASSESSMENT_20261103.md: 9 verified answers, 3 honest refusals; BX:core_thesis corrected to degraded"
+  },
+  "run-5": {
+   "cases": [
+    {
+     "application_status": null,
+     "case_id": "SMFG:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "identity_unresolved",
+     "corrected_status": null,
+     "earlier_report": "no company",
+     "packet_status": "identity_unresolved"
+    },
+    {
+     "application_status": "unresolved_company_identity",
+     "case_id": "SMFG:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "identity_unresolved",
+     "corrected_status": null,
+     "earlier_report": "no company",
+     "packet_status": "identity_unresolved"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "BNY:decision_threshold",
+     "claims": 6,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "substantive",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": null,
+     "case_id": "OWL:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "identity_unresolved",
+     "corrected_status": null,
+     "earlier_report": "no company",
+     "packet_status": "identity_unresolved"
+    },
+    {
+     "application_status": "unresolved_company_identity",
+     "case_id": "OWL:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "identity_unresolved",
+     "corrected_status": null,
+     "earlier_report": "no company",
+     "packet_status": "identity_unresolved"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "TWST:core_thesis",
+     "claims": 7,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "substantive",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "insufficient_claim_evidence",
+     "case_id": "TWST:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "insufficient_evidence",
+     "corrected_status": null,
+     "earlier_report": "empty",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "AGEN:core_thesis",
+     "claims": 6,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "substantive",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "AGEN:decision_threshold",
+     "claims": 3,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "substantive",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "partial",
+     "case_id": "FSTR:core_thesis",
+     "claims": 6,
+     "consistent_with_earlier_report": true,
+     "content": "source_bound_claims",
+     "corrected_status": null,
+     "earlier_report": "substantive",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": "insufficient_claim_evidence",
+     "case_id": "FSTR:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "insufficient_evidence",
+     "corrected_status": null,
+     "earlier_report": "empty",
+     "packet_status": "answered_unadjudicated"
+    },
+    {
+     "application_status": null,
+     "case_id": "BNY:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "no_answer",
+     "corrected_status": null,
+     "earlier_report": "halted",
+     "packet_status": "halted"
+    }
+   ],
+   "content_counts": {
+    "identity_unresolved": 4,
+    "insufficient_evidence": 2,
+    "no_answer": 1,
+    "source_bound_claims": 5
+   },
+   "inconsistent_with_earlier_report": [],
+   "operationally_answered_label": 7,
+   "packet_outcome_counts": {
+    "degraded_answer": 0,
+    "full_answer": 7,
+    "operational_failure": 1,
+    "unanswered": 4
+   },
+   "packet_sha256": "051a5c84524834e6707ce73c972959756271157358154ef194ffd5d6a0850aa7",
+   "report": "offline-review/RUN5_ASSESSMENT_20261105.md: 7 operationally full, 5 substantive, 2 empty, 4 no company, 1 halted"
+  },
+  "run-6": {
+   "cases": [
+    {
+     "application_status": null,
+     "case_id": "BP:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "no_answer",
+     "corrected_status": null,
+     "earlier_report": "halted",
+     "packet_status": "halted"
+    },
+    {
+     "application_status": null,
+     "case_id": "BP:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "MNST:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "MNST:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "CRDO:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "CRDO:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "LLYVA:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "LLYVA:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "DGXX:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "DGXX:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "VIRC:core_thesis",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    },
+    {
+     "application_status": null,
+     "case_id": "VIRC:decision_threshold",
+     "claims": 0,
+     "consistent_with_earlier_report": true,
+     "content": "not_run",
+     "corrected_status": null,
+     "earlier_report": "not run",
+     "packet_status": "not_run_after_halt"
+    }
+   ],
+   "content_counts": {
+    "no_answer": 1,
+    "not_run": 11
+   },
+   "inconsistent_with_earlier_report": [],
+   "operationally_answered_label": 0,
+   "packet_outcome_counts": {
+    "degraded_answer": 0,
+    "full_answer": 0,
+    "operational_failure": 12,
+    "unanswered": 0
+   },
+   "packet_sha256": "51c6c9a6010291952dbe98fc7df8140b0e11f714761c4234efd5927da8ef04a8",
+   "report": "offline-review/RUN6_RESULTS_20261107.md, as corrected: 1 halted, 11 not run, no answers"
+  }
+ }
+}
