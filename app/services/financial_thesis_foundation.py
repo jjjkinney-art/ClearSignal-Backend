@@ -307,8 +307,12 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
 
 
 def build_financial_foundation(ticker: str, items: list, references: list[dict] | None,
-                               *, expected_cik: str | None = None) -> dict | None:
-    """Return a financial foundation only after identity, fact and citation checks."""
+                               *, expected_cik: str | None = None, allow_lone: bool = False,
+                               withheld: list | None = None) -> dict | None:
+    """Return a financial foundation only after identity, fact and citation checks.
+
+    ``allow_lone`` (thesis answers with the lone-comparison flag on) lets one verified comparison stand, with the
+    reason each other core measure was not compared taken from ``withheld``; the default needs two, as before."""
     candidates = [item for item in items if getattr(item, "verified_claims", [])]
     if not candidates:
         return None
@@ -363,7 +367,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         selected.append(item)
         core_comparisons[name] = (item, reference_id)
     # One isolated observation does not form a multi-dimensional financial case.
-    if len(rows) < 2:
+    if len(rows) < (1 if allow_lone else 2):
         return None
     if len({item.verified_claims[0]["unit"] for item in selected}) != 1:
         # Independently valid comparisons in different currencies do not
@@ -494,6 +498,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer = hypothesis
     answer += "\n\nReported evidence\n" + "\n\n".join(
         f"{index}. {row['claim']} [{row['reference_id']}]" for index, row in enumerate(rows, start=1))
+    if allow_lone and len(core_comparisons) == 1:
+        from .lone_comparison import section as lone_section
+        core_missing = [name for name in CORE_METRICS if name in missing]
+        answer += lone_section(next(iter(core_comparisons)), core_missing, withheld)
     if supplemental:
         answer += "\n\n" + (BANK_PRETAX_LIMITATION if sector == "bank" else PRETAX_LIMITATION)
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
