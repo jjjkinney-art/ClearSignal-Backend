@@ -203,6 +203,27 @@ class Settings(BaseSettings):
     # Additional filing retrieval for broad monitoring questions. Opt-in only;
     # existing frozen pilots have no document slots for this path.
     decision_monitoring_filing_fallback_enabled: bool = False
+    # Threshold answers read the latest filing, within the same request budget:
+    # one submissions response per request, reused by its evidence stages, a
+    # shorter document wait, and an explicit notice when evidence is missing.
+    # Default off; existing pilot contracts and production behaviour are unchanged.
+    threshold_filing_explanations_enabled: bool = False
+    # Adds source_answer.evidence_outcomes (one record per evidence need: available, unavailable,
+    # unsupported, failed or not attempted) and a "What remains unknown" block. Adds no source, claim
+    # or request. Default off: with it off the field is absent and every answer is unchanged.
+    evidence_outcomes_enabled: bool = False
+    # Reads company facts reported under the IFRS taxonomy or in a currency other than USD/EUR, as reported:
+    # annual comparisons only, in the filing's own currency, with no conversion. Adds taxonomy, currency and
+    # reporting-basis metadata to the claims it produces. Default off: with it off nothing changes.
+    as_reported_financials_enabled: bool = False
+    # With the flag above also on: reads annual comparisons and management's stated explanations from a 20-F the
+    # request has already fetched for its business and risk text (that one fetch also keeps the filing's inline
+    # XBRL facts and results discussion). Makes no additional request. Default off.
+    annual_filing_facts_enabled: bool = False
+    # Quotes management's own present-tense liquidity sufficiency statement from the latest periodic filing the
+    # metrics stage already reads (no additional request), with its adjacent sentences. Default off: with it off
+    # nothing changes.
+    liquidity_statements_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False

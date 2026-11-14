@@ -1,0 +1,86 @@
+[
+ {
+  "case_id": "NWBI:core_thesis",
+  "issuer_id": "NWBI",
+  "expected_cik": "0001471265",
+  "question": "What is the investment thesis for Northwest Bancshares, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "NWBI:decision_threshold",
+  "issuer_id": "NWBI",
+  "expected_cik": "0001471265",
+  "question": "Which valuation and operating assumptions would make Northwest Bancshares, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "VBREY:core_thesis",
+  "issuer_id": "VBREY",
+  "expected_cik": "0001000377",
+  "question": "What is the investment thesis for Vibra Energia S.A./ADR, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "VBREY:decision_threshold",
+  "issuer_id": "VBREY",
+  "expected_cik": "0001000377",
+  "question": "Which valuation and operating assumptions would make Vibra Energia S.A./ADR attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "GALT:core_thesis",
+  "issuer_id": "GALT",
+  "expected_cik": "0001133416",
+  "question": "What is the investment thesis for GALECTIN THERAPEUTICS INC, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "GALT:decision_threshold",
+  "issuer_id": "GALT",
+  "expected_cik": "0001133416",
+  "question": "Which valuation and operating assumptions would make GALECTIN THERAPEUTICS INC attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "AUDC:core_thesis",
+  "issuer_id": "AUDC",
+  "expected_cik": "0001086434",
+  "question": "What is the investment thesis for AUDIOCODES LTD, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "AUDC:decision_threshold",
+  "issuer_id": "AUDC",
+  "expected_cik": "0001086434",
+  "question": "Which valuation and operating assumptions would make AUDIOCODES LTD attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "FORFF:core_thesis",
+  "issuer_id": "FORFF",
+  "expected_cik": "0001666175",
+  "question": "What is the investment thesis for Fortis Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "FORFF:decision_threshold",
+  "issuer_id": "FORFF",
+  "expected_cik": "0001666175",
+  "question": "Which valuation and operating assumptions would make Fortis Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "IFCNF:core_thesis",
+  "issuer_id": "IFCNF",
+  "expected_cik": "0002035057",
+  "question": "What is the investment thesis for Inficon Holding AG/ADR, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "IFCNF:decision_threshold",
+  "issuer_id": "IFCNF",
+  "expected_cik": "0002035057",
+  "question": "Which valuation and operating assumptions would make Inficon Holding AG/ADR attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ }
+]

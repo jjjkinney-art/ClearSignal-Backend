@@ -1,0 +1,130 @@
+{
+ "app_tree": "4940dc839ebbb3aedbcfac865df37440455f0de7",
+ "backend_commit": "5410eebcd24800943be7425ddc4401f7f7a817a5",
+ "cases_sha256": "d64b14cde73d82c827f858be4a5c00d9a4560e70f7358fac1460bc88c545b384",
+ "classifier_sha256": "6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "format": "generalization-cohort-4-offline-checks-v1",
+ "frontend_commit": "138d6461a7d6822fd9b27c784a410f55b243a40e",
+ "guard_refusals_during_checks": 0,
+ "identity": [
+  {
+   "case_id": "CNK:core_thesis",
+   "discovered": "CNK",
+   "intent": "company_analysis",
+   "issuer": "CNK",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "CNK:decision_threshold",
+   "discovered": "CNK",
+   "intent": "company_analysis",
+   "issuer": "CNK",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "COHU:core_thesis",
+   "discovered": "COHU",
+   "intent": "company_analysis",
+   "issuer": "COHU",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "COHU:decision_threshold",
+   "discovered": "COHU",
+   "intent": "company_analysis",
+   "issuer": "COHU",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "TRIP:core_thesis",
+   "discovered": "TRIP",
+   "intent": "company_analysis",
+   "issuer": "TRIP",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "TRIP:decision_threshold",
+   "discovered": "TRIP",
+   "intent": "company_analysis",
+   "issuer": "TRIP",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "LXRX:core_thesis",
+   "discovered": "LXRX",
+   "intent": "company_analysis",
+   "issuer": "LXRX",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "LXRX:decision_threshold",
+   "discovered": "LXRX",
+   "intent": "company_analysis",
+   "issuer": "LXRX",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MRX:core_thesis",
+   "discovered": "MRX",
+   "intent": "company_analysis",
+   "issuer": "MRX",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MRX:decision_threshold",
+   "discovered": "MRX",
+   "intent": "company_analysis",
+   "issuer": "MRX",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "DCGO:core_thesis",
+   "discovered": "DCGO",
+   "intent": "company_analysis",
+   "issuer": "DCGO",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "DCGO:decision_threshold",
+   "discovered": "DCGO",
+   "intent": "company_analysis",
+   "issuer": "DCGO",
+   "route": "research",
+   "verdict": "correct issuer"
+  }
+ ],
+ "intents": {
+  "CNK:core_thesis": "company_analysis",
+  "CNK:decision_threshold": "company_analysis",
+  "COHU:core_thesis": "company_analysis",
+  "COHU:decision_threshold": "company_analysis",
+  "DCGO:core_thesis": "company_analysis",
+  "DCGO:decision_threshold": "company_analysis",
+  "LXRX:core_thesis": "company_analysis",
+  "LXRX:decision_threshold": "company_analysis",
+  "MRX:core_thesis": "company_analysis",
+  "MRX:decision_threshold": "company_analysis",
+  "TRIP:core_thesis": "company_analysis",
+  "TRIP:decision_threshold": "company_analysis"
+ },
+ "network_requests": 0,
+ "node": "v24.15.0",
+ "resolver_sha256": "6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542",
+ "source_binding": "d5806966f363ce5166fa2eccc3aaaf09f19405a1a4f5405d62c2dc94bb262cc8",
+ "source_binding_independently_recomputed": true,
+ "source_files": 460,
+ "tree": "78cf8a7831cd6c8e317671b111bfbb8396c5b24e",
+ "validation_tree": "c626312545068538fe39c64a0d71c8df9e70d94a"
+}

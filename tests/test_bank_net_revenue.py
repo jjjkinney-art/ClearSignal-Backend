@@ -159,3 +159,35 @@ def test_net_interest_cash_context_survives_source_gate_without_conviction(monke
     assert result['inferences'][-1]['signal'] == 'context_only'
     assert 'Counter-evidence' not in thesis.direct_answer
     assert thesis.confidence_score == 0 and thesis.directional_stance == ''
+
+
+def _bank_answer(monkeypatch, sic):
+    from app.services.providers import sec_provider
+    monkeypatch.setattr('app.services.providers.sec_provider._load_ticker_cik_map', lambda: {'AAPL': CIK})
+    monkeypatch.setattr(sec_provider, '_issuer_sic', {} if sic is None else {str(CIK).zfill(10): sic})
+    cash = evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow')
+    material = merge_latest_filing_metrics([evidence('Revenues', 'revenue'), cash], [bank_filing()], ticker='AAPL')
+    material = material + [_filing()]
+    refs = [reference(x, f'E{i}') for i, x in enumerate(material, 1)]
+    thesis = InvestmentThesis(ticker='AAPL', company_name='Synthetic bank')
+    return apply_source_answer_gate(thesis, 'What is the investment thesis for AAPL? Cite material claims.',
+                                    material, references=refs), thesis
+
+
+def test_a_bank_is_not_told_it_lacks_an_operating_income_line(monkeypatch):
+    from app.services.financial_thesis_foundation import SECTOR_GAPS
+    result, thesis = _bank_answer(monkeypatch, '6022')
+    assert 'operating income' not in result['unanswered_parts']
+    assert 'revenue' not in result['unanswered_parts']
+    assert SECTOR_GAPS['bank'][0] in result['unanswered_parts']
+    assert 'Operating income remains unverified' not in thesis.direct_answer
+
+
+def test_an_unknown_business_type_is_an_explicit_gap_not_silence(monkeypatch):
+    from app.services.financial_thesis_foundation import SECTOR_UNKNOWN_GAP
+    result, _ = _bank_answer(monkeypatch, None)
+    assert SECTOR_UNKNOWN_GAP in result['unanswered_parts']
+    # A known industry code outside the measured types is not a gap.
+    result, _ = _bank_answer(monkeypatch, '3330')
+    assert SECTOR_UNKNOWN_GAP not in result['unanswered_parts']
+    assert 'operating income' in result['unanswered_parts']

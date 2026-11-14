@@ -1,0 +1,76 @@
+{
+ "seed": "clearsignal-generalization-5:",
+ "buckets": [
+  [
+   "mid",
+   1001,
+   2500
+  ],
+  [
+   "small",
+   2501,
+   5000
+  ],
+  [
+   "micro",
+   5001,
+   9000
+  ]
+ ],
+ "per_bucket": 2,
+ "code_commit": "59efed3ec71e51a79fe8db5e6c109b7371f5ff53",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "directory_rows": 10409,
+ "excluded_prior_cohort_or_retained": 30,
+ "excluded_code_mentions": 780,
+ "cohort": [
+  {
+   "bucket": "mid",
+   "position": 2018,
+   "ticker": "NWBI",
+   "cik": 1471265,
+   "sec_name": "Northwest Bancshares, Inc.",
+   "rank": "002c429f5a82c2f94a1445835a582a363b6e7b11dffeb5c134e405d1dfd1a4f0"
+  },
+  {
+   "bucket": "mid",
+   "position": 1241,
+   "ticker": "VBREY",
+   "cik": 1000377,
+   "sec_name": "Vibra Energia S.A./ADR",
+   "rank": "004ac7dfa56f10625c86599edf6f809a2efdd6ca7ae491a6d3811251eb6ae0c7"
+  },
+  {
+   "bucket": "small",
+   "position": 3576,
+   "ticker": "GALT",
+   "cik": 1133416,
+   "sec_name": "GALECTIN THERAPEUTICS INC",
+   "rank": "002ef5f5c9d367c7207195d3ee715a5f46db81adfcc7d5de7d8aeea7cfc186a3"
+  },
+  {
+   "bucket": "small",
+   "position": 3918,
+   "ticker": "AUDC",
+   "cik": 1086434,
+   "sec_name": "AUDIOCODES LTD",
+   "rank": "00d8ab41508b0ccde08ee3a13e6d75982104dce8d25c2944e8b1498bb6764bdd"
+  },
+  {
+   "bucket": "micro",
+   "position": 8931,
+   "ticker": "FORFF",
+   "cik": 1666175,
+   "sec_name": "Fortis Inc.",
+   "rank": "000015f0063cc5a2ef2224ede8dab486e9c640134b901be548af407d4ffaf2c1"
+  },
+  {
+   "bucket": "micro",
+   "position": 7785,
+   "ticker": "IFCNF",
+   "cik": 2035057,
+   "sec_name": "Inficon Holding AG/ADR",
+   "rank": "00296ea2f007755ab9fd3189098bb698b17a788c884aa3c2b3d49a386954cc7d"
+  }
+ ]
+}

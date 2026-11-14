@@ -1,0 +1,131 @@
+{
+ "app_tree": "e3ccf3e3de9b8d1e5c95e1cbb455582b1f244888",
+ "backend_commit_checked": "59efed3ec71e51a79fe8db5e6c109b7371f5ff53",
+ "cases_sha256": "a56e53f7a452fe92ecf7e9d367b57c0e26ffb4bbfeb46df27086766a9111e4f6",
+ "classifier_sha256": "9f8b1e87fc9f9353bc2c53d9ee0768596b9d6fb54d100074d6381e5540dd340a",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "format": "generalization-cohort-5-offline-checks-deployed-v1",
+ "frontend_commit": "77c33bbbb0c530e01f74b0d51502fabdf6d1ce12",
+ "frontend_pr": "jjjkinney-art/Ai-Intelligence-interface#91 (squash-merged; reviewed commit a2e768ce5990bc94ee840e6b07a069097302e09b, identical tree)",
+ "frontend_tree": "e3a85ea7641b7b46ae7c6003d855107bfb5c694d",
+ "guard_refusals_during_checks": 0,
+ "identity": [
+  {
+   "case_id": "NWBI:core_thesis",
+   "discovered": "NWBI",
+   "intent": "company_analysis",
+   "issuer": "NWBI",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "NWBI:decision_threshold",
+   "discovered": "NWBI",
+   "intent": "company_analysis",
+   "issuer": "NWBI",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "VBREY:core_thesis",
+   "discovered": "VBREY",
+   "intent": "company_analysis",
+   "issuer": "VBREY",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "VBREY:decision_threshold",
+   "discovered": "VBREY",
+   "intent": "company_analysis",
+   "issuer": "VBREY",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "GALT:core_thesis",
+   "discovered": "GALT",
+   "intent": "company_analysis",
+   "issuer": "GALT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "GALT:decision_threshold",
+   "discovered": "GALT",
+   "intent": "company_analysis",
+   "issuer": "GALT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "AUDC:core_thesis",
+   "discovered": "AUDC",
+   "intent": "company_analysis",
+   "issuer": "AUDC",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "AUDC:decision_threshold",
+   "discovered": "AUDC",
+   "intent": "company_analysis",
+   "issuer": "AUDC",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "FORFF:core_thesis",
+   "discovered": "FTS",
+   "intent": "company_analysis",
+   "issuer": "FTS",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "FORFF:decision_threshold",
+   "discovered": "FTS",
+   "intent": "company_analysis",
+   "issuer": "FTS",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "IFCNF:core_thesis",
+   "discovered": "IFHLY",
+   "intent": "company_analysis",
+   "issuer": "IFHLY",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "IFCNF:decision_threshold",
+   "discovered": "IFHLY",
+   "intent": "company_analysis",
+   "issuer": "IFHLY",
+   "route": "research",
+   "verdict": "correct issuer"
+  }
+ ],
+ "intents": {
+  "AUDC:core_thesis": "company_analysis",
+  "AUDC:decision_threshold": "company_analysis",
+  "FORFF:core_thesis": "company_analysis",
+  "FORFF:decision_threshold": "company_analysis",
+  "GALT:core_thesis": "company_analysis",
+  "GALT:decision_threshold": "company_analysis",
+  "IFCNF:core_thesis": "company_analysis",
+  "IFCNF:decision_threshold": "company_analysis",
+  "NWBI:core_thesis": "company_analysis",
+  "NWBI:decision_threshold": "company_analysis",
+  "VBREY:core_thesis": "company_analysis",
+  "VBREY:decision_threshold": "company_analysis"
+ },
+ "network_requests": 0,
+ "node": "v24.15.0",
+ "note": "Classification and identity with the classifier and resolver exported from the DEPLOYED frontend commit. docs/generalization_cohort_5_offline_checks.json (the original 138d646 result, 10 of 12) and ..._frontend_amendment.json are unchanged and preserved.",
+ "resolver_sha256": "6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542",
+ "summary": {
+  "company_analysis_research_correct_issuer": 12
+ }
+}

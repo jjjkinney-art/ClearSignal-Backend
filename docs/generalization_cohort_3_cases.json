@@ -1,0 +1,86 @@
+[
+  {
+    "case_id": "BP:core_thesis",
+    "issuer_id": "BP",
+    "expected_cik": "0000313807",
+    "question": "What is the investment thesis for BP PLC, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "BP:decision_threshold",
+    "issuer_id": "BP",
+    "expected_cik": "0000313807",
+    "question": "Which valuation and operating assumptions would make BP PLC attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "MNST:core_thesis",
+    "issuer_id": "MNST",
+    "expected_cik": "0000865752",
+    "question": "What is the investment thesis for Monster Beverage Corp, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "MNST:decision_threshold",
+    "issuer_id": "MNST",
+    "expected_cik": "0000865752",
+    "question": "Which valuation and operating assumptions would make Monster Beverage Corp attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "CRDO:core_thesis",
+    "issuer_id": "CRDO",
+    "expected_cik": "0001807794",
+    "question": "What is the investment thesis for Credo Technology Group Holding Ltd, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "CRDO:decision_threshold",
+    "issuer_id": "CRDO",
+    "expected_cik": "0001807794",
+    "question": "Which valuation and operating assumptions would make Credo Technology Group Holding Ltd attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "LLYVA:core_thesis",
+    "issuer_id": "LLYVA",
+    "expected_cik": "0002078416",
+    "question": "What is the investment thesis for Liberty Live Holdings, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "LLYVA:decision_threshold",
+    "issuer_id": "LLYVA",
+    "expected_cik": "0002078416",
+    "question": "Which valuation and operating assumptions would make Liberty Live Holdings, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "DGXX:core_thesis",
+    "issuer_id": "DGXX",
+    "expected_cik": "0001854368",
+    "question": "What is the investment thesis for Digi Power X Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "DGXX:decision_threshold",
+    "issuer_id": "DGXX",
+    "expected_cik": "0001854368",
+    "question": "Which valuation and operating assumptions would make Digi Power X Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "VIRC:core_thesis",
+    "issuer_id": "VIRC",
+    "expected_cik": "0000751365",
+    "question": "What is the investment thesis for VIRCO MFG CORPORATION, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "VIRC:decision_threshold",
+    "issuer_id": "VIRC",
+    "expected_cik": "0000751365",
+    "question": "Which valuation and operating assumptions would make VIRCO MFG CORPORATION attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  }
+]

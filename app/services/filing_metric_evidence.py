@@ -15,6 +15,8 @@ from .providers import sec_provider
 from .public_document_ingestion import fetch_public_document
 from .thesis_disclosures import _business_issuer_url, requests_thesis_disclosures
 
+from .current_period_explanation import EXPLANATION_CONCEPTS, extract_current_period_explanation
+
 FILING_METRICS = {**CORE_METRICS, **SUPPLEMENTARY_METRICS}
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,8 @@ def _monitoring_filing_request(question):
     """Separate rollout switch: existing frozen monitoring quotas stay intact."""
     from .source_answer import is_decision_monitoring_request
     return (getattr(settings, 'decision_monitoring_inputs_enabled', False) is True
-            and getattr(settings, 'decision_monitoring_filing_fallback_enabled', False) is True
+            and (getattr(settings, 'decision_monitoring_filing_fallback_enabled', False) is True
+                 or getattr(settings, 'threshold_filing_explanations_enabled', False) is True)
             and is_decision_monitoring_request(question))
 
 
@@ -116,17 +119,31 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         if not valid:
             return []
         filing = max(valid, key=lambda item: (item.reporting_period_end, item.timestamp))
+        sec_provider.note_filing_selected('filing_metrics', filing.document_type)
         document = fetch_public_document(filing.url, user_agent=settings.sec_user_agent,
             publisher='SEC EDGAR', published_at=filing.timestamp, document_type=filing.document_type,
             source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True,
-            extract_tables=False, inline_fact_cik=cik,
-            inline_fact_concepts=tuple(c for group in FILING_METRICS.values() for c in group))
+            preserve_sec_results=True, extract_tables=False, inline_fact_cik=cik,
+            parse_deadline=sec_provider.filing_parse_deadline(),
+            checkpoint=lambda stage: sec_provider.filing_checkpoint('filing_metrics', stage),
+            inline_fact_concepts=tuple(dict.fromkeys((*(c for group in FILING_METRICS.values() for c in group),
+                                                      *EXPLANATION_CONCEPTS))))
         items = evidence_from_filing(document, filing, ticker=ticker, cik=cik)
+        sec_provider.filing_checkpoint('filing_metrics', 'comparisons_built')
         (logger.info if items else logger.warning)(
             'Latest filing metrics %s: period=%s observations=%d comparisons=%d',
             ticker, filing.reporting_period_end, len(document.inline_xbrl_facts), len(items))
         if requests_thesis_disclosures(ticker, question) or _monitoring_filing_request(question):
-            return items
+            # The same admitted filing may explain its own latest-period changes.
+            from .going_concern_disclosure import extract_going_concern
+            going_concern = extract_going_concern(document, ticker=ticker, cik=cik, period_end=filing.reporting_period_end)
+            from . import liquidity_statement
+            # Management's own sufficiency statement, only when no going-concern conclusion governs (default off).
+            liquidity = ([] if going_concern or not _liquidity_wanted(ticker, question) else
+                         liquidity_statement.extract_liquidity_statement(
+                             document, ticker=ticker, cik=cik, period_end=filing.reporting_period_end))
+            return (items + extract_current_period_explanation(document, items, ticker=ticker, cik=cik)
+                    + going_concern + liquidity)
         from .verified_sec_metric_service import _requested_metrics
         requested = {f'us-gaap:{concept}' for concepts, _, _, _, _ in
                      _requested_metrics(question, include_defaults=False) for concept in concepts}
@@ -135,7 +152,16 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         return [item for item in items if item.verified_claims[0]['metric'] in requested]
     except Exception as exc:
         logger.warning('Latest filing metrics unavailable for %s: %s', ticker, type(exc).__name__)
+        sec_provider.note_filing_read_failure(
+            'filing_metrics', too_large=getattr(exc, 'size_limit_bytes', None) is not None)
         return []
+
+
+def _liquidity_wanted(ticker, question):
+    """Liquidity statements answer thesis questions only; decision-threshold answers are left exactly as they were."""
+    from . import liquidity_statement
+    return bool(liquidity_statement.enabled() and requests_thesis_disclosures(ticker, question)
+                and not _monitoring_filing_request(question))
 
 
 def merge_latest_filing_metrics(company_facts, filing_facts, *, ticker, question=None):

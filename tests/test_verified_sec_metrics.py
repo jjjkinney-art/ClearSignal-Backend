@@ -902,3 +902,12 @@ def test_pretax_fallback_uses_exact_concept_and_one_fetch_then_defers_to_operati
     assert [x.verified_claims[0]["metric"] for x in service.fetch_verified_metric_evidence("AAPL", question=question)] == ["us-gaap:OperatingIncomeLoss"]
     assert len(service.fetch_verified_metric_evidence("AAPL", question="Compare profitability and pretax income")) == 2
     assert service.fetch_verified_metric_evidence("AAPL", question="How has operating cash flow changed?") == []
+
+
+def test_a_real_change_does_not_round_away_in_either_amount():
+    from app.integrity.sec_metric_evidence import _distinct_values
+    assert _distinct_values(1_668_000_000, 1_716_000_000, 'USD') == ('$1.67B', '$1.72B')
+    assert _distinct_values(1_700_400_000, 1_700_100_000, 'USD') == ('$1.7004B', '$1.7001B')
+    # Amounts that already differ, or are truly equal, keep the usual form.
+    assert _distinct_values(2_600_000_000, 2_200_000_000, 'USD') == ('$2.6B', '$2.2B')
+    assert _distinct_values(1_700_000_000, 1_700_000_000, 'USD') == ('$1.7B', '$1.7B')

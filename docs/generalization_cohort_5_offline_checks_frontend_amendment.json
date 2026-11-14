@@ -1,0 +1,140 @@
+{
+ "backend_commit": "59efed3ec71e51a79fe8db5e6c109b7371f5ff53",
+ "candidate_classifier_sha256": "9f8b1e87fc9f9353bc2c53d9ee0768596b9d6fb54d100074d6381e5540dd340a",
+ "candidate_frontend_branch": "fix/adr-suffix-company-names",
+ "candidate_frontend_commit": "a2e768ce5990bc94ee840e6b07a069097302e09b",
+ "candidate_frontend_pr": "jjjkinney-art/Ai-Intelligence-interface#91 (draft, do not merge)",
+ "candidate_resolver_sha256": "6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542",
+ "cases_sha256": "a56e53f7a452fe92ecf7e9d367b57c0e26ffb4bbfeb46df27086766a9111e4f6",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "format": "generalization-cohort-5-offline-checks-frontend-amendment-v1",
+ "guard_refusals_during_checks": 0,
+ "identity": [
+  {
+   "case_id": "NWBI:core_thesis",
+   "discovered": "NWBI",
+   "intent": "company_analysis",
+   "issuer": "NWBI",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "NWBI:decision_threshold",
+   "discovered": "NWBI",
+   "intent": "company_analysis",
+   "issuer": "NWBI",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "VBREY:core_thesis",
+   "discovered": "VBREY",
+   "intent": "company_analysis",
+   "issuer": "VBREY",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "VBREY:decision_threshold",
+   "discovered": "VBREY",
+   "intent": "company_analysis",
+   "issuer": "VBREY",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "GALT:core_thesis",
+   "discovered": "GALT",
+   "intent": "company_analysis",
+   "issuer": "GALT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "GALT:decision_threshold",
+   "discovered": "GALT",
+   "intent": "company_analysis",
+   "issuer": "GALT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "AUDC:core_thesis",
+   "discovered": "AUDC",
+   "intent": "company_analysis",
+   "issuer": "AUDC",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "AUDC:decision_threshold",
+   "discovered": "AUDC",
+   "intent": "company_analysis",
+   "issuer": "AUDC",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "FORFF:core_thesis",
+   "discovered": "FTS",
+   "intent": "company_analysis",
+   "issuer": "FTS",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "FORFF:decision_threshold",
+   "discovered": "FTS",
+   "intent": "company_analysis",
+   "issuer": "FTS",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "IFCNF:core_thesis",
+   "discovered": "IFHLY",
+   "intent": "company_analysis",
+   "issuer": "IFHLY",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "IFCNF:decision_threshold",
+   "discovered": "IFHLY",
+   "intent": "company_analysis",
+   "issuer": "IFHLY",
+   "route": "research",
+   "verdict": "correct issuer"
+  }
+ ],
+ "intents": {
+  "AUDC:core_thesis": "company_analysis",
+  "AUDC:decision_threshold": "company_analysis",
+  "FORFF:core_thesis": "company_analysis",
+  "FORFF:decision_threshold": "company_analysis",
+  "GALT:core_thesis": "company_analysis",
+  "GALT:decision_threshold": "company_analysis",
+  "IFCNF:core_thesis": "company_analysis",
+  "IFCNF:decision_threshold": "company_analysis",
+  "NWBI:core_thesis": "company_analysis",
+  "NWBI:decision_threshold": "company_analysis",
+  "VBREY:core_thesis": "company_analysis",
+  "VBREY:decision_threshold": "company_analysis"
+ },
+ "network_requests": 0,
+ "node": "v24.15.0",
+ "note": "Candidate frontend fix only. Nothing is merged, deployed or re-pinned. docs/generalization_cohort_5_offline_checks.json (the original 10-of-12 result) is unchanged and stands as the pinned-frontend record.",
+ "pinned_classifier_sha256": "6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38",
+ "pinned_frontend_commit": "138d6461a7d6822fd9b27c784a410f55b243a40e",
+ "resolver_unchanged_from_pin": true,
+ "source_binding": "ee102739d72ebe94c0f4774fbce4397ba62b138b385f1fd9583afc9582700482",
+ "source_binding_independently_recomputed": true,
+ "summary": {
+  "company_analysis_research_correct_issuer": 12,
+  "original_pinned_result": "10 of 12 research; VBREY:core_thesis and IFCNF:core_thesis investing_education",
+  "routing_regression_cases": [
+   "VBREY:core_thesis",
+   "IFCNF:core_thesis"
+  ]
+ }
+}

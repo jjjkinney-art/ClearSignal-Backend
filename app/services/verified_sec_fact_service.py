@@ -8,7 +8,7 @@ from datetime import date
 from ..config import settings
 from ..integrity.sec_revenue_claim import REVENUE_CONCEPTS, latest_sec_revenue_claim
 from ..providers.sec_client import get_company_fact_records_for_concepts
-from .providers.sec_provider import _load_ticker_cik_map
+from .providers.sec_provider import _load_ticker_cik_map, facts_not_applicable
 
 _TICKER = re.compile(r"[A-Z]{1,5}(?:\.[A-Z])?\Z")
 
@@ -38,6 +38,8 @@ def fetch_verified_revenue_claim(
         return None
     cik = _load_ticker_cik_map().get(ticker)
     if not cik or not cik.isdigit():
+        return None
+    if facts_not_applicable(cik) is not None:
         return None
     records = get_company_fact_records_for_concepts(
         cik, concepts=REVENUE_CONCEPTS, unit="USD",
