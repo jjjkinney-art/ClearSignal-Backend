@@ -14,6 +14,13 @@ one would be an error. Excluded:
 The statement is quoted with its adjacent sentences, verbatim, so any caveat the filing places next to it
 travels with it and the quote cannot be read as stronger than the filing writes it. No figure is extracted
 and nothing is inferred about solvency, likelihood or adequacy beyond the issuer's own words.
+
+Two narrow guards keep the quote from misleading about dates (open release issue, IRMD, 2026-11-14):
+* a neighbouring sentence that states a money amount is quoted only when it dates every amount to the filing's own
+  period end; a prior-period or undated balance next to the statement is left out (the statement and the neighbour
+  that carries the caveat are kept), so the quote cannot lead with a stale balance under a "period ended" label;
+* a bare page number the page break left at the start of the sentence ("23 We believe ...") is not part of the
+  statement; it stays in the quote only if a kept neighbour precedes it, since the quote is verbatim.
 """
 from datetime import date
 import re
@@ -50,6 +57,23 @@ _PAST = re.compile(r"\b(?:we|management|the company|the registrant|the group)\s+
 _THIRD_PARTY = re.compile(
     r'\b(?:customers?|tenants?|borrowers?|counterpart\w+|suppliers?|licensees?|subsidiar\w+|joint ventures?|'
     r'investees?|affiliates?|vendors?|distributors?|lessees?|portfolio compan\w+)\b(?!\s+and\b)', re.I)
+
+
+_MONEY = re.compile(r"\$\s?\d|\b\d[\d,.]*\s?(?:thousand|million|billion)\b", re.I)
+_MONTHS = ('january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december')
+_DATE = re.compile(r"\b(" + "|".join(_MONTHS) + r")\s+(\d{1,2}),?\s+(\d{4})\b", re.I)
+_PAGE_MARKER = re.compile(r"\d{1,3}\s+(?=[A-Z])")
+
+
+def _dates(text):
+    return {f"{int(y):04d}-{_MONTHS.index(m.lower()) + 1:02d}-{int(d):02d}" for m, d, y in _DATE.findall(text)}
+
+
+def dated_to_period_end(neighbour, period_end):
+    """True when the neighbouring text states no amount, or dates every amount it states to the filing's period end."""
+    if not _MONEY.search(neighbour):
+        return True
+    return _dates(neighbour) == {period_end}
 
 
 def enabled():
@@ -106,18 +130,23 @@ def extract_liquidity_statement(document, *, ticker, cik, period_end):
         return []
     text = document.text
     pairs = list(sentences(text))
-    for index, (offset, sentence) in enumerate(pairs):
+    for index, (offset, raw_sentence) in enumerate(pairs):
+        marker = _PAGE_MARKER.match(raw_sentence)  # "23 We believe ...": the page number is not the issuer's statement
+        sentence = raw_sentence[marker.end():] if marker else raw_sentence
+        statement_at = offset + (marker.end() if marker else 0)
         if classify(sentence) != 'statement':
             continue
         previous = pairs[index - 1] if index else None
         following = pairs[index + 1] if index + 1 < len(pairs) else None
-        start, end = offset, offset + len(sentence)
-        if previous and len(previous[1]) <= MAX_NEIGHBOR_CHARS and not text[previous[0] + len(previous[1]):offset].strip():
+        start, end = statement_at, statement_at + len(sentence)
+        if (previous and len(previous[1]) <= MAX_NEIGHBOR_CHARS and not text[previous[0] + len(previous[1]):offset].strip()
+                and dated_to_period_end(previous[1], period_end)):
             start = previous[0]
-        if following and len(following[1]) <= MAX_NEIGHBOR_CHARS and not text[end:following[0]].strip():
+        if (following and len(following[1]) <= MAX_NEIGHBOR_CHARS and not text[end:following[0]].strip()
+                and dated_to_period_end(following[1], period_end)):
             end = following[0] + len(following[1])
         if end - start > MAX_QUOTE_CHARS:
-            start, end = offset, offset + len(sentence)
+            start, end = statement_at, statement_at + len(sentence)
         quote = text[start:end]
         if _GOING_CONCERN.search(quote):
             continue  # a neighbouring going-concern passage: that rule governs, not this one
@@ -130,7 +159,7 @@ def extract_liquidity_statement(document, *, ticker, cik, period_end):
         except (TypeError, ValueError):
             continue
         value = dict(claim_kind=CLAIM_KIND, ticker=ticker, quote=quote, statement=sentence,
-                     statement_offset=offset - start, start_offset=start, end_offset=end, document_ref=ref,
+                     statement_offset=statement_at - start, start_offset=start, end_offset=end, document_ref=ref,
                      document_type=document.document_type, period_end=period_end)
         return [RetrievedEvidence(
             title=f'{ticker} liquidity statement · {document.published_at}',
@@ -177,7 +206,9 @@ def bound_liquidity_statement(item, *, ticker, cik):
                 or not date.fromisoformat(item.reporting_period_end) <= date.fromisoformat(item.timestamp)
                     <= date.today()
                 or item.summary != _summary(value)
-                or classify(statement) != 'statement'):
+                or classify(statement) != 'statement'
+                or not dated_to_period_end(quote[:offset], item.reporting_period_end)
+                or not dated_to_period_end(quote[offset + len(statement):], item.reporting_period_end)):
             return None
     except (KeyError, TypeError, ValueError, AttributeError):
         return None

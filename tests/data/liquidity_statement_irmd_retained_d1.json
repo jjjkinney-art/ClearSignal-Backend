@@ -1,0 +1,8 @@
+{
+ "IRMD": {
+  "url": "https://www.sec.gov/Archives/edgar/data/1325618/000162828026068576/irmd-20260930.htm",
+  "excerpt": "s balances, cash flow from operations and access to the financial markets. Our principal uses of cash are operating expenses, working capital requirements, capital expenditures and dividend payments. As of September 30, 2026, we had cash and cash equivalents of $63.3 million, stockholders\u2019 equity of $106.5 million, and working capital of $82.5 million. As of December 31, 2025, we had cash and cash equivalents of $51.2 million, stockholders\u2019 equity of $94.6 million, and working capital of $71.0 milli on . 23 We believe that our current cash, and cash generated from operations will be sufficient to meet our ongoing operating requirements for at least the next 12 months and into the foreseeable future. We do not anticipate requiring additional capital; however, if required or desirable, we may seek to obtain a credit facility, raise debt, or issue additional equity in private or public markets. Various economic conditions (including persistent inflationary pressures, elevated or volatile interest rate levels, and the imposition of, expansion of, or changes in tariffs or other trade restrictions) may disrupt capital markets at any time, which could reduce our ability to access capital and negatively affect our liquidity in the future.",
+  "source_sha256": "72dbf96b2f8c1309a600cf6dd196206e55862843713bda9f5d382c58fcf32ffa",
+  "note": "verbatim slice of the retained IRMD 10-Q (period 2026-09-30, filed 2026-10-30) normalized visible text, from 200 characters before the September 30, 2026 balance sentence to the end of the sentence that follows the liquidity statement and its neighbour"
+ }
+}
