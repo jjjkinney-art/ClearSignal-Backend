@@ -11,9 +11,22 @@ from xml.etree import ElementTree as ET
 
 XBRLI = 'http://www.xbrl.org/2003/instance'
 IX = 'http://www.xbrl.org/2013/inlineXBRL'
+XBRLDI = 'http://xbrl.org/2006/xbrldi'
+_SRT = re.compile(r'https?://fasb\.org/srt/20\d{2}(?:-\d{2}-\d{2})?\Z')
 USD = 'http://www.xbrl.org/2003/iso4217'
 _ID = re.compile(r'[A-Za-z_][A-Za-z0-9_.-]{0,199}\Z')
 _GAAP = re.compile(r'https?://(?:fasb\.org|xbrl\.us)/us-gaap/20\d{2}(?:-\d{2}-\d{2})?\Z')
+_IFRS = re.compile(r'https?://xbrl\.ifrs\.org/taxonomy/20\d{2}-\d{2}-\d{2}/ifrs-full\Z')
+_TAXONOMIES = {'us-gaap': _GAAP, 'ifrs-full': _IFRS}
+_CURRENCY = re.compile(r'[A-Z]{3}\Z')
+
+
+def _currency_ok(unit, currencies):
+    return unit in currencies if currencies != '*' else bool(_CURRENCY.fullmatch(unit or ''))
+
+
+def _namespace_ok(namespace, taxonomies):
+    return any(_TAXONOMIES[name].fullmatch(namespace) for name in taxonomies)
 _TRANSFORMS = {
     'http://www.xbrl.org/inlineXBRL/transformation/2011-07-31': {'numcommadot'},
     'http://www.xbrl.org/inlineXBRL/transformation/2015-02-26': {'numdotdecimal'},
@@ -22,11 +35,15 @@ _TRANSFORMS = {
 }
 
 
-def validated_observation(value, *, cik, concepts):
-    """Recheck the producer's source observation before binding or rendering."""
+def validated_observation(value, *, cik, concepts, taxonomies=('us-gaap',), currencies=('USD',)):
+    """Recheck the producer's source observation before binding or rendering.
+
+    ``taxonomies`` and ``currencies`` default to the US-GAAP/USD behaviour; a caller that opts in (the annual
+    filing as-reported slice) may also admit ifrs-full facts and other ISO currency units, kept as reported.
+    """
     try:
-        if (not isinstance(value, dict) or not _GAAP.fullmatch(value['concept_namespace'])
-                or value['concept'] not in concepts or value['unit'] != 'USD'
+        if (not isinstance(value, dict) or not _namespace_ok(value['concept_namespace'], taxonomies)
+                or value['concept'] not in concepts or not _currency_ok(value['unit'], currencies)
                 or value['unit_namespace'] != USD
                 or value['entity_scheme'] != 'http://www.sec.gov/CIK'
                 or not re.fullmatch(r'[0-9]{1,10}', value['entity_identifier'])
@@ -95,8 +112,14 @@ class _InlineTarget:
     There is no document tree or namespace index for unrelated display markup.
     All IDs are checked through EOF so a later duplicate still rejects a fact.
     """
-    def __init__(self, concepts):
+    def __init__(self, concepts, *, product_members=False, taxonomies=('us-gaap',), currencies=('USD',)):
         self.concepts = frozenset(concepts)
+        self.taxonomies = tuple(taxonomies)
+        self.currencies = currencies if currencies == '*' else tuple(currencies)
+        # Opt-in: contexts with exactly one srt:ProductOrServiceAxis member
+        # (a disaggregation of the concept by product or service). Off by
+        # default, so ordinary callers never see dimensional facts.
+        self.product_members = product_members
         self.stack, self.pending, self.scope = [], [], {}
         self.ids, self.duplicates = set(), set()
         self.contexts, self.units, self.facts = {}, {}, []
@@ -154,7 +177,7 @@ class _InlineTarget:
             if not self.resource_invalid:
                 if self.stack and element is not self.resource:
                     self.stack[-1]['element'].append(element)
-                if tag == f'{{{XBRLI}}}measure':
+                if tag in (f'{{{XBRLI}}}measure', f'{{{XBRLDI}}}explicitMember'):
                     self.resource_namespaces[id(element)] = self.scope
         self.stack.append(frame)
 
@@ -163,8 +186,11 @@ class _InlineTarget:
             return
         frame = self.stack[-1]
         element = frame['element']
-        if (element is None or frame['text_overflow'] or
-                frame['tag'] not in _TEXT_FIELDS):
+        # Member text is collected only in the opt-in product-member mode; other
+        # parsers built on this target handle dimensional members themselves.
+        if (element is None or frame['text_overflow'] or (
+                frame['tag'] not in _TEXT_FIELDS
+                and not (self.product_members and frame['tag'] == f'{{{XBRLDI}}}explicitMember'))):
             return
         if len(element.text or '') + len(text) > MAX_FIELD_CHARS:
             frame['text_overflow'] = True
@@ -180,8 +206,15 @@ class _InlineTarget:
         if element.tag == f'{{{XBRLI}}}context':
             entity = element.find(f'{{{XBRLI}}}entity')
             period = element.find(f'{{{XBRLI}}}period')
+            member = None
+            if self.product_members and entity is not None and len(entity) == 2:
+                member = self._product_member(entity.find(f'{{{XBRLI}}}segment'))
+                if member is None:
+                    return
+            elif self.product_members:
+                return  # member mode returns only member facts
             if (entity is None or period is None or len(element) != 2
-                    or len(entity) != 1 or len(period) != 2):
+                    or len(entity) != (2 if member else 1) or len(period) != 2):
                 return
             identifier = entity.find(f'{{{XBRLI}}}identifier')
             start = period.find(f'{{{XBRLI}}}startDate')
@@ -194,6 +227,8 @@ class _InlineTarget:
             if (len(values['entity_identifier']) > 10 or len(values['start']) != 10
                     or len(values['end']) != 10):
                 return
+            if member:
+                values.update(member_namespace=member[0], member=member[1])
             self.contexts[key] = values
         else:
             measure = element.find(f'{{{XBRLI}}}measure')
@@ -201,14 +236,29 @@ class _InlineTarget:
                 return
             namespace, unit = _qname(self.resource_namespaces.get(id(measure), {}),
                                      (measure.text or '').strip())
-            if unit == 'USD' and namespace == USD:
+            if _currency_ok(unit, self.currencies) and namespace == USD:
                 self.units[key] = dict(unit_namespace=namespace, unit=unit)
+
+    def _product_member(self, segment):
+        """(namespace, local name) of the one srt:ProductOrServiceAxis member, or None."""
+        if segment is None or len(segment) != 1:
+            return None
+        explicit = segment[0]
+        if explicit.tag != f'{{{XBRLDI}}}explicitMember' or len(explicit):
+            return None
+        scope = self.resource_namespaces.get(id(explicit), {})
+        dimension = _qname(scope, explicit.get('dimension'))
+        member = _qname(scope, (explicit.text or '').strip())
+        if (not _SRT.fullmatch(dimension[0]) or dimension[1] != 'ProductOrServiceAxis'
+                or not member[0] or not re.fullmatch(r'[A-Za-z][A-Za-z0-9]{0,150}Member', member[1])):
+            return None
+        return member
 
     def _fact(self, frame):
         fact = frame['element']
         attrs = fact.attrib
         namespace, concept = _qname(frame['scope'], attrs.get('name'))
-        if (concept not in self.concepts or not _GAAP.fullmatch(namespace)
+        if (concept not in self.concepts or not _namespace_ok(namespace, self.taxonomies)
                 or frame['children'] or frame['text_overflow']
                 or any(key in attrs for key in ('tupleRef', 'target', 'continuedAt', 'precision'))
                 or attrs.get('{http://www.w3.org/2001/XMLSchema-instance}nil') is not None
@@ -244,11 +294,34 @@ class _InlineTarget:
         return self
 
 
-def parse_inline_observations(text, *, cik, concepts):
+def validated_member_observation(value, *, cik, concepts):
+    """The amount of a product-or-service member fact, rechecked like a consolidated one."""
+    if (not isinstance(value, dict) or value.get('scope') != 'product_or_service'
+            or not isinstance(value.get('member'), str)
+            or not re.fullmatch(r'[A-Za-z][A-Za-z0-9]{0,150}Member', value['member'])
+            or not isinstance(value.get('member_namespace'), str) or not value['member_namespace']):
+        return None
+    return validated_observation({**value, 'scope': 'consolidated'}, cik=cik, concepts=concepts)
+
+
+def parse_member_observations(text, *, cik, concepts):
+    """Facts disaggregated by exactly one srt:ProductOrServiceAxis member.
+
+    Each is validated exactly as a consolidated fact, then marked
+    scope='product_or_service' with its member, so validated_observation (which
+    requires scope='consolidated') never admits it as a consolidated value."""
+    observations = []
+    for observation in parse_inline_observations(text, cik=cik, concepts=concepts, product_members=True):
+        observations.append({**observation, 'scope': 'product_or_service'})
+    return tuple(observations)
+
+
+def parse_inline_observations(text, *, cik, concepts, product_members=False, taxonomies=('us-gaap',),
+                              currencies=('USD',)):
     """Parse bounded XML callbacks; unsupported or incomplete input fails closed."""
     if not isinstance(text, str) or len(text) > 15_000_000 or _DECLARATION.search(text):
         return ()
-    target = _InlineTarget(concepts)
+    target = _InlineTarget(concepts, product_members=product_members, taxonomies=taxonomies, currencies=currencies)
     parser = ET.XMLParser(target=target)
     try:
         # Feeding slices avoids an additional whole-document StringIO copy.
@@ -269,6 +342,7 @@ def parse_inline_observations(text, *, cik, concepts):
         if context is None or unit is None:
             continue
         observation = dict(**fact, **context, **unit, scope='consolidated')
-        if validated_observation(observation, cik=cik, concepts=concepts) is not None:
+        if validated_observation(observation, cik=cik, concepts=concepts, taxonomies=taxonomies,
+                                 currencies=currencies) is not None:
             observations.append(observation)
     return tuple(observations)

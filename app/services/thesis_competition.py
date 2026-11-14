@@ -32,8 +32,10 @@ def _qualifies(quote):
     if re.search(r'\d|[%$€£]|\b(?:may|could|might|will|expect\w*|believe\w*|'
                  r'leading|best|superior|advantage\w*|dominant|unmatched)\b', quote, re.I):
         return False
-    if re.search(r'\b(?:employees|personnel|workforce|recruit\w*|talent|'
-                 r'software developers|sales professionals)\b', quote, re.I):
+    # Competition for people is a labour-market statement, not a product or market one.
+    # "front-office staff" is the same statement as "personnel" or "talent".
+    if re.search(r'\b(?:employees|personnel|workforce|recruit\w*|talent|staff|'
+                 r'(?:front|middle|back)[- ]office|software developers|sales professionals)\b', quote, re.I):
         return False
     return bool(_segment_scope(quote) or re.match(
         r'^We (?:(?:also|primarily|principally) )?compete (?:(?:primarily|principally) )?'

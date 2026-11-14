@@ -72,6 +72,12 @@ class TransportFailure(BudgetError):
         if type(code) is not str or code not in TRANSPORT_FAILURE_CODES:
             raise BudgetError('invalid transport failure code')
         self.code = code
+        # The numeric HTTP status, for diagnosis only: set where a non-200 response raised this
+        # failure, else None. Nothing decides anything from it.
+        self.status = None
+        # Set only on response_size whose response closed cleanly: what was seen
+        # before the download stopped. Never the content.
+        self.size_observation = None
         super().__init__('owned HTTP exchange failed')
 
 
@@ -92,6 +98,57 @@ def transport_failure_code(exc):
         if isinstance(exc, kind):
             return code
     return 'transport_other'
+
+
+FILING_DOCUMENT_FORMS = frozenset({'10-K', '10-Q', '20-F', '40-F', '6-K', '8-K'})
+
+
+class SubmissionRefusal(BudgetError):
+    """A validated submissions response cannot admit filing documents."""
+    def __init__(self, code):
+        self.code = code
+        super().__init__('SEC submissions response refused')
+
+
+def submission_documents(data, cik):
+    """Exact filing-document URLs admitted by one issuer's submissions response.
+
+    ``cik`` is the 10-digit issuer CIK the response was already checked against.
+    Returns ``(urls, filings, excluded)``: the URL set, each URL's
+    ``(form, filingDate)`` or ``None`` when rows disagree or lack an aligned
+    date, and the count of supported rows whose filename is not fetchable.
+    Missing ``filings.recent`` keys propagate as KeyError, as they always have.
+    """
+    recent = data['filings']['recent']
+    fields = [recent[key] for key in ('form', 'accessionNumber', 'primaryDocument')]
+    if any(type(field) is not list for field in fields) or len({len(field) for field in fields}) != 1:
+        raise SubmissionRefusal('sec_recent_array_shape')
+    # Filing dates are optional here: without an aligned date a document
+    # stays fetchable under the ordinary envelope, never the reviewed one.
+    dates = recent.get('filingDate')
+    dated = type(dates) is list and len(dates) == len(fields[0])
+    urls = set()
+    filings = {}
+    excluded = 0
+    for index, (form, accession, document) in enumerate(zip(*fields)):
+        if form not in FILING_DOCUMENT_FORMS:
+            continue
+        if type(accession) is not str or not re.fullmatch(r'[0-9]{10}-[0-9]{2}-[0-9]{6}', accession):
+            raise SubmissionRefusal('sec_accession_syntax')
+        if (type(document) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:htm|html|txt)', document)
+                or '..' in document):
+            # Metadata can remain useful without a fetchable document.
+            # Only exact validated filenames enter the network allowlist.
+            excluded += 1
+            continue
+        url = f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace("-", "")}/{document}'
+        urls.add(url)
+        filed_at = dates[index] if dated else None
+        entry = (form, filed_at) if type(filed_at) is str else None
+        # Rows disagreeing about one document make it ambiguous: no
+        # reviewed envelope, whichever row happens to come first.
+        filings[url] = entry if filings.get(url, entry) == entry else None
+    return urls, filings, excluded
 
 
 def json_object(raw):
@@ -196,6 +253,9 @@ class OwnedHTTPTransport:
         failure = None
         phase = 'dispatch_gate'
         result = None
+        observed = None
+        close_failed = False
+        http_status = None
         try:
             if self.gate is not None:
                 self.gate.record_dispatch()
@@ -208,7 +268,9 @@ class OwnedHTTPTransport:
                         'http_throttled' if status == 429 else
                         'http_client_error' if 400 <= status < 500 else
                         'http_server_error' if 500 <= status < 600 else 'http_other_status')
-                raise TransportFailure(code)
+                failure = TransportFailure(code)
+                failure.status = status if type(status) is int and 100 <= status <= 599 else None
+                raise failure
             if response.headers.get('content-encoding', 'identity') != 'identity':
                 raise TransportFailure('response_encoding')
             # A declaration is advisory: it can refuse early, never admit. One
@@ -218,12 +280,16 @@ class OwnedHTTPTransport:
                 if len(declared) != 1 or not re.fullmatch(r'[0-9]{1,15}', declared[0]):
                     raise TransportFailure('protocol_error')
                 if int(declared[0]) > limit:
+                    observed = {'limit_bytes': limit, 'declared_bytes': int(declared[0]), 'bytes_read': 0}
                     raise TransportFailure('response_size')
             content = bytearray()
             # Raw chunks are single httpcore socket reads (READ_CHUNK_BYTES each
             # at most). No re-chunking layer adds a buffer of its own.
             for chunk in response.iter_raw():
                 if len(content) + len(chunk) > limit:
+                    observed = {'limit_bytes': limit, 'declared_bytes': int(declared[0]) if declared else None,
+                                'bytes_read': len(content) + len(chunk)}
+                    content.clear()  # A partial body is discarded, never returned or retained.
                     raise TransportFailure('response_size')
                 content.extend(chunk)
             media = response.headers.get('content-type', '').split(';')[0]
@@ -243,15 +309,22 @@ class OwnedHTTPTransport:
         except BaseException as exc:
             failure = (exc.code if type(exc) is TransportFailure else
                        transport_failure_code(exc) if phase == 'transport_other' else phase)
+            if type(exc) is TransportFailure:
+                http_status = exc.status      # diagnosis only; carried onto the re-raised failure
         finally:
             if response is not None:
                 try:
                     response.close()
                 except BaseException:
+                    close_failed = True
                     if failure is None:
                         failure = 'response_close'
         if failure is not None:
-            raise TransportFailure(failure) from None
+            error = TransportFailure(failure)
+            error.status = http_status
+            if failure == 'response_size' and not close_failed:
+                error.size_observation = observed
+            raise error from None
         return result
 
     def close(self):
@@ -327,35 +400,10 @@ class LiveAdapterBoundary(PilotBoundary):
             cik = self.case['identity']['cik']
             if str(data.get('cik', '')).zfill(10) != cik:
                 self.refuse('identity_mismatch')
-            recent = data['filings']['recent']
-            fields = [recent[key] for key in ('form', 'accessionNumber', 'primaryDocument')]
-            if any(type(field) is not list for field in fields) or len({len(field) for field in fields}) != 1:
-                self.refuse_sec_response('sec_recent_array_shape')
-            # Filing dates are optional here: without an aligned date a document
-            # stays fetchable under the ordinary envelope, never the reviewed one.
-            dates = recent.get('filingDate')
-            dated = type(dates) is list and len(dates) == len(fields[0])
-            urls = set()
-            filings = {}
-            excluded_documents = 0
-            for index, (form, accession, document) in enumerate(zip(*fields)):
-                if form not in {'10-K', '10-Q', '20-F', '40-F', '6-K', '8-K'}:
-                    continue
-                if type(accession) is not str or not re.fullmatch(r'[0-9]{10}-[0-9]{2}-[0-9]{6}', accession):
-                    self.refuse_sec_response('sec_accession_syntax')
-                if (type(document) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:htm|html|txt)', document)
-                        or '..' in document):
-                    # Metadata can remain useful without a fetchable document.
-                    # Only exact validated filenames enter the network allowlist.
-                    excluded_documents += 1
-                    continue
-                url = f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace("-", "")}/{document}'
-                urls.add(url)
-                filed_at = dates[index] if dated else None
-                entry = (form, filed_at) if type(filed_at) is str else None
-                # Rows disagreeing about one document make it ambiguous: no
-                # reviewed envelope, whichever row happens to come first.
-                filings[url] = entry if filings.get(url, entry) == entry else None
+            try:
+                urls, filings, excluded_documents = submission_documents(data, cik)
+            except SubmissionRefusal as refusal:
+                self.refuse_sec_response(refusal.code)
             with self.lock:
                 attempt, _, _ = self.sec_attempt.get()
                 event = next(item for item in self.events if item['attempt_id'] == attempt)

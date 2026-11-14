@@ -55,8 +55,26 @@ jobs:
       # still making every test module a required part of the release gate.
       - name: Full repository regression (isolated per file)
         shell: bash
+        env:
+          ORDINARY_PROFILE_CHILD_REPORT: ${{ runner.temp }}/ordinary-profile-child-report.json
         run: |
           bash scripts/ci_isolated_regression.sh
+
+      # The profile tests run in a child process, whose counts the step above cannot show.
+      # Kept even when that step fails; a missing report fails this job.
+      - name: Profile child test counts
+        if: always()
+        run: |
+          cat "$RUNNER_TEMP/ordinary-profile-child-report.json"
+
+      - name: Keep profile child test counts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ordinary-profile-child-report
+          path: ${{ runner.temp }}/ordinary-profile-child-report.json
+          retention-days: 90
+          if-no-files-found: error
 
       # Each suite below runs in its own process (deterministic per-area), matching
       # the documented test constraints (see docs/API.md). Any failure fails the job.

@@ -1,0 +1,86 @@
+[
+  {
+    "case_id": "CNK:core_thesis",
+    "issuer_id": "CNK",
+    "expected_cik": "0001385280",
+    "question": "What is the investment thesis for Cinemark Holdings, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "CNK:decision_threshold",
+    "issuer_id": "CNK",
+    "expected_cik": "0001385280",
+    "question": "Which valuation and operating assumptions would make Cinemark Holdings, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "COHU:core_thesis",
+    "issuer_id": "COHU",
+    "expected_cik": "0000021535",
+    "question": "What is the investment thesis for COHU INC, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "COHU:decision_threshold",
+    "issuer_id": "COHU",
+    "expected_cik": "0000021535",
+    "question": "Which valuation and operating assumptions would make COHU INC attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "TRIP:core_thesis",
+    "issuer_id": "TRIP",
+    "expected_cik": "0001526520",
+    "question": "What is the investment thesis for TripAdvisor, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "TRIP:decision_threshold",
+    "issuer_id": "TRIP",
+    "expected_cik": "0001526520",
+    "question": "Which valuation and operating assumptions would make TripAdvisor, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "LXRX:core_thesis",
+    "issuer_id": "LXRX",
+    "expected_cik": "0001062822",
+    "question": "What is the investment thesis for LEXICON PHARMACEUTICALS, INC., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "LXRX:decision_threshold",
+    "issuer_id": "LXRX",
+    "expected_cik": "0001062822",
+    "question": "Which valuation and operating assumptions would make LEXICON PHARMACEUTICALS, INC. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "MRX:core_thesis",
+    "issuer_id": "MRX",
+    "expected_cik": "0001997464",
+    "question": "What is the investment thesis for Marex Group Ltd, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "MRX:decision_threshold",
+    "issuer_id": "MRX",
+    "expected_cik": "0001997464",
+    "question": "Which valuation and operating assumptions would make Marex Group Ltd attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "DCGO:core_thesis",
+    "issuer_id": "DCGO",
+    "expected_cik": "0001822359",
+    "question": "What is the investment thesis for DocGo Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "DCGO:decision_threshold",
+    "issuer_id": "DCGO",
+    "expected_cik": "0001822359",
+    "question": "Which valuation and operating assumptions would make DocGo Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  }
+]

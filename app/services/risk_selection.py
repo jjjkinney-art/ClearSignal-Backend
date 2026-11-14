@@ -1,0 +1,187 @@
+"""Choose company-specific risk disclosures for a broad thesis answer.
+
+Every candidate has already passed the issuer-risk admission rules. This
+step removes disclosures that are about the risk-factor section itself or
+that list generic hazards any issuer could name, then prefers disclosures
+that state something particular to this issuer: a concrete dependency or
+concentration first, then named parties (not statutes, which apply to every
+issuer, and not acronyms). A disclosure qualifies only with such a signal,
+and a macro-hazard disclosure only with a concrete dependency; when none
+qualifies, nothing is presented and the answer says so. Selection never asserts materiality or likelihood.
+Nothing here names an issuer.
+"""
+import re
+
+# About the section, not a risk: "the events discussed in these risk factors …".
+_PREAMBLE = re.compile(
+    r"\b(?:these|the|such|our) risk factors\b|\brisks? (?:discussed|described|set forth|identified) "
+    r"(?:below|above|herein|in this)\b|\b(?:discussed|described) (?:below|above)\b"
+    r"|\bif any (?:of )?(?:such|these|those|the foregoing) risks\b|\b(?:any|each) of the foregoing risks\b", re.I)
+# How a holding company is organized, not a risk to its operations.
+_CORPORATE_STRUCTURE = re.compile(
+    r"\b(?:operations|business) through (?:our|its) (?:\w+[, -]+){0,4}subsidiaries\b", re.I)
+# Any issuer depends on its management; this says nothing particular to one.
+_KEY_PERSON = re.compile(r"\bdependent (?:up)?on [^.]{0,60}?\b(?:management|executive officers|key personnel)\b", re.I)
+_BULLET = re.compile(r"•")
+# Generic macro hazards; four or more distinct ones make a catch-all list.
+_HAZARDS = {
+    'natural disaster': r"\bnatural (?:or human-caused )?disasters?\b|\bhurricanes?\b|\btornado(?:es)?\b|\bearthquakes?\b|\bfloods?\b",
+    'weather': r"\b(?:adverse|extreme|severe) weather\b|\bclimate\b",
+    'terrorism': r"\bterroris[tm]\b",
+    'public health': r"\bpublic health\b|\bpandemics?\b|\bepidemics?\b",
+    'conflict': r"\bwars?\b|\b(?:military|armed|regional|international) conflicts?\b|\bconflicts\b",
+    'geopolitical': r"\bgeopolitic",
+    'unrest': r"\b(?:political|civil|labor|social) unrest\b|\bstrikes\b",
+    'catastrophe': r"\bcatastroph",
+    'inflation': r"\binflation",
+    'currency': r"\bforeign exchange\b|\bcurrenc(?:y|ies)\b",
+    'interest rates': r"\binterest rates?\b",
+    'supply chain': r"\bsupply chains?\b",
+    'cyber': r"\bcyber",
+    'trade measures': r"\bsanctions\b|\bexport controls?\b|\btariffs?\b|\btrade (?:policy|policies|restrictions?)\b",
+}
+_HAZARD_PATTERNS = {name: re.compile(pattern, re.I) for name, pattern in _HAZARDS.items()}
+# A concrete dependency or concentration this issuer states about itself.
+_DEPENDENCY = re.compile(
+    r"\b(?:accounts?|accounted) for (?:a )?(?:significant|substantial|large|majority|material)\b"
+    r"|\b(?:represents?|represented) (?:a )?(?:significant|substantial|large|majority)\b"
+    r"|\bonly one or (?:a )?limited (?:number of )?sources?\b|\bsingle[- ]source\b|\bsole[- ]source\b"
+    r"|\b(?:companies|businesses|issuers) like ours\b"
+    r"|\bour (?:largest|principal|key|major) (?:customers?|suppliers?|clients?)\b"
+    # Stated dependence on the issuer's own products' prices, markets or
+    # properties, or a concentration of its operations, revenue or loans.
+    r"|\b(?:highly|heavily|significantly|substantially|primarily|principally|largely) dependent (?:up)?on\b"
+    r"|\bdepends? (?:primarily|principally|heavily|substantially|largely) (?:up)?on\b"
+    r"|\b(?:a (?:significant|substantial|large) (?:portion|part|majority)|(?:all|substantially all)) of our "
+    r"(?:current )?(?:operations|revenues?|sales|cash flows?|assets|properties|loans?|loan portfolio)\b"
+    r"|\b(?:is|are) concentrated in\b|\bconcentration of our\b", re.I)
+_GENERIC_CAPITALIZED = {
+    'The', 'Our', 'We', 'Any', 'If', 'In', 'For', 'Some', 'Many', 'Such', 'These', 'This', 'Company',
+    'Despite', 'Because', 'As', 'An', 'A', 'New', 'Failure', 'Failures', 'Failing', 'Decisions', 'Corporation'}
+def hazard_count(quote):
+    return sum(bool(pattern.search(quote)) for pattern in _HAZARD_PATTERNS.values())
+
+
+def run_in_heading(quote):
+    """A risk-factor heading run into its first sentence: most of the first
+    eight words capitalized ("Risks Related to Artificial Intelligence, Our Data …")."""
+    words = quote.split()[:8]
+    return len(words) == 8 and sum(word[:1].isupper() for word in words) >= 6
+
+
+def rejection(quote):
+    if _PREAMBLE.search(quote):
+        return 'risk_factor_preamble'
+    if len(_BULLET.findall(quote)) >= 2:
+        return 'bullet_summary'
+    if _CORPORATE_STRUCTURE.search(quote):
+        return 'corporate_structure'
+    if _KEY_PERSON.search(quote):
+        return 'generic_key_person'
+    if run_in_heading(quote):
+        return 'run_in_heading'
+    if hazard_count(quote) >= 4:
+        return 'generic_hazard_list'
+    return None
+
+
+# Laws and regulations apply to every issuer subject to them.
+_STATUTE = re.compile(r"(?:[A-Z][A-Za-z\-]+\s+(?:in\s+|of\s+)?){1,7}(?:Act|Acts|Regulations?|Laws?|Rules?|Directive)\b")
+
+
+# A risk-factor section heading run into the sentence ("General Risk Factors •
+# Failure …", "Financial risks Our …") names the section, not a party.
+_RUN_IN_SECTION = re.compile(r"^(?:[A-Z][A-Za-z,&\-]*\s+){0,8}?(?:Risks?|Risk Factors)\b\s*(?:•\s*)?(?=[A-Z])")
+
+
+def specificity(quote):
+    """Concrete dependency statements outrank named parties (beyond the opening
+    word); statute names, all-capital acronyms and a run-in section heading are
+    not parties."""
+    text = _STATUTE.sub(' ', _RUN_IN_SECTION.sub('', quote))
+    named = {word for word in re.findall(r"(?<=\s)[A-Z][a-z][A-Za-z\-]*", text)
+             if word not in _GENERIC_CAPITALIZED}
+    return 3 * len(_DEPENDENCY.findall(quote)) + min(len(named), 2)
+
+
+def qualifies(quote):
+    """Company-specific enough to present: a positive signal, and for text that
+    names generic macro hazards, a concrete dependency."""
+    if hazard_count(quote) >= 2:
+        return bool(_DEPENDENCY.search(quote))
+    return specificity(quote) > 0
+
+
+# The issuer speaking about itself, and a stated consequence. Neither alone is an exposure.
+_OWN = re.compile(r"\b(?:we|our|us|the company|the corporation)\b|\bthe (?:company|corporation)['\u2019]s\b", re.I)
+_ADVERSE = re.compile(
+    r"\b(?:could|may|might|would|will)\b[^.]{0,120}?\b(?:adverse\w*|harm\w*|suffer\w*|negatively|disrupt\w*|"
+    r"reduc\w*|decreas\w*|los[es]\w*|impair\w*|limit\w*|interrupt\w*|jeopardi[sz]\w*)\b"
+    r"|\bif we (?:are|were) (?:not able|unable)\b[^.]*\b(?:could|may|might|would)\b", re.I)
+_TERM = re.compile(r"[a-z][a-z\-]{4,}")
+
+
+def _term(word):
+    return word[:-1] if word.endswith('s') and not word.endswith('ss') else word
+
+
+def business_terms(text, *, minimum=3):
+    """Words this filing's own business section uses repeatedly, beyond any section's vocabulary."""
+    from .business_common_words import BUSINESS_COMMON_WORDS
+    counts = {}
+    for word in _TERM.findall((text or '').lower()):
+        if _term(word) not in BUSINESS_COMMON_WORDS:
+            counts[_term(word)] = counts.get(_term(word), 0) + 1
+    return frozenset(term for term, count in counts.items() if count >= minimum)
+
+
+def plain_exposure(quote, *, terms=frozenset(), heading=None):
+    """A plain-language risk stating this issuer's own exposure and its consequence.
+
+    The passage must state both. A business term or the section heading only supports it:
+    neither qualifies a sentence by itself, and the heading is never quoted. A sentence naming
+    a macro hazard still needs a concrete dependency.
+    """
+    if hazard_count(quote) >= 1 or not _OWN.search(quote) or not _ADVERSE.search(quote):
+        return False
+    words = {_term(word) for word in _TERM.findall(quote.lower())}
+    if words & terms:
+        return True
+    topic = {_term(word) for word in re.findall(r"[a-z][a-z\-]{5,}", (heading or '').lower())} - {'related', 'relating'}
+    return bool(words & topic)
+
+
+def select_risks(candidates, *, quote_of, offset_of, limit=2, heading_of=None, terms=frozenset()):
+    """(selected, rejected reasons). Empty selection means none qualified."""
+    kept, reasons = [], []
+    for item in candidates:
+        quote = quote_of(item)
+        heading = heading_of(item) if heading_of else None
+        reason = rejection(quote) or (None if qualifies(quote) or plain_exposure(quote, terms=terms, heading=heading)
+                                      else 'not_company_specific')
+        if reason:
+            reasons.append(reason)
+        else:
+            kept.append(item)
+    # A risk the issuer heads in its own summary comes before one it does not, at equal specificity.
+    kept.sort(key=lambda item: (-specificity(quote_of(item)), 0 if heading_of and heading_of(item) else 1, offset_of(item)))
+    distinct = []
+    for item in kept:
+        if any(near_duplicate(quote_of(item), quote_of(other)) for other in distinct):
+            reasons.append('near_duplicate')
+            continue
+        distinct.append(item)
+    return distinct[:limit], reasons
+
+
+def _content_words(quote):
+    return {word for word in re.findall(r"[a-z][a-z\-]{3,}", quote.lower())}
+
+
+def near_duplicate(first, second):
+    """The same risk stated twice: every content word (four or more letters, at
+    least five of them) of the shorter quote recurs in the other. One differing
+    word ("customers" vs "suppliers") keeps two risks distinct."""
+    a, b = _content_words(first), _content_words(second)
+    shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
+    return len(shorter) >= 5 and shorter <= longer

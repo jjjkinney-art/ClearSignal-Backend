@@ -116,6 +116,8 @@ class TestRetrievedEvidenceSchema:
             "cash_flow_disclosures",
             "cash_reconciliation_disclosures",
             "impairment_disclosures",
+            "period_explanations",
+            "going_concern_disclosures",
         }
         assert d["source_type"] == "unknown"
         assert d["source_tier"] == "unverified"
@@ -132,6 +134,7 @@ class TestRetrievedEvidenceSchema:
         assert d["cash_flow_disclosures"] == []
         assert d["cash_reconciliation_disclosures"] == []
         assert d["impairment_disclosures"] == []
+        assert d["period_explanations"] == []
 
 
 # ── retrieve_general_finance_evidence (production stub) ──────────────────────

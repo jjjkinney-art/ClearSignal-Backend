@@ -24,10 +24,12 @@ def _word(value: str) -> str:
 
 
 _ITEM = _word("Item")
+# Item numbers may carry a period and a dash before the title ("ITEM 1A. — RISK FACTORS").
+_SEP = r"(?:[.:—–-]\s*){0,2}"
 RISK_START = re.compile(
-    rf"\b{_ITEM}\s+1\s*A\s*[.:—–-]?\s*{_word('Risk')}\s+{_word('Factors')}\b", re.I)
+    rf"\b{_ITEM}\s+1\s*A\s*{_SEP}{_word('Risk')}\s+{_word('Factors')}\b", re.I)
 RISK_END = re.compile(
-    rf"\b{_ITEM}\s+(?:1\s*B|1\s*C|2)(?:\s*[.:—–-]\s*|\s+)(?:"
+    rf"\b{_ITEM}\s+(?:1\s*B|1\s*C|2)(?:\s*(?:[.:—–-]\s*){{1,2}}|\s+)(?:"
     rf"{_word('Unresolved')}(?:\s+{_word('Staff')}\s+{_word('Comments')})?|"
     rf"{_word('Cybersecurity')}|{_word('Properties')}|"
     rf"{_word('Legal')}(?:\s+{_word('Proceedings')})?|"
@@ -69,13 +71,16 @@ def risk_openings(text: str, *, form: str = '10-K', layout: dict | None = None):
     return _foreign_headings(text) if form in FOREIGN_RISK_FORMS else RISK_START.finditer(text)
 
 
-def rejected_risk_heading(text: str, end: int, *, start: int | None = None) -> bool:
+def rejected_risk_heading(text: str, end: int, *, start: int | None = None, page_numbers: bool = True) -> bool:
     # TOC page numbers, quoted cross-references and dash-led references are not
     # independently established section boundaries.
     # Styled HTML can leave a separate period/colon between the heading
     # title and its TOC page number ("Business . 1"). Keep source offsets
     # unchanged and reject the same pagination after this separator too.
-    return bool(re.match(r'(?:[.:]\s*)?\d|["”\u2013\u2014-]|\(Continued\)', text[end:].lstrip(), re.I)
+    # page_numbers=False keeps only the cross-reference signals: a real heading can be followed by a page number
+    # ("Item 6. DIRECTORS ... 86 A. Directors"), a quoted reference cannot be a boundary either way.
+    return bool((page_numbers and re.match(r'(?:[.:]\s*)?\d', text[end:].lstrip(), re.I))
+                or re.match(r'["”\u2013\u2014-]|\(Continued\)', text[end:].lstrip(), re.I)
                 or (start is not None and re.search(
                     r'(?:["“]\s*|\b(?:see|refer\s+to|discussed\s+in|in|under|within)\s*)$',
                     text[max(0, start - 60):start], re.I)))
@@ -150,7 +155,45 @@ def risk_sentence_spans(text: str):
         start = end
 
 
-BUSINESS_START = re.compile(rf"\b{_ITEM}\s+1\s*[.:—–-]?\s*{_word('Business')}\b", re.I)
+BUSINESS_START = re.compile(rf"\b{_ITEM}\s+1\s*{_SEP}{_word('Business')}\b", re.I)
+
+
+# The periodic report's results discussion (MD&A): Item 2 of a 10-Q, Item 7 of a 10-K.
+_RESULTS_START = {
+    '10-Q': re.compile(rf"\b{_ITEM}\s+2\s*{_SEP}{_word('Management')}\W{{0,2}}s?\s+{_word('Discussion')}\b", re.I),
+    '10-K': re.compile(rf"\b{_ITEM}\s+7\s*{_SEP}{_word('Management')}\W{{0,2}}s?\s+{_word('Discussion')}\b", re.I),
+    '20-F': re.compile(rf"\b{_ITEM}\s+5\s*{_SEP}{_word('Operating')}\s+and\s+{_word('Financial')}\s+{_word('Review')}\b", re.I),
+}
+_RESULTS_END = {
+    '10-Q': re.compile(rf"\b{_ITEM}\s+(?:3\s*{_SEP}{_word('Quantitative')}|4\s*{_SEP}{_word('Controls')})\b", re.I),
+    '10-K': re.compile(rf"\b{_ITEM}\s+(?:7\s*A\s*{_SEP}{_word('Quantitative')}|8\s*{_SEP}{_word('Financial')})\b", re.I),
+    '20-F': re.compile(rf"\b{_ITEM}\s+6\s*{_SEP}{_word('Directors')}\b", re.I),
+}
+
+
+def results_section_bounds(text, *, form, reject_cross_references=False):
+    """(start, end) of the results discussion, or None. A table-of-contents
+    entry is followed almost at once by the next item, so the longest span
+    between an opening and the following closing heading is the section.
+
+    reject_cross_references (default off, so existing callers are unchanged): a quoted or "see ..." reference to the
+    item ("see “Item 5. Operating and Financial Review ...”") is neither an opening nor a closing heading. Without it
+    such a reference in an earlier item can open, and another can close, a longer span than the real section."""
+    base = (form or '').split('/')[0]
+    if base not in _RESULTS_START:
+        return None
+    best = None
+
+    def reference(match):
+        return reject_cross_references and rejected_risk_heading(text, match.end(), start=match.start(), page_numbers=False)
+    for opening in _RESULTS_START[base].finditer(text):
+        if reference(opening):
+            continue
+        closing = next((c for c in _RESULTS_END[base].finditer(text, opening.end()) if not reference(c)), None)
+        end = closing.start() if closing else len(text)
+        if best is None or end - opening.start() > best[1] - best[0]:
+            best = (opening.start(), end)
+    return best
 
 
 _FOREIGN_BUSINESS_END = re.compile(
