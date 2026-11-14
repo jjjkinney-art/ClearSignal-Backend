@@ -225,3 +225,34 @@ def test_an_unrelated_sentence_between_the_change_and_the_cause_breaks_the_link(
     # The cause must be the sentence IMMEDIATELY after the statement it explains.
     items = explain(variant(fetched, DRIVER, 'Deliveries are shown in the table below. ' + DRIVER), comparisons)
     assert 'cause_quote' not in revenue_statement(items[0])
+
+
+# --- the cited change and the attribution are ONE consolidated FY2025 comparison -------------------------------------------------------
+
+def test_the_statement_and_its_cause_are_the_consolidated_fy2025_revenue_comparison(fetched, comparisons):
+    from decimal import Decimal
+    text = fetched.results_text
+    assert text.count(REVENUE) == 1 and text.count(DRIVER) == 1
+    a = text.index(REVENUE)
+    # directly under the consolidated "2025 Compared with 2024 / Revenue" heading, after the consolidated results table ...
+    heading = '2025 Compared with 2024 Revenue '
+    assert text[a - len(heading):a] == heading
+    # ... the cause is the very next sentence (one space apart) ...
+    assert text[a + len(REVENUE):text.index(DRIVER)] == ' '
+    # ... and the segment discussion only begins after it, so neither sentence is a segment statement.
+    after = text[text.index(DRIVER) + len(DRIVER):].lstrip()
+    assert after.startswith('Revenues from our Commercial Aviation segment increased US$161.2 million')
+    # the quoted change is internally exact and equals the document's own consolidated inline revenue facts for FY2025 and FY2024
+    assert Decimal('7577.5') - Decimal('6394.7') == Decimal('1182.8') and round(Decimal('1182.8') / Decimal('6394.7') * 100, 1) == Decimal('18.5')
+    amounts = {(row['start'], row['end']): amount for row in fetched.inline_xbrl_facts
+               if row['concept'] == 'Revenue' and (amount := cpe.validated_observation(
+                   row, cik='1355444', concepts=('Revenue',), taxonomies=('us-gaap', 'ifrs-full'))) is not None}
+    assert amounts[('2025-01-01', '2025-12-31')] == 7577500000 and amounts[('2024-01-01', '2024-12-31')] == 6394700000
+    item = explain(fetched, comparisons)[0]
+    value = item.period_explanations[0]
+    assert value['period'] == {'current_start': '2025-01-01', 'current_end': '2025-12-31', 'prior_start': '2024-01-01', 'prior_end': '2024-12-31'}
+    assert value['metrics']['revenue'] == {'current': 7577500000, 'prior': 6394700000}
+    revenue_claims = [c for i in comparisons for c in i.verified_claims if 'revenue' in str(c.get('metric', '')).lower()]
+    assert revenue_claims and all(c['unit'] == 'USD' for c in revenue_claims)
+    # no segment sentence was bound for any measure
+    assert all('segment' not in s['quote'].lower() for s in value['statements'])
