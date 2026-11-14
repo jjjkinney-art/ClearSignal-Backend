@@ -220,6 +220,10 @@ class Settings(BaseSettings):
     # request has already fetched for its business and risk text (that one fetch also keeps the filing's inline
     # XBRL facts and results discussion). Makes no additional request. Default off.
     annual_filing_facts_enabled: bool = False
+    # Quotes management's own present-tense liquidity sufficiency statement from the latest periodic filing the
+    # metrics stage already reads (no additional request), with its adjacent sentences. Default off: with it off
+    # nothing changes.
+    liquidity_statements_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False

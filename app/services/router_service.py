@@ -1373,7 +1373,8 @@ def _run_investment_pipeline(
     # A filing's explanation of its own changes is not a metric comparison;
     # it travels beside the merged comparisons rather than through the merge.
     def _stage_context_item(item):
-        return bool(getattr(item, "period_explanations", None) or getattr(item, "going_concern_disclosures", None))
+        return bool(getattr(item, "period_explanations", None) or getattr(item, "going_concern_disclosures", None)
+                    or getattr(item, "liquidity_statements", None))
     _period_explanation_evidence: list = [
         item for item in _ev_results.get("filing_metrics", []) if _stage_context_item(item)
     ]
