@@ -242,14 +242,19 @@ def _table_context(text, offset, period):
 _DURATION_HEADING = re.compile(r'\b(?:Three|Six|Nine|Twelve)[- ]months? (?:periods? )?ended\b', re.I)
 
 
-def sentences(text, split_tables=False):
+# An annual results table is headed by its year columns ("For the Year Ended December 31, 2025 2024 2023").
+_ANNUAL_HEADING = re.compile(r'\bYears? Ended\b', re.I)
+
+
+def sentences(text, split_tables=False, annual_tables=False):
     """(offset, sentence) pairs. A boundary is terminal punctuation followed by
     whitespace and a capital or digit, so a decimal such as $21.0 billion never
     splits. Byte-order marks count as spaces (same length, offsets unchanged).
     With split_tables (the explanation reader only), a narrative sentence run
     onto a flattened table is yielded on its own, and only when a duration
     heading ("Three months ended …") opens that table within MAX_TABLE_CHARS;
-    every other text is split exactly as before."""
+    every other text is split exactly as before. annual_tables (off by default; the 20-F reader turns it on) also
+    accepts a "Year Ended" heading inside the flattened table's own text, however long the table is."""
     text = text.replace('\ufeff', ' ')
     start = 0
     for match in _BOUNDARY.finditer(text):
@@ -259,7 +264,8 @@ def sentences(text, split_tables=False):
             offset = start + len(chunk) - len(chunk.lstrip())
             split = _narrative_tail(sentence) if split_tables else None
             if split is not None and not _DURATION_HEADING.search(
-                    text, max(0, offset + split - MAX_TABLE_CHARS), offset + split):
+                    text, max(0, offset + split - MAX_TABLE_CHARS), offset + split) and not (
+                    annual_tables and _ANNUAL_HEADING.search(sentence[:split])):
                 split = None
             if split is None:
                 yield offset, sentence
@@ -523,7 +529,12 @@ def _restated_metric(sentence, following):
                     r'(increased|decreased|rose|fell|declined|grew)\b', following, re.I)
 
 
-def following_cause(sentence, following, period, direction=None):
+# "This was primarily due to ..." refers back to the sentence just before it. Opt-in (the 20-F reader): the sentence
+# it follows must itself be a bound statement of a verified change, and every other guard below still applies.
+_BARE_ANAPHOR = re.compile(r'This (?:was|is|has been) ')
+
+
+def following_cause(sentence, following, period, direction=None, bare_demonstrative=False):
     """Whether the next sentence explains this sentence's own stated change.
 
     Only the immediately following sentence; it must open by referring back
@@ -533,11 +544,13 @@ def following_cause(sentence, following, period, direction=None):
     following = cause_excerpt(following)
     if not following or cause_match(sentence):
         return False
-    anaphor, cause = _ANAPHOR.match(following) or _restated_metric(sentence, following), cause_match(following)
+    anaphor = (_ANAPHOR.match(following) or _restated_metric(sentence, following)
+               or (_BARE_ANAPHOR.match(following) if bare_demonstrative else None))
+    cause = cause_match(following)
     direction = direction or stated_direction(sentence)
     if not anaphor or not cause or cause.start() < anaphor.end() or direction is None:
         return False
-    word = anaphor.group(1).lower()
+    word = anaphor.group(1).lower() if anaphor.re.groups else ''  # a bare "This was" names no direction
     if word.startswith(('increase', 'rose', 'grew', 'improvement', 'growth')) and direction != 'up':
         return False
     if word.startswith(('decrease', 'decline', 'fell', 'reduction', 'deterioration')) and direction != 'down':
@@ -882,7 +895,7 @@ def definition_quote(all_sentences, index, metric, metrics, period):
 
 
 def explanation_value(text, observations, filing_items, *, ticker, document_type, filed_at, members=(),
-                      level_cause=False):
+                      level_cause=False, annual_tables=False):
     metrics, period = _metrics(filing_items)
     # Banks and other issuers without a revenue line still explain net income.
     if not period or not metrics.keys() & {'revenue', 'operating income', 'net income'}:
@@ -927,7 +940,7 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
         metrics['operating margin'] = {key: int(round(Decimal(metrics['operating income'][key]) * 10000
                                                       / Decimal(metrics['revenue'][key]))) for key in ('current', 'prior')}
     candidates, components, anchor, used = {}, [], None, set()
-    all_sentences = list(sentences(text, split_tables=True))
+    all_sentences = list(sentences(text, split_tables=True, annual_tables=annual_tables))
     blocks = table_blocks(text, period_value)
     definition = None
     for index, (offset, sentence) in enumerate(all_sentences):
@@ -958,7 +971,8 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
             for start in clause_starts(sentence):
                 level = level_binding(sentence[start:], metrics, period_value)
                 if level and following_cause(sentence[start:], following, period_value,
-                                             direction=level_direction(metrics[level['metric']])):
+                                             direction=level_direction(metrics[level['metric']]),
+                                             bare_demonstrative=annual_tables):
                     binding, quote = level, sentence[start:]
                     break
         for start in clause_starts(sentence):
@@ -974,7 +988,8 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
             anchor = index
         if following_cause(quote, following, period_value,
                            direction=(level_direction(metrics[binding['metric']])
-                                      if level_cause and stated_direction(quote) is None else None)):
+                                      if level_cause and stated_direction(quote) is None else None),
+                           bare_demonstrative=annual_tables):
             binding['cause_quote'] = cause_excerpt(following)
         # Prefer a stated cause, then figures that reconcile, then document order.
         rank = (cause_match(quote) is None and 'cause_quote' not in binding,
@@ -1031,7 +1046,7 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
              'document_type': document_type, 'filed_at': filed_at,
              'period': period_value, 'metrics': metrics, 'bridge': bridge,
              'statements': statements, 'components': components,
-             **({'level_cause': True} if level_cause else {})}
+             **({'level_cause': True} if level_cause else {}), **({'annual_tables': True} if annual_tables else {})}
     return json.loads(json.dumps(value, default=int))
 
 
@@ -1105,7 +1120,8 @@ def bound_current_period_explanation(item, *, ticker, cik):
             if 'cause_quote' in statement and not following_cause(
                     statement['quote'], statement['cause_quote'], v['period'],
                     direction=level_direction(metrics[statement['metric']])
-                    if v.get('level_cause') is True and (level_only or stated_direction(statement['quote']) is None) else None):
+                    if v.get('level_cause') is True and (level_only or stated_direction(statement['quote']) is None) else None,
+                    bare_demonstrative=v.get('annual_tables') is True):
                 return None
         for c in v['components']:
             following = c.get('cause_quote')
@@ -1185,7 +1201,7 @@ def extract_annual_foreign_explanation(document, filing_items, *, ticker, cik):
                                                             taxonomies=('us-gaap', 'ifrs-full'))) is not None]
         value = explanation_value(view.text, observations, filing_items, ticker=ticker,
                                   document_type=document.document_type, filed_at=document.published_at, members=(),
-                                  level_cause=True)
+                                  level_cause=True, annual_tables=True)
         if value is None or not date.fromisoformat(value['period']['current_end']) <= date.fromisoformat(document.published_at) <= date.today():
             return []
         anchor = (value['statements'] or value['components'] or [{'quote': 'consolidated inline XBRL facts'}])[0]['quote']
