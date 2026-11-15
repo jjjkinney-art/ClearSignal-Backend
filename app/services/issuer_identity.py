@@ -160,6 +160,7 @@ def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int
 # remains (an exchange listing or a Y-ending ADR line), that symbol names the
 # issuer. Several remaining symbols, or only F lines, still abstain.
 _FOREIGN_ORDINARY_LINE = re.compile(r"[A-Z]{4}F")
+_DERIVATIVE_SUFFIXES = frozenset({"W", "WS", "WT", "WW", "U", "R", "RT", "RW"})
 
 
 def official_name_spans(value: str) -> list[tuple[tuple[int, int], list[Issuer]]]:
@@ -215,6 +216,15 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
                 # Distinct share classes (GOOGL/GOOG) still abstain.
                 listed = [item for item in base if not _FOREIGN_ORDINARY_LINE.fullmatch(item.ticker)]
                 base = listed if len(listed) == 1 else base
+            if len(base) > 1:
+                # An offering's other lines: warrants, units and rights carry the common symbol plus a derivative
+                # suffix (GRAB / GRABW, CORZ / CORZW / CORZR / CORZZ). One symbol that all the others extend this
+                # way names the issuer; unrelated share classes (GOOGL/GOOG, RUSHA/RUSHB) still abstain.
+                derivatives = {item.ticker for item in base for other in base
+                               if other.ticker != item.ticker and item.ticker.startswith(other.ticker)
+                               and item.ticker[len(other.ticker):] in _DERIVATIVE_SUFFIXES}
+                primary = [item for item in base if item.ticker not in derivatives]
+                base = primary if len(primary) == 1 else base
             issuer = base[0] if len(base) == 1 else None
     if issuer is None:
         return None

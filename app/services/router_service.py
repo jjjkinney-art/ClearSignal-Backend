@@ -2395,11 +2395,15 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
-                elif _entity_resolution.method == "exact_ticker" and _entity_resolution.context is not None:
+                elif _entity_resolution.method in ("exact_ticker", "alias_exact") and _entity_resolution.context is not None:
                     # A ticker-shaped word that occurs only inside other issuers'
                     # official names ("DE" in "BETTERWARE DE MEXICO, S.A.P.I. DE
                     # C.V", "T" in "T-Mobile US, Inc.") is part of those names,
-                    # not a second company. The official name wins when it
+                    # not a second company. The same holds for a well-known brand
+                    # alias ("coca-cola" in "COCA-COLA EUROPACIFIC PARTNERS plc",
+                    # "blackrock" in "BlackRock Capital Allocation Term Trust"):
+                    # when the alias occurs only inside another issuer's full
+                    # official name, that name wins. The official name wins when it
                     # identifies one issuer; otherwise the ticker is not trusted
                     # and the named issuer's securities become suggestions.
                     from .issuer_identity import official_name_spans, symbol
@@ -2408,7 +2412,8 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     _names = [(span, found) for span, found in official_name_spans(request.question)
                               if _ticker not in {item.ticker for item in found}]
                     _hits = [hit.span() for hit in re.finditer(
-                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question)] if _token else []
+                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question,
+                        re.IGNORECASE if _entity_resolution.method == "alias_exact" else 0)] if _token else []
                     if _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
                                      for start, end in _hits):
                         from .company_detection import EntityResolution
