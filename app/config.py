@@ -228,6 +228,10 @@ class Settings(BaseSettings):
     # metrics stage already reads (no additional request), with its adjacent sentences. Default off: with it off
     # nothing changes.
     liquidity_statements_enabled: bool = False
+    # For net income only (NetIncomeLoss, ProfitLoss): when the preferred concept's latest complete comparison is older than an alias's, show the
+    # alias with the latest period (net income including noncontrolling interests, labelled as such), exactly as revenue already does. Values are
+    # never joined across concepts and an issuer current in its preferred concept is unchanged. Default off: with it off nothing changes.
+    latest_alias_net_income_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False
