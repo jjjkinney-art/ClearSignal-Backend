@@ -101,3 +101,19 @@ def test_the_as_of_boundary_excludes_a_later_filing():
     assert evidence and evidence[0].reporting_period_end == '2025-12-31'
     evidence, _ = ar.evidence_from_response(data, 'T', '1', boundary=date(2026, 6, 1))
     assert evidence[0].reporting_period_end == '2026-03-31'
+
+
+# --- the timing gap is stated where interim results cannot be read ----------------------------------------
+
+@pytest.mark.parametrize('form,stated', [('20-F', True), ('40-F', True), ('10-K', False), ('10-Q', False)])
+def test_a_foreign_annual_comparison_says_interim_results_are_not_read_and_others_do_not(form, stated):
+    cur = rec(value=120, start='2025-01-01', end='2025-12-31', filed='2026-03-01', accession='0000000001-26-000001', form=form)
+    prior = rec(value=100, start='2024-01-01', end='2024-12-31', filed='2025-03-01', accession='0000000001-25-000001', form=form)
+    if form == '10-Q':
+        cur = rec(value=120, start='2026-01-01', end='2026-03-31', filed='2026-05-05', accession='0000000001-26-000002', form=form)
+        prior = rec(value=100, start='2025-01-01', end='2025-03-31', filed='2025-05-05', accession='0000000001-25-000002', form=form)
+    item, why = ar.evidence_from_pair(cur, prior, ticker='T', expected_cik='1', metric_name='revenue')
+    assert why is None and (ar.TIMING_NOTE in item.summary) is stated
+    if stated:
+        assert item.summary.endswith('interim results published on Form 6-K are not read in this version.')
+    assert ar.rebuild_as_reported(item, ticker='T', cik='1', name='revenue') == item

@@ -36,6 +36,8 @@ ANCHOR = "Assets"
 SIGNED_MEASURES = ("operating income", "net income", "operating cash flow")
 MAX_STALENESS_DAYS = 550
 ANNUAL_PREFIXES = ("10-K", "20-F", "40-F")
+FOREIGN_ANNUAL_PREFIXES = ("20-F", "40-F")
+TIMING_NOTE = " This is the issuer's latest annual period in its structured SEC data; interim results published on Form 6-K are not read in this version."
 INTERIM_FORMS = ("10-Q", "10-Q/A")   # the interim periodic report: only 10-Q filers (not 6-K) carry interim facts
 BASES = {"us-gaap": "US-GAAP", "ifrs-full": "IFRS"}
 CORE = {
@@ -276,6 +278,10 @@ def evidence_from_pair(current: SecFactRecord, prior: SecFactRecord, *, ticker: 
     summary = (f"{lead} {current_text} for the period {current.start} to {current.end}, {link} "
                f"{prior_text} in the comparable prior-year period {prior.start} to {prior.end}. "
                f"Reported in {current.unit} under {BASES[current.taxonomy]}; no currency conversion was applied.")
+    if current.form.startswith(FOREIGN_ANNUAL_PREFIXES):
+        # A foreign issuer's interim results are published on Form 6-K, which carries no structured facts: say so, so an annual
+        # figure is not read as the issuer's latest reported period.
+        summary += TIMING_NOTE
     claims = [claim for record in (current, prior)
               if (claim := _bind(record, ticker=ticker, expected_cik=expected_cik)) is not None]
     if len(claims) != 2:
