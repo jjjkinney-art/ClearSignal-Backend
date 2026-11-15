@@ -360,7 +360,7 @@ def check_safe_state() -> None:
     try:
         import asyncio
         from app.services.visual_observability_service import build_visual_snapshot
-        snapshot = asyncio.get_event_loop().run_until_complete(
+        snapshot = asyncio.run(
             build_visual_snapshot(None)
         )
         safe = snapshot.get("safe_state", {})

@@ -336,7 +336,7 @@ def check_safe_state() -> None:
         from app.services.personal_experience_observability_service import (
             build_personal_experience_snapshot,
         )
-        snapshot = asyncio.get_event_loop().run_until_complete(
+        snapshot = asyncio.run(
             build_personal_experience_snapshot(None)
         )
         safe = snapshot.get("safe_state", {})

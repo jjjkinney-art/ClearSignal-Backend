@@ -284,7 +284,7 @@ def main() -> int:
     print("Async / DB checks")
     print("-" * 40)
 
-    async_results = asyncio.get_event_loop().run_until_complete(_run_async_checks())
+    async_results = asyncio.run(_run_async_checks())
     for name, ok, detail in async_results:
         _check(name, ok, detail)
 

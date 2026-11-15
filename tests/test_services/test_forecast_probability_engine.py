@@ -789,8 +789,8 @@ class TestNoAdvicePriceFields:
 
         code_strings = []
         for node in ast.walk(tree):
-            if isinstance(node, ast.Constant) and isinstance(node.s, str):
-                code_strings.append(node.s)
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                code_strings.append(node.value)
             if isinstance(node, ast.Attribute):
                 code_strings.append(node.attr)
 

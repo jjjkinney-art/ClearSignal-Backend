@@ -85,7 +85,7 @@ def test_run_concurrent(monkeypatch: pytest.MonkeyPatch) -> None:
     # Results should be squares of indices in the same order
     assert results == [i * i for i in range(5)]
     # Ensure each task was called once
-    assert calls == list(range(5))
+    assert sorted(calls) == list(range(5))
 
 
 @pytest.mark.anyio

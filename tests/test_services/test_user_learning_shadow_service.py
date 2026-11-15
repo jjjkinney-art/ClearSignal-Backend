@@ -823,7 +823,7 @@ def _docstring_ids(tree: ast.Module) -> set:
     for node in ast.walk(tree):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             if (node.body and isinstance(node.body[0], ast.Expr) and
-                    isinstance(node.body[0].value, (ast.Constant, ast.Str))):
+                    isinstance(node.body[0].value, ast.Constant)):
                 ids.add(id(node.body[0].value))
     return ids
 
@@ -831,10 +831,10 @@ def _docstring_ids(tree: ast.Module) -> set:
 def _non_docstring_strings(tree: ast.Module):
     ds_ids = _docstring_ids(tree)
     for node in ast.walk(tree):
-        if isinstance(node, (ast.Constant, ast.Str)):
+        if isinstance(node, ast.Constant):
             if id(node) in ds_ids:
                 continue
-            val = node.s if isinstance(node, ast.Str) else node.value
+            val = node.value
             if isinstance(val, str):
                 yield val
 

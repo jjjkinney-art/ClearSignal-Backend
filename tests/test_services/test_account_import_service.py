@@ -98,7 +98,7 @@ class TestNullSessionSafety:
 
     def test_preview_returns_empty(self):
         from app.services.account_import_service import preview_import
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             preview_import(None, USER_A)
         )
         assert result.watchlist_count == 0
@@ -109,7 +109,7 @@ class TestNullSessionSafety:
 
     def test_execute_returns_empty(self):
         from app.services.account_import_service import execute_import
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             execute_import(None, USER_A)
         )
         assert result.watchlist_copied == 0
@@ -118,7 +118,7 @@ class TestNullSessionSafety:
 
     def test_rollback_returns_zeros(self):
         from app.services.account_import_service import rollback_import
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             rollback_import(None, USER_A)
         )
         assert result.total_deleted == 0
