@@ -574,31 +574,31 @@ class TestSECEdgarAdapter:
         self.adapter = SECEdgarAdapter(use_live_api=False)  # synthetic mode
 
     def test_health_check_synthetic(self):
-        result = asyncio.get_event_loop().run_until_complete(self.adapter.health_check())
+        result = asyncio.run(self.adapter.health_check())
         assert result is True
 
     def test_fetch_returns_events(self):
-        events = asyncio.get_event_loop().run_until_complete(
+        events = asyncio.run(
             self.adapter.fetch_latest(tickers=None)
         )
         assert len(events) > 0
 
     def test_events_have_high_reliability(self):
-        events = asyncio.get_event_loop().run_until_complete(
+        events = asyncio.run(
             self.adapter.fetch_latest(tickers=None)
         )
         for ev in events:
             assert ev.source_reliability == SourceReliability.HIGH
 
     def test_events_have_sec_source(self):
-        events = asyncio.get_event_loop().run_until_complete(
+        events = asyncio.run(
             self.adapter.fetch_latest(tickers=None)
         )
         for ev in events:
             assert "sec_edgar" in ev.source
 
     def test_ticker_filter(self):
-        events = asyncio.get_event_loop().run_until_complete(
+        events = asyncio.run(
             self.adapter.fetch_latest(tickers=["AAPL"])
         )
         for ev in events:
@@ -615,26 +615,26 @@ class TestTreasuryMacroAdapter:
         self.adapter = TreasuryMacroAdapter(use_live_api=False)
 
     def test_health_check(self):
-        result = asyncio.get_event_loop().run_until_complete(self.adapter.health_check())
+        result = asyncio.run(self.adapter.health_check())
         assert result is True
 
     def test_returns_macro_events(self):
-        events = asyncio.get_event_loop().run_until_complete(self.adapter.fetch_latest())
+        events = asyncio.run(self.adapter.fetch_latest())
         assert len(events) > 0
         for ev in events:
             assert ev.category == EventCategory.MACRO
 
     def test_no_ticker_on_macro(self):
-        events = asyncio.get_event_loop().run_until_complete(self.adapter.fetch_latest())
+        events = asyncio.run(self.adapter.fetch_latest())
         for ev in events:
             assert ev.ticker is None
 
     def test_market_moving_set(self):
-        events = asyncio.get_event_loop().run_until_complete(self.adapter.fetch_latest())
+        events = asyncio.run(self.adapter.fetch_latest())
         assert any(ev.is_market_moving for ev in events)
 
     def test_cpi_event_has_correct_tags(self):
-        events = asyncio.get_event_loop().run_until_complete(self.adapter.fetch_latest())
+        events = asyncio.run(self.adapter.fetch_latest())
         cpi_events = [e for e in events if "cpi" in e.headline.lower()]
         assert len(cpi_events) > 0
         # CPI events should have cpi_release or hot_cpi tag
@@ -671,7 +671,7 @@ class TestEventIngestionPipeline:
             from app.services.timeline_store import JsonFileTimelineStore
             store = JsonFileTimelineStore(data_dir=tmpdir)
             pipeline = EventIngestionPipeline(store=store)
-            result = asyncio.get_event_loop().run_until_complete(pipeline.run())
+            result = asyncio.run(pipeline.run())
             assert result.events_fetched == 0
             assert result.impact_assessments == []
 
@@ -690,7 +690,7 @@ class TestEventIngestionPipeline:
                 normalizer=EventNormalizer(),
             )
             pipeline.register_adapter(SECEdgarAdapter(use_live_api=False))
-            result = asyncio.get_event_loop().run_until_complete(pipeline.run())
+            result = asyncio.run(pipeline.run())
             assert result.events_fetched > 0
             assert result.adapters_called == 1
 
@@ -707,8 +707,8 @@ class TestEventIngestionPipeline:
             pipeline = EventIngestionPipeline(store=store, deduplicator=dedup, normalizer=EventNormalizer())
             pipeline.register_adapter(SECEdgarAdapter(use_live_api=False))
             # Run twice — second run should see all events as duplicates
-            r1 = asyncio.get_event_loop().run_until_complete(pipeline.run())
-            r2 = asyncio.get_event_loop().run_until_complete(pipeline.run())
+            r1 = asyncio.run(pipeline.run())
+            r2 = asyncio.run(pipeline.run())
             assert r1.events_after_dedup > 0
             assert r2.events_after_dedup == 0  # all deduped
 
@@ -718,7 +718,7 @@ class TestEventIngestionPipeline:
             from app.services.timeline_store import JsonFileTimelineStore
             store = JsonFileTimelineStore(data_dir=tmpdir)
             pipeline = EventIngestionPipeline(store=store)
-            result = asyncio.get_event_loop().run_until_complete(pipeline.run())
+            result = asyncio.run(pipeline.run())
             assert result.duration_ms >= 0.0
 
     def test_health_check_no_adapters(self):
@@ -727,7 +727,7 @@ class TestEventIngestionPipeline:
             from app.services.timeline_store import JsonFileTimelineStore
             store = JsonFileTimelineStore(data_dir=tmpdir)
             pipeline = EventIngestionPipeline(store=store)
-            health = asyncio.get_event_loop().run_until_complete(pipeline.health_check())
+            health = asyncio.run(pipeline.health_check())
             assert "pipeline_healthy" in health
             assert health["pipeline_healthy"] is True  # vacuously true with no adapters
 
@@ -739,7 +739,7 @@ class TestEventIngestionPipeline:
             store = JsonFileTimelineStore(data_dir=tmpdir)
             pipeline = EventIngestionPipeline(store=store)
             pipeline.register_adapter(SECEdgarAdapter(use_live_api=False))
-            health = asyncio.get_event_loop().run_until_complete(pipeline.health_check())
+            health = asyncio.run(pipeline.health_check())
             assert health["adapters"]["sec_edgar"] is True
 
     def test_adapter_count(self):
@@ -790,7 +790,7 @@ class TestEventIngestionPipeline:
                 max_staleness_hours=48.0,  # tight window
             )
             pipeline._adapters.append(StaleAdapter())  # type: ignore
-            result = asyncio.get_event_loop().run_until_complete(pipeline.run())
+            result = asyncio.run(pipeline.run())
             assert result.skipped_stale >= 1
             assert result.events_after_freshness == 0
 

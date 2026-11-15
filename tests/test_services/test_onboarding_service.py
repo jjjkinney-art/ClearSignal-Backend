@@ -94,7 +94,7 @@ class TestNullSessionSafety:
     """All functions return safe defaults (not raise) when session is None."""
 
     def _run(self, coro):
-        return asyncio.get_event_loop().run_until_complete(coro)
+        return asyncio.run(coro)
 
     def test_get_returns_empty_state(self):
         from app.services.onboarding_service import get_onboarding_state
