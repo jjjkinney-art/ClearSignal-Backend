@@ -450,6 +450,17 @@ def fetch_verified_metric_evidence(
     if _as_reported:
         from .annual_filing_facts import note_company_facts
         note_company_facts(_response.get("data"))
+    if evidence and _as_reported and not is_decision_monitoring_request(question or ""):
+        # A filer reporting in another currency: the issuer's own presentation replaces a USD translation or a long-stale figure.
+        from .as_reported_financials import reported_basis_replacement
+        replacement = reported_basis_replacement(evidence, _response.get("data"), ticker, cik, boundary=boundary)
+        if replacement is not None:
+            from .evidence_outcomes import note_as_reported_withheld
+            evidence, _withheld = replacement
+            note_as_reported_withheld(_withheld, [
+                {"title": item.title, "period_end": item.reporting_period_end} for item in evidence])
+            from .annual_filing_facts import note_withheld
+            note_withheld(_withheld)
     if not evidence and _as_reported and not is_decision_monitoring_request(question or ""):
         # IFRS or non-USD/EUR company facts, as reported (default off): annual comparisons only, no conversion,
         # from the response above (no further request), and never for decision-threshold questions.

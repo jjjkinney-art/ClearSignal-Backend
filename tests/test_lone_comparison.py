@@ -21,6 +21,10 @@ FULL = json.loads((Path(__file__).resolve().parent / 'data' / 'company_facts_as_
 @pytest.fixture(autouse=True)
 def as_reported_on(monkeypatch):
     monkeypatch.setattr(settings, 'as_reported_financials_enabled', True, raising=False)
+    # A loss, an operating deficit or cash used is now compared (tests/test_signed_comparisons.py). The lone-comparison mechanism
+    # remains for any measure withheld for another reason, so these tests reproduce a withheld profit measure by switching the
+    # signed-measure rule off; they exercise the reasons text and the lone foundation, not the signed rule.
+    monkeypatch.setattr(ar, 'SIGNED_MEASURES', (), raising=True)
 
 
 def built(key, source=DATA):
