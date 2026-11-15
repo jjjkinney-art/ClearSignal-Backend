@@ -85,10 +85,12 @@ def test_a_ticker_word_inside_an_official_name_does_not_select_another_company(r
 
 def test_a_ticker_word_inside_an_ambiguous_official_name_is_not_trusted(routed):
     response = route(THESIS.format("T-Mobile US, Inc."))
-    # Not AT&T: identification stays unresolved and suggests the named issuer.
-    assert routed == []
-    text = response.answer["general"]["answer"]
-    assert "Did you mean" in text and "(TMUS)" in text and "AT&T" not in text
+    # Never AT&T. Either identification stays unresolved and suggests the named issuer, or (since a symbol that starts a
+    # hyphenated word is no longer read as that symbol) T-Mobile US itself is selected.
+    assert routed in ([], ["TMUS"])
+    if routed == []:
+        text = response.answer["general"]["answer"]
+        assert "Did you mean" in text and "(TMUS)" in text and "AT&T" not in text
 
 
 def test_a_plain_ticker_question_keeps_its_ticker(routed):
