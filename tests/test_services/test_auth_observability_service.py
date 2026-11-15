@@ -107,17 +107,17 @@ class TestNullSessionSnapshot:
 
     def test_returns_snapshot(self):
         from app.services.auth_observability_service import build_auth_snapshot
-        snap = asyncio.get_event_loop().run_until_complete(build_auth_snapshot(None))
+        snap = asyncio.run(build_auth_snapshot(None))
         assert snap is not None
 
     def test_db_available_false(self):
         from app.services.auth_observability_service import build_auth_snapshot
-        snap = asyncio.get_event_loop().run_until_complete(build_auth_snapshot(None))
+        snap = asyncio.run(build_auth_snapshot(None))
         assert snap.db_available is False
 
     def test_counts_are_zero(self):
         from app.services.auth_observability_service import build_auth_snapshot
-        snap = asyncio.get_event_loop().run_until_complete(build_auth_snapshot(None))
+        snap = asyncio.run(build_auth_snapshot(None))
         assert snap.user_count == 0
         assert snap.profile_count == 0
         assert snap.claimed_rows_count == 0
@@ -125,18 +125,18 @@ class TestNullSessionSnapshot:
 
     def test_system_user_present_false(self):
         from app.services.auth_observability_service import build_auth_snapshot
-        snap = asyncio.get_event_loop().run_until_complete(build_auth_snapshot(None))
+        snap = asyncio.run(build_auth_snapshot(None))
         assert snap.system_user_present is False
 
     def test_safe_state_false_when_db_unavailable(self):
         from app.services.auth_observability_service import build_auth_snapshot
-        snap = asyncio.get_event_loop().run_until_complete(build_auth_snapshot(None))
+        snap = asyncio.run(build_auth_snapshot(None))
         # db_available=False → safe_state must be False
         assert snap.safe_state is False
 
     def test_generated_at_present(self):
         from app.services.auth_observability_service import build_auth_snapshot
-        snap = asyncio.get_event_loop().run_until_complete(build_auth_snapshot(None))
+        snap = asyncio.run(build_auth_snapshot(None))
         assert snap.generated_at
         assert "T" in snap.generated_at  # ISO format
 
