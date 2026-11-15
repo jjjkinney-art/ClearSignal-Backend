@@ -160,11 +160,93 @@ def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int
 # remains (an exchange listing or a Y-ending ADR line), that symbol names the
 # issuer. Several remaining symbols, or only F lines, still abstain.
 _FOREIGN_ORDINARY_LINE = re.compile(r"[A-Z]{4}F")
+_DERIVATIVE_SUFFIXES = frozenset({"W", "WS", "WT", "WW", "U", "R", "RT", "RW"})
 
 
 def official_name_spans(value: str) -> list[tuple[tuple[int, int], list[Issuer]]]:
     """Where exact current official names occur in free text, and whose they are."""
-    return _name_windows(value, _load_directory()) if value.strip() else []
+    from .company_detection import mask_exchange_prefix
+    return _name_windows(mask_exchange_prefix(value), _load_directory()) if value.strip() else []
+
+
+def symbol_name_collisions(value: str) -> list[Issuer]:
+    """Issuers named by a symbol that is also another issuer's entire official name, or [] ("SUN": Sunoco LP and SUN)."""
+    if not value.strip():
+        return []
+    from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, mask_exchange_prefix
+    excluded = _TICKER_STOP_WORDS | frozenset(PROTECTED_GENERIC_TICKERS)
+    directory = _load_directory()
+    for token_match in re.finditer(r"(?<!\w)\$?[A-Z][A-Z0-9]{0,11}(?:[.-][A-Z0-9]{1,4})?(?!\w)", mask_exchange_prefix(value)):
+        token = token_match.group()
+        if token.lstrip("$") in excluded and not token.startswith("$"):
+            continue
+        item = directory.symbols.get(symbol(token))
+        others = [other for other in directory.names.get(token.lstrip("$").lower(), []) if item and other.cik != item.cik]
+        if item and others:
+            return [item, *others]
+    return []
+
+
+# Words that describe the question, not a company: a window made only of these never names an issuer by its first word(s).
+_QUESTION_WORDS = frozenset((
+    "investment thesis supports support invalidate distinguish reported facts inference cite material claims risks risk main good right "
+    "buy sell hold should could would what which where when why tell about financial financials performance performing performed doing "
+    "compared compare versus last year quarter sales profit profits growth outlook valuation overvalued undervalued opinion think "
+    "stock stocks share shares company companies business invest investing investor investors return returns price prices earnings "
+    "revenue margin margins dividend dividends interest rates inflation recession market markets sector industry economy economic "
+    "analysis analyze explain describe summary current latest recent future worth value fund funds trust capital group holdings "
+    "global national american united general first bank energy financial services technology technologies international").split())
+
+
+def name_prefix_candidates(value: str, limit: int = 5) -> list[Issuer]:
+    """Issuers whose official name BEGINS with the distinctive word(s) the question uses ("Toyota" -> TOYOTA MOTOR CORP).
+
+    Used only to make a clarification useful (offer these issuers); it never selects an issuer by itself. Windows made of question or
+    generic words are ignored; the window with the fewest matching issuers (at most six) wins, then the longest, then the earliest.
+    One issuer is offered once, under its shortest unsuffixed symbol.
+    """
+    import bisect
+    if not value or not value.strip():
+        return []
+    from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, _CONTEXT_WORDS, mask_exchange_prefix
+    directory = _load_directory()
+    keys = sorted(directory.names)
+    excluded = _TICKER_STOP_WORDS | frozenset(PROTECTED_GENERIC_TICKERS)
+    masked = mask_exchange_prefix(value)
+    spans = [m for m in re.finditer(r"[A-Za-z0-9]+", masked)]
+    words = [m.group().lower() for m in spans]
+    best = None
+    for width in (3, 2, 1):
+        for start in range(len(words) - width + 1):
+            window = words[start:start + width]
+            if all(w in _QUESTION_WORDS or w in _CONTEXT_WORDS or w.upper() in excluded for w in window):
+                continue
+            if width == 1:
+                original = spans[start].group()
+                # One word names an issuer only as a proper noun: capitalised, not just the first word of a longer sentence
+                # ("Lithium prices ..."), and not a generic or question word.
+                if (len(window[0]) < 4 or window[0] in _QUESTION_WORDS or window[0] in _CONTEXT_WORDS or window[0].upper() in excluded
+                        or not original[0].isupper() or (start == 0 and len(words) > 3)):
+                    continue
+            key = " ".join(window)
+            found = {}
+            for k in keys[bisect.bisect_left(keys, key + " "):bisect.bisect_left(keys, key + "!")]:
+                for item in directory.names[k]:
+                    found.setdefault(item.cik, []).append(item)
+            for item in directory.names.get(key, []):
+                found.setdefault(item.cik, []).append(item)
+            if not found or len(found) > 6:
+                continue
+            rank = (len(found), -width, start)
+            if best is None or rank < best[0]:
+                best = (rank, found)
+    if best is None:
+        return []
+    out = []
+    for items in best[1].values():
+        plain = sorted((i for i in items if not re.search(r"[.-]", i.ticker)), key=lambda i: (len(i.ticker), i.ticker)) or sorted(items, key=lambda i: i.ticker)
+        out.append(plain[0])
+    return sorted(out, key=lambda i: (len(i.name), i.name))[:limit]
 
 
 def discover_company(value: str, *, question_text: bool = False, as_of=None) -> CompanyContext | None:
@@ -175,6 +257,9 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
     """
     if not value.strip() or as_of:
         return None  # A current directory cannot prove historical identity.
+    if question_text:
+        from .company_detection import mask_exchange_prefix
+        value = mask_exchange_prefix(value)
     directory = _load_directory()
     if not question_text:
         issuer = exact_issuer(value, directory)
@@ -204,6 +289,11 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             item = directory.symbols.get(symbol(token))
             if item:
                 matches[item.ticker] = item
+                # A symbol that is also another issuer's entire official name ("SUN" is Sunoco LP's symbol and an issuer's
+                # name; "HP" is Helmerich & Payne's symbol and HP Inc.'s name) names two issuers: it must not pick one.
+                for other in directory.names.get(token.lstrip("$").lower(), []):
+                    if other.cik != item.cik:
+                        matches[other.ticker] = other
         issuer = next(iter(matches.values())) if len(matches) == 1 else None
         if issuer is None and len({item.cik for item in matches.values()}) == 1:
             # One issuer's securities (common plus preferred or notes): the
@@ -215,6 +305,15 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
                 # Distinct share classes (GOOGL/GOOG) still abstain.
                 listed = [item for item in base if not _FOREIGN_ORDINARY_LINE.fullmatch(item.ticker)]
                 base = listed if len(listed) == 1 else base
+            if len(base) > 1:
+                # An offering's other lines: warrants, units and rights carry the common symbol plus a derivative
+                # suffix (GRAB / GRABW, CORZ / CORZW / CORZR / CORZZ). One symbol that all the others extend this
+                # way names the issuer; unrelated share classes (GOOGL/GOOG, RUSHA/RUSHB) still abstain.
+                derivatives = {item.ticker for item in base for other in base
+                               if other.ticker != item.ticker and item.ticker.startswith(other.ticker)
+                               and item.ticker[len(other.ticker):] in _DERIVATIVE_SUFFIXES}
+                primary = [item for item in base if item.ticker not in derivatives]
+                base = primary if len(primary) == 1 else base
             issuer = base[0] if len(base) == 1 else None
     if issuer is None:
         return None
