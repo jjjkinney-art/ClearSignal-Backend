@@ -16,7 +16,15 @@ from validation.capture_budget import AttemptLedger, BudgetError, setup_binding
 def no_network(monkeypatch):
     def refuse(*args, **kwargs):
         pytest.fail('network attempted')
-    monkeypatch.setattr(socket.socket, 'connect', refuse)
+    real_connect = socket.socket.connect
+
+    def refuse_connect(self, *args, **kwargs):
+        # Python 3.14 starts ProcessPoolExecutor workers through the forkserver on Linux, whose parent connects to it over a
+        # local AF_UNIX socket. That is not network access; every other connect is still refused.
+        if self.family == getattr(socket, 'AF_UNIX', None):
+            return real_connect(self, *args, **kwargs)
+        pytest.fail('network attempted')
+    monkeypatch.setattr(socket.socket, 'connect', refuse_connect)
     monkeypatch.setattr(socket.socket, 'sendto', refuse)
     monkeypatch.setattr(socket, 'getaddrinfo', refuse)
 
