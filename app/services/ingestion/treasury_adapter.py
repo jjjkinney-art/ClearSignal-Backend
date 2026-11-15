@@ -142,7 +142,7 @@ class TreasuryMacroAdapter(EventIngestionAdapter):
         Implemented as a stub — returns synthetic in this version.
         Replace with actual FRED API calls for production deployment.
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._synthetic_events)
 
     # ── Synthetic events ───────────────────────────────────────────────────

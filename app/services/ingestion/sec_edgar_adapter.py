@@ -191,7 +191,7 @@ class SECEdgarAdapter(EventIngestionAdapter):
         since: Optional[str],
     ) -> List[NormalizedEvent]:
         """Call the real EDGAR API in a thread pool."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._fetch_live_sync, tickers, since)
 
     def _fetch_live_sync(

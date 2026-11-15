@@ -87,7 +87,7 @@ async def _stream_for_symbol(
     last_events = 0.0
     last_financial = 0.0
     while not _stop_event.is_set():
-        now = asyncio.get_event_loop().time()
+        now = asyncio.get_running_loop().time()
         # Price updates
         if now - last_price >= price_interval:
             try:

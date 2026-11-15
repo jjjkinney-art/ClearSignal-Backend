@@ -682,7 +682,14 @@ _INVESTMENT_INTENT_KEYWORDS: frozenset = frozenset([
     "worth", "performance", "position", "upside", "downside",
     "dividend", "dividend yield", "earnings yield", "free cash flow yield",
     "fcf yield", "multiple", "pe ratio", "p/e",
+    # Natural status questions about a named company ("How is Microsoft doing compared with last year?") carried none of
+    # the words above and fell to a general answer that never mentioned the company.
+    "performing", "performed", "year over year", "year-over-year", "last year", "last quarter",
+    "financial", "financials", "profit", "profits", "sales",
 ])
+
+# "How is X doing ..." / "How has X been trending ..." state a status question; "What is X doing to ..." (a plan) does not.
+_STATUS_QUESTION = re.compile(r"\bhow (?:is|are|was|were|has|have)\b.*\b(?:doing|trending|faring)\b", re.IGNORECASE)
 
 
 def _has_investment_intent(question: str) -> bool:
@@ -693,7 +700,7 @@ def _has_investment_intent(question: str) -> bool:
     ("Why are Treasury yields rising?").
     """
     q = question.lower()
-    return any(kw in q for kw in _INVESTMENT_INTENT_KEYWORDS)
+    return any(kw in q for kw in _INVESTMENT_INTENT_KEYWORDS) or bool(_STATUS_QUESTION.search(question))
 
 
 def _is_bare_company_reference(question: str, resolution: Any) -> bool:
@@ -2395,11 +2402,24 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
-                elif _entity_resolution.method == "exact_ticker" and _entity_resolution.context is not None:
+                    else:
+                        from .issuer_identity import symbol_name_collisions
+                        _pair = symbol_name_collisions(request.question)
+                        if _pair:
+                            from .company_detection import EntityResolution
+                            _entity_resolution = EntityResolution(
+                                None, 0.0, "not_found", request.question,
+                                candidates=[(item.ticker, item.name, 1.0) for item in _pair],
+                                rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
+                elif _entity_resolution.method in ("exact_ticker", "alias_exact") and _entity_resolution.context is not None:
                     # A ticker-shaped word that occurs only inside other issuers'
                     # official names ("DE" in "BETTERWARE DE MEXICO, S.A.P.I. DE
                     # C.V", "T" in "T-Mobile US, Inc.") is part of those names,
-                    # not a second company. The official name wins when it
+                    # not a second company. The same holds for a well-known brand
+                    # alias ("coca-cola" in "COCA-COLA EUROPACIFIC PARTNERS plc",
+                    # "blackrock" in "BlackRock Capital Allocation Term Trust"):
+                    # when the alias occurs only inside another issuer's full
+                    # official name, that name wins. The official name wins when it
                     # identifies one issuer; otherwise the ticker is not trusted
                     # and the named issuer's securities become suggestions.
                     from .issuer_identity import official_name_spans, symbol
@@ -2408,8 +2428,21 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     _names = [(span, found) for span, found in official_name_spans(request.question)
                               if _ticker not in {item.ticker for item in found}]
                     _hits = [hit.span() for hit in re.finditer(
-                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question)] if _token else []
-                    if _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
+                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question,
+                        re.IGNORECASE if _entity_resolution.method == "alias_exact" else 0)] if _token else []
+                    # One more genuine collision: the word is this issuer's symbol AND another issuer's entire official name
+                    # (symbol SUN is Sunoco LP; an issuer is registered as "SUN"). Neither reading is safe: ask.
+                    from .issuer_identity import _load_directory as _identity_directory
+                    _own = _identity_directory().symbols.get(_ticker)
+                    _same_name = [item for item in _identity_directory().names.get(_token.lower().lstrip("$"), [])
+                                  if _own is not None and item.cik != _own.cik]
+                    if _same_name and _own is not None and _entity_resolution.method == "exact_ticker":
+                        from .company_detection import EntityResolution
+                        _entity_resolution = EntityResolution(
+                            None, 0.0, "not_found", _entity_resolution.matched_text,
+                            candidates=[(_own.ticker, _own.name, 1.0)] + [(item.ticker, item.name, 1.0) for item in _same_name],
+                            rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
+                    elif _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
                                      for start, end in _hits):
                         from .company_detection import EntityResolution
                         _official = discover_company(request.question, question_text=True, as_of=request.as_of)
@@ -2614,14 +2647,25 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         _entity_resolution is not None
         and any(score >= _DYM_MIN_CONFIDENCE for _, _, score in _entity_resolution.candidates)
     )
+    # A company named by the first word(s) of its official name ("Toyota", "Alibaba", "Afya") is offered as itself, not as
+    # whichever aliases the question's other words happen to resemble. Suggestions only: nothing is selected from a prefix.
+    _prefix_issuers = []
+    if _entity_resolution is not None and _entity_resolution.context is None and _has_intent:
+        try:
+            from .issuer_identity import name_prefix_candidates
+            _prefix_issuers = name_prefix_candidates(request.question)
+        except Exception:
+            _prefix_issuers = []
     if (
         _entity_resolution is not None
         and _entity_resolution.context is None
         and _has_intent
-        and _has_quality_candidates
+        and (_has_quality_candidates or _prefix_issuers)
     ):
         request_id = str(uuid.uuid4())
-        candidates = _named_issuer_candidates(request.question) or _entity_resolution.candidates[:3]
+        candidates = (_named_issuer_candidates(request.question)
+                      or [(item.ticker, item.name, 1.0) for item in _prefix_issuers]
+                      or _entity_resolution.candidates[:3])
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",
