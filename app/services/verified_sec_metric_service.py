@@ -430,6 +430,12 @@ def fetch_verified_metric_evidence(
             )) is not None
         ]
         item = candidates[0] if candidates else None
+        if (item is not None and len(candidates) > 1 and metric_name == "net income"
+                and getattr(settings, "latest_alias_net_income_enabled", False) is True):
+            # Same rule as revenue below, for the one other measure with two interchangeable-in-time concepts: an issuer that stopped tagging
+            # NetIncomeLoss keeps tagging ProfitLoss. The candidate with the latest current period; equal periods keep the configured order
+            # (NetIncomeLoss), and each candidate is already a complete same-concept, same-unit pair, so values are never joined.
+            item = max(candidates, key=lambda candidate: candidate.reporting_period_end or "")
         if metric_name == "revenue" and item is not None:
             # Issuers change revenue concepts over time (Alphabet moved from
             # RevenueFromContractWithCustomerExcludingAssessedTax to Revenues),
