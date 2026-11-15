@@ -1445,11 +1445,28 @@ def _token_windows(text: str, max_ngram: int = 4) -> list[str]:
     return windows
 
 
+_EXCHANGE_PREFIX = re.compile(
+    r"\b(?:NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|NYSEMKT|AMEX|CBOE|OTC|OTCMKTS|OTCQB|OTCQX|TSX|TSXV|LSE|ASX)\s*:\s*", re.IGNORECASE)
+
+
+def mask_exchange_prefix(text: str) -> str:
+    """Blank out an exchange label written before a symbol ("NASDAQ: BTMD", "NYSE:KO").
+
+    The exchange is not the company: left in place, "NASDAQ" resolves to Nasdaq, Inc. and the user is asked to choose.
+    The label is replaced by spaces of the same length so every character offset in the text is unchanged.
+    """
+    return _EXCHANGE_PREFIX.sub(lambda match: " " * len(match.group()), text or "")
+
+
 def _extract_explicit_ticker(text: str) -> Optional[CompanyContext]:
     """Step 1 — scan *text* for an uppercase word that is a known ticker."""
     for match in _TICKER_RE.finditer(text):
         candidate = match.group(1)
         if candidate in _TICKER_STOP_WORDS:
+            continue
+        # A symbol written as the start of a hyphenated word is part of that word ("T-Mobile" is not "T"). A real class
+        # suffix ("BRK-B") is consumed by the pattern itself, so a hyphen followed by a letter here means the word goes on.
+        if text[match.end():match.end() + 2] and text[match.end()] == "-" and text[match.end() + 1:match.end() + 2].isalpha():
             continue
         if candidate in _COMPANY_DB:
             return _make_context(candidate, candidate)
@@ -1521,6 +1538,8 @@ def _fuzzy_token_match(
         # a reasonable range of the window length (avoids matching
         # a 2-char window against a 15-char alias).
         wlen = len(window)
+        if wlen < 5:
+            continue  # a 3- or 4-letter ordinary word ("all", "cost") is never a misspelling of a company alias
         # Fuzzy resolution is for spelling mistakes, not partial company-name
         # matches.  Requiring the same token count prevents an ordinary word
         # such as "brown" from resolving to the two-token alias
@@ -1543,6 +1562,8 @@ def _fuzzy_token_match(
             cutoff=cutoff,
         )
         for match in close:
+            if match.startswith(window) or window.startswith(match):
+                continue  # a truncation or extension ("cost" for "costco") is not a spelling mistake
             score = difflib.SequenceMatcher(None, window, match).ratio()
             if score > best_score:
                 best_score = score
@@ -1631,6 +1652,7 @@ def resolve_entity(text: str) -> EntityResolution:
         Always returns an object (never raises).  Check ``context`` and
         ``confidence`` in the caller.
     """
+    text = mask_exchange_prefix(text)
     import json as _json
 
     if not text or not text.strip():

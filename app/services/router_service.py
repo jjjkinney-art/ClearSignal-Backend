@@ -2395,6 +2395,15 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
+                    else:
+                        from .issuer_identity import symbol_name_collisions
+                        _pair = symbol_name_collisions(request.question)
+                        if _pair:
+                            from .company_detection import EntityResolution
+                            _entity_resolution = EntityResolution(
+                                None, 0.0, "not_found", request.question,
+                                candidates=[(item.ticker, item.name, 1.0) for item in _pair],
+                                rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
                 elif _entity_resolution.method in ("exact_ticker", "alias_exact") and _entity_resolution.context is not None:
                     # A ticker-shaped word that occurs only inside other issuers'
                     # official names ("DE" in "BETTERWARE DE MEXICO, S.A.P.I. DE
@@ -2414,7 +2423,19 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     _hits = [hit.span() for hit in re.finditer(
                         rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question,
                         re.IGNORECASE if _entity_resolution.method == "alias_exact" else 0)] if _token else []
-                    if _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
+                    # One more genuine collision: the word is this issuer's symbol AND another issuer's entire official name
+                    # (symbol SUN is Sunoco LP; an issuer is registered as "SUN"). Neither reading is safe: ask.
+                    from .issuer_identity import _load_directory as _identity_directory
+                    _own = _identity_directory().symbols.get(_ticker)
+                    _same_name = [item for item in _identity_directory().names.get(_token.lower().lstrip("$"), [])
+                                  if _own is not None and item.cik != _own.cik]
+                    if _same_name and _own is not None and _entity_resolution.method == "exact_ticker":
+                        from .company_detection import EntityResolution
+                        _entity_resolution = EntityResolution(
+                            None, 0.0, "not_found", _entity_resolution.matched_text,
+                            candidates=[(_own.ticker, _own.name, 1.0)] + [(item.ticker, item.name, 1.0) for item in _same_name],
+                            rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
+                    elif _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
                                      for start, end in _hits):
                         from .company_detection import EntityResolution
                         _official = discover_company(request.question, question_text=True, as_of=request.as_of)
@@ -2619,14 +2640,25 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         _entity_resolution is not None
         and any(score >= _DYM_MIN_CONFIDENCE for _, _, score in _entity_resolution.candidates)
     )
+    # A company named by the first word(s) of its official name ("Toyota", "Alibaba", "Afya") is offered as itself, not as
+    # whichever aliases the question's other words happen to resemble. Suggestions only: nothing is selected from a prefix.
+    _prefix_issuers = []
+    if _entity_resolution is not None and _entity_resolution.context is None and _has_intent:
+        try:
+            from .issuer_identity import name_prefix_candidates
+            _prefix_issuers = name_prefix_candidates(request.question)
+        except Exception:
+            _prefix_issuers = []
     if (
         _entity_resolution is not None
         and _entity_resolution.context is None
         and _has_intent
-        and _has_quality_candidates
+        and (_has_quality_candidates or _prefix_issuers)
     ):
         request_id = str(uuid.uuid4())
-        candidates = _named_issuer_candidates(request.question) or _entity_resolution.candidates[:3]
+        candidates = (_named_issuer_candidates(request.question)
+                      or [(item.ticker, item.name, 1.0) for item in _prefix_issuers]
+                      or _entity_resolution.candidates[:3])
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",
