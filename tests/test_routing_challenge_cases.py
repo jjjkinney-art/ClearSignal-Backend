@@ -62,6 +62,13 @@ def test_ordinary_words_do_not_fuzzy_match_a_company(routed, question):
     assert routed == []
 
 
+@pytest.mark.parametrize("question", [
+    "How is MICROSOFT CORP doing compared with last year?", "How is Microsoft performing?", "Tell me about Microsoft's sales"])
+def test_a_status_question_about_a_named_company_reaches_the_company_pipeline(routed, question):
+    route(question)
+    assert routed == ["MSFT"]
+
+
 def test_a_symbol_that_is_another_issuers_whole_name_asks_which(routed):
     response = route("What is the investment thesis for SUN?")
     assert routed == []
@@ -118,3 +125,7 @@ def test_a_lowercase_or_sentence_opening_word_offers_no_issuer(prefix_routed):
     assert identity.name_prefix_candidates("Zentrix prices rose across every sector this week, what does it mean?") == []
     assert [i.ticker for i in identity.name_prefix_candidates("What about Zentrix Energy?")] == ["ZNRG"]
 
+
+def test_a_status_question_has_intent_but_a_plan_question_does_not():
+    assert router._has_investment_intent("How is Microsoft doing compared with last year?")
+    assert not router._has_investment_intent("What is Tesla doing to set itself up to do well in 2030 and beyond?")

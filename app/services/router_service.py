@@ -682,7 +682,14 @@ _INVESTMENT_INTENT_KEYWORDS: frozenset = frozenset([
     "worth", "performance", "position", "upside", "downside",
     "dividend", "dividend yield", "earnings yield", "free cash flow yield",
     "fcf yield", "multiple", "pe ratio", "p/e",
+    # Natural status questions about a named company ("How is Microsoft doing compared with last year?") carried none of
+    # the words above and fell to a general answer that never mentioned the company.
+    "performing", "performed", "year over year", "year-over-year", "last year", "last quarter",
+    "financial", "financials", "profit", "profits", "sales",
 ])
+
+# "How is X doing ..." / "How has X been trending ..." state a status question; "What is X doing to ..." (a plan) does not.
+_STATUS_QUESTION = re.compile(r"\bhow (?:is|are|was|were|has|have)\b.*\b(?:doing|trending|faring)\b", re.IGNORECASE)
 
 
 def _has_investment_intent(question: str) -> bool:
@@ -693,7 +700,7 @@ def _has_investment_intent(question: str) -> bool:
     ("Why are Treasury yields rising?").
     """
     q = question.lower()
-    return any(kw in q for kw in _INVESTMENT_INTENT_KEYWORDS)
+    return any(kw in q for kw in _INVESTMENT_INTENT_KEYWORDS) or bool(_STATUS_QUESTION.search(question))
 
 
 def _is_bare_company_reference(question: str, resolution: Any) -> bool:
