@@ -43,8 +43,13 @@ def symbol(value: str) -> str:
     return value.strip().lstrip("$").upper().replace("-", ".")
 
 
+# SEC titles end with a state or country tag ("LITTELFUSE INC /DE", "PORTLAND GENERAL ELECTRIC CO /OR/", "PATRIOT ACQUISITION CORP./CI"):
+# it is a registry annotation, not part of the name a person types, so it is not part of the key.
+_REGISTRY_TAG = re.compile(r"\s*/[A-Za-z]{2,4}/?\s*$")
+
+
 def name_key(value: str) -> str:
-    value = re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+    value = re.sub(r"[^a-z0-9]+", " ", _REGISTRY_TAG.sub("", value).lower()).strip()
     while _SUFFIX.search(value):
         value = _SUFFIX.sub("", value).strip()
     return value
@@ -149,7 +154,11 @@ def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int
                         legal.upper() in excluded or legal in _CONTEXT_WORDS)):
                     found = directory.names.get(legal, [])
             if found:
-                windows.append(((words[start].start(), words[start + width - 1].end()), found))
+                end = words[start + width - 1].end()
+                tag = re.match(r"[\s.,]*/[A-Za-z]{2,4}/?(?![A-Za-z0-9])", value[end:])
+                if tag:      # the registry tag written after the name ("... CORP /DE/") belongs to the name, not to a second company
+                    end += tag.end()
+                windows.append(((words[start].start(), end), found))
     return windows
 
 
@@ -247,6 +256,72 @@ def name_prefix_candidates(value: str, limit: int = 5) -> list[Issuer]:
         plain = sorted((i for i in items if not re.search(r"[.-]", i.ticker)), key=lambda i: (len(i.ticker), i.ticker)) or sorted(items, key=lambda i: i.ticker)
         out.append(plain[0])
     return sorted(out, key=lambda i: (len(i.name), i.name))[:limit]
+
+
+_NAME_EDGE_STOP = frozenset("a an the of and for in on to is are was what which who how why when where about with from by at as or vs versus its it".split())
+_NAME_TAIL = frozenset("trust fund funds inc incorporated corp corporation co company companies ltd limited plc llc lp group holdings holding".split())
+
+
+def other_issuers_naming_phrase(value: str, hits: list[tuple[int, int]], own_ciks: set[str]) -> tuple[list[Issuer], str, bool]:
+    """Issuers other than the matched one whose official name contains the phrase around a matched word.
+
+    A brand alias or ticker-like word that sits inside a longer proper name ("Eaton" in "Eaton Vance Duration Income Fund", "OR" or
+    "General Electric" in "Portland General Electric") may belong to that longer name. `hits` are the character spans of the matched
+    word in `value`; `own_ciks` are the CIKs of the issuer the word resolved to. Returns (issuers, phrase, sole): the issuers whose name
+    contains the longest phrase made of the matched word plus its neighbours (neither edge a function word) that the matched issuer's
+    own name does not contain, the phrase, and True when exactly one issuer qualifies and its name continues the phrase only with
+    legal-form or generic words ("... Realty Income" -> "... Realty Income Trust"). Empty when nothing qualifies.
+    """
+    if not value.strip() or not hits:
+        return [], "", False
+    from .company_detection import mask_exchange_prefix
+    masked = mask_exchange_prefix(value)
+    directory = _load_directory()
+    words = [(m.group().lower(), m.start(), m.end()) for m in re.finditer(r"[A-Za-z0-9]+", masked)]
+    own_keys = [" " + key + " " for key, items in directory.names.items() if any(i.cik in own_ciks for i in items)]
+    best = None
+    for hit_start, hit_end in hits:
+        covered = [n for n, (_, start, end) in enumerate(words) if start < hit_end and end > hit_start]
+        if not covered:
+            return [], "", False
+        first, last = covered[0], covered[-1]
+        hit_best = None
+        for left in range(0, 4):
+            for right in range(0, 5):
+                lo, hi = first - left, last + right
+                if (left + right == 0) or lo < 0 or hi >= len(words) or hi - lo + 1 > 8:
+                    continue
+                if words[lo][0] in _NAME_EDGE_STOP or words[hi][0] in _NAME_EDGE_STOP:
+                    continue
+                phrase = " ".join(w[0] for w in words[lo:hi + 1]); padded = " " + phrase + " "
+                core = " " + name_key(phrase) + " "      # the phrase without a trailing legal form: "... Acquisition Corp" is the same name as "... Acquisition"
+                if any(padded in own or core in own for own in own_keys):
+                    continue
+                found = {}
+                for key, items in directory.names.items():
+                    if padded in " " + key + " ":
+                        for item in items:
+                            if item.cik not in own_ciks:
+                                found.setdefault(item.cik, []).append((key, item))
+                if found and (hit_best is None or (hi - lo, -len(found)) > (hit_best[0], -len(hit_best[1]))):
+                    hit_best = (hi - lo, found, phrase)
+        if hit_best is None:
+            return [], "", False      # this occurrence stands on its own ("... for T, given competition from T-Mobile US"): the word is really there
+        if best is None or (hit_best[0], -len(hit_best[1])) > (best[0], -len(best[1])):
+            best = hit_best
+    if best is None:
+        return [], "", False
+    _, found, phrase = best
+    issuers = []
+    for rows in found.values():
+        plain = sorted((i for _, i in rows if not re.search(r"[.-]", i.ticker)), key=lambda i: (len(i.ticker), i.ticker)) or sorted((i for _, i in rows), key=lambda i: i.ticker)
+        issuers.append(plain[0])
+    issuers.sort(key=lambda i: (len(i.name), i.name))
+    sole = False
+    if len(found) == 1:
+        keys = [key for key, _ in next(iter(found.values()))]
+        sole = any(key.startswith(phrase + " ") and set(key[len(phrase):].split()) <= _NAME_TAIL or key == phrase for key in keys)
+    return issuers[:6], phrase, sole
 
 
 def discover_company(value: str, *, question_text: bool = False, as_of=None) -> CompanyContext | None:

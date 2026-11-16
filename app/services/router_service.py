@@ -2451,6 +2451,43 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                                 rejection_reason="ticker_inside_official_name",
                                 fallback_reason="candidates_available",
                             )
+            if (_entity_resolution is not None and _entity_resolution.context is not None
+                    and _entity_resolution.method in ("exact_ticker", "alias_exact", "sec_directory_exact")):
+                # The matched word (a brand alias or a ticker-like word) may be the start or the middle of a LONGER proper name that is
+                # not written exactly as the SEC titles it ("Eaton Vance Duration Income Fund", "Universal Health Realty Income").
+                # When the matched issuer's own name does not contain that longer phrase and another issuer's official name does, the
+                # alias is not trusted: one issuer whose name merely continues with legal or generic words is that issuer; otherwise ask.
+                try:
+                    from .issuer_identity import _load_directory as _id_dir, other_issuers_naming_phrase, symbol as _id_symbol
+                    _own = _id_dir().symbols.get(_id_symbol(_entity_resolution.context.ticker))
+                    _tok = (_entity_resolution.matched_text or "").strip().lstrip("$")
+                    if _entity_resolution.method == "sec_directory_exact":
+                        from .issuer_identity import official_name_spans
+                        _spans = [span for span, found in official_name_spans(request.question)
+                                  if _own is not None and any(item.cik == _own.cik for item in found)]
+                        if not _spans and _own is not None:      # the issuer was selected by a ticker-like word in the text
+                            _spans = [m.span() for m in re.finditer(
+                                rf"(?<![\w$])\$?{re.escape(_own.ticker.replace('.', '-'))}(?!\w)|(?<![\w$])\$?{re.escape(_own.ticker)}(?!\w)", request.question)]
+                    else:
+                        _spans = [m.span() for m in re.finditer(
+                            rf"(?<![\w$])\$?{re.escape(_tok)}(?!\w)", request.question,
+                            re.IGNORECASE if _entity_resolution.method == "alias_exact" else 0)] if _tok else []
+                    if _own is not None and _spans:
+                        _others, _phrase, _sole = other_issuers_naming_phrase(request.question, _spans, {_own.cik})
+                        if _others:
+                            from .company_detection import EntityResolution
+                            if _sole and len(_others) == 1:
+                                _only = _others[0]
+                                _entity_resolution = EntityResolution(
+                                    CompanyContext(ticker=_only.ticker, company_name=_only.name, aliases=[request.question]),
+                                    1.0, "sec_directory_name_phrase", _phrase)
+                            else:
+                                _entity_resolution = EntityResolution(
+                                    None, 0.0, "not_found", _entity_resolution.matched_text,
+                                    candidates=[(item.ticker, item.name, 1.0) for item in _others],
+                                    rejection_reason="word_inside_longer_issuer_name", fallback_reason="candidates_available")
+                except Exception as _phrase_exc:      # identity guard must never break routing
+                    logger.warning("[router] phrase guard failed: %r", _phrase_exc)
             logger.info(
                 json.dumps({
                     "event": "entity_resolution",
@@ -2656,9 +2693,12 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         and (_has_quality_candidates or _prefix_issuers)
     ):
         request_id = str(uuid.uuid4())
-        candidates = (_named_issuer_candidates(request.question)
-                      or [(item.ticker, item.name, 1.0) for item in _prefix_issuers]
-                      or _entity_resolution.candidates[:3])
+        if _entity_resolution.rejection_reason == "word_inside_longer_issuer_name":
+            candidates = list(_entity_resolution.candidates[:5])        # the issuers whose names contain the longer phrase
+        else:
+            candidates = (_named_issuer_candidates(request.question)
+                          or [(item.ticker, item.name, 1.0) for item in _prefix_issuers]
+                          or _entity_resolution.candidates[:3])
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",
