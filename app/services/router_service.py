@@ -2029,13 +2029,14 @@ def _security_clarification(company, question: str, request_id: str, decision) -
                                     "matched_lines": [t for t, _ in decision.lines], "security_specific_evidence": "unavailable"}})
 
 
-def _run_scoped_pipeline(*, company, question: str, request_id: str, **kwargs) -> AgentAnswerResponse:
+def _run_scoped_pipeline(*, company, question: str, request_id: str, scope_decision=None, **kwargs) -> AgentAnswerResponse:
     """`_run_investment_pipeline`, with the security scope step for questions that name a kind of security (warrants, preferred stock, notes or bonds,
     depositary shares, a share class): ask which line when several fit, otherwise answer at issuer level and say so in the first sentence."""
-    decision = None
+    decision = scope_decision
     try:
         from . import security_scope
-        decision = security_scope.decide(question, company.ticker, company.company_name)
+        if decision is None:
+            decision = security_scope.decide(question, company.ticker, company.company_name)
     except Exception as exc:      # the scope step must never break routing
         logger.warning("[router] security scope failed: %r", exc)
     if decision is not None and decision.action == "ask":
@@ -2201,6 +2202,28 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                            request.question, re.IGNORECASE))
     )
     if _comparative_requested and not _selected_historical_comparison:
+        # Two or more lines of ONE issuer ("GOOG and GOOGL", "F and F-PB", "RGTI with RGTIW") are not a ranking between companies: answer for the issuer and say so.
+        try:
+            from . import security_scope as _scope_mod
+            _same_issuer = _scope_mod.same_issuer_comparison(request.question, [c.ticker for c in _comparison_companies])
+        except Exception as _same_exc:
+            logger.warning("[router] same-issuer comparison check failed: %r", _same_exc)
+            _same_issuer = None
+        if _same_issuer is not None:
+            _decision, _rep = _same_issuer
+            return _run_scoped_pipeline(
+                company=CompanyContext(ticker=_rep.ticker, company_name=_rep.name, aliases=[request.question]),
+                question=request.question,
+                request_id=str(uuid.uuid4()),
+                scope_decision=_decision,
+                memory_context_block=getattr(request, "memory_context_block", None),
+                memory_context_data=getattr(request, "memory_context_data", None),
+                dossier_context_block=getattr(request, "dossier_context_block", None),
+                personalization_context_data=getattr(request, "personalization_context_data", None),
+                research_memory_context_block=getattr(request, "research_memory_context_block", None),
+                research_memory_context_data=getattr(request, "research_memory_context_data", None),
+                as_of=request.as_of,
+            )
         if len(_comparison_companies) >= 2:
             request_id = str(uuid.uuid4())
             _comparison = build_comparative_ranking(

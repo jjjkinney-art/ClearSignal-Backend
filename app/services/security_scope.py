@@ -28,7 +28,7 @@ _KINDS: dict[str, re.Pattern] = {
         rf"\b(?:the|its|their|{_NAME})\s+bonds\b|\bbonds\s+(?:issued|due|maturing)\b|\(the\s+bonds\)|['\u2019]s\s+bonds\b", re.I),
     "share_class": re.compile(r"\bclass\s+[a-z0-9]\s+(?:shares?|stock|common|ordinary|equity)\b", re.I),
 }
-_PHRASE = {"warrants": "warrants", "preferred": "preferred stock", "depositary": "depositary shares", "debt": "notes or bonds", "share_class": "share class"}
+_PHRASE = {"comparison": "securities compared", "warrants": "warrants", "preferred": "preferred stock", "depositary": "depositary shares", "debt": "notes or bonds", "share_class": "share class"}
 _WARRANT = re.compile(r"(?:W|WS|WT|WW)[A-Z]?")
 _DERIVATIVE = re.compile(r"(?:W|WS|WT|WW|U|UN|R|RT|RW)[A-Z]?")
 _PREFERRED = re.compile(r"\.P[A-Z]?$")
@@ -100,6 +100,63 @@ def lines_of_kind(kind: str, lines: list) -> list:
     return []        # the directory has no debt lines
 
 
+_DESIGNATOR = {"share_class": re.compile(r"\bclass\s+([a-z0-9])\s+(?:shares?|stock|common|ordinary|equity)\b", re.I),
+               "preferred": re.compile(r"\bseries\s+([a-z0-9]{1,2})\s+preferred\b", re.I)}
+
+
+def _named_designators(question: str, kind: str) -> str:
+    """"Class A shares and Class C shares" when a comparison names two or more distinct classes or series of one kind, else ""."""
+    from .comparative_ranking_service import is_comparative_question
+    pattern = _DESIGNATOR.get(kind)
+    if pattern is None or not is_comparative_question(question):
+        return ""
+    found = []
+    for m in pattern.finditer(question):
+        if m.group(1).upper() not in found:
+            found.append(m.group(1).upper())
+    if len(found) < 2:
+        return ""
+    word = "Class" if kind == "share_class" else "Series"; tail = "shares" if kind == "share_class" else "preferred"
+    names = [f"{word} {d} {tail}" for d in found]
+    return " and ".join(names) if len(names) == 2 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def same_issuer_comparison(question: str, detected: list[str] | None = None) -> "tuple[ScopeDecision, object] | None":
+    """A comparison whose named securities (typed tickers, or companies resolved by name) are two or more lines of ONE issuer: the decision to label it
+    at issuer level and the issuer's representative line. None otherwise (including every comparison between different issuers)."""
+    from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, mask_registry_tags
+    from .comparative_ranking_service import is_comparative_question
+    from .issuer_identity import _load_directory, representative_security, symbol
+    if not is_comparative_question(question):
+        return None
+    try:
+        directory = _load_directory(); text = mask_registry_tags(question); found: dict[str, object] = {}
+        for m in re.finditer(r"(?<![\w$.-])(\$?)([A-Za-z][A-Za-z0-9]{0,5}(?:[.-][A-Za-z0-9]{1,3})?)(?![\w])", text):
+            word = m.group(2)
+            if not m.group(1) and not (word == word.upper() and re.search(r"[a-z]", text)):
+                continue          # a typed ticker is upper case (or $-prefixed)
+            if not m.group(1) and (word.upper() in _TICKER_STOP_WORDS or word.upper() in PROTECTED_GENERIC_TICKERS):
+                continue
+            item = directory.symbols.get(symbol(word))
+            if item is not None:
+                found[item.ticker] = item
+        for t in detected or []:
+            item = directory.symbols.get(symbol(t))
+            if item is not None:
+                found.setdefault(item.ticker, item)
+    except Exception:
+        return None
+    if len(found) < 2 or len({item.cik for item in found.values()}) != 1:
+        return None
+    issuer_lines = [line for line in directory.symbols.values() if line.cik == next(iter(found.values())).cik]
+    rep = representative_security(issuer_lines, directory)
+    if rep is None:
+        return None
+    names = [item.ticker for item in found.values()]
+    named = " and ".join(names) if len(names) == 2 else ", ".join(names[:-1]) + " and " + names[-1]
+    return ScopeDecision(["comparison"], "label", rep.name, rep.ticker, [(i.ticker, i.name) for i in found.values()], note=f"comparison:{named}"), rep
+
+
 def decide(question: str, company_ticker: str, company_name: str) -> ScopeDecision | None:
     """None when the question names no kind of security; otherwise what to do."""
     from .issuer_identity import _load_directory, official_name_spans, symbol
@@ -124,6 +181,9 @@ def decide(question: str, company_ticker: str, company_name: str) -> ScopeDecisi
     if chosen is not None:      # the user named this line by its ticker, or the company was selected as this line: not a guess
         return ScopeDecision(kinds, "label", issuer, company_ticker, [(line.ticker, line.name) for line in matched], selected=chosen.ticker)
     if len(matched) >= 2:
+        named = _named_designators(question, kind)
+        if named:      # "compare Class A shares with Class C shares": both are named, so there is nothing to ask
+            return ScopeDecision(kinds, "label", issuer, company_ticker, [(line.ticker, line.name) for line in matched], note=f"comparison:{named}")
         return ScopeDecision(kinds, "ask", issuer, company_ticker, [(line.ticker, line.name) for line in matched])
     if kind == "share_class":
         return ScopeDecision(kinds, "label", issuer, company_ticker, [(line.ticker, line.name) for line in matched],
@@ -141,6 +201,11 @@ def _kind_text(kinds: list[str]) -> str:
 def label_text(decision: ScopeDecision) -> str:
     kind = _kind_text(decision.kinds); who = f"{decision.issuer_name} ({decision.ticker})"
     unavailable = "security-specific evidence (terms, price, ranking, conversion or redemption rights) is not available in this analysis"
+    if decision.note.startswith("comparison:"):
+        named = decision.note[len("comparison:"):]
+        owner = decision.issuer_name if decision.issuer_name.endswith(".") else decision.issuer_name + "."      # "Alphabet Inc." already ends the sentence
+        return (f"{LABEL_START} you asked to compare {named}, securities of {owner} They belong to one issuer, so this answer is about {who} at issuer level and "
+                f"does not distinguish between them; {unavailable}.")
     if decision.note.startswith("the SEC ticker directory lists at most one"):
         return (f"{LABEL_START} you asked about {decision.issuer_name}'s {kind}. The SEC ticker directory lists only one share class for this issuer, so no separate class could be identified, and "
                 f"{unavailable}. The answer below is about {who} at issuer level and makes no claim specific to the {kind}.")
