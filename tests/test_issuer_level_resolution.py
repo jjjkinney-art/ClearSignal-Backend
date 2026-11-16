@@ -63,13 +63,20 @@ def test_a_company_level_question_resolves_to_the_issuer(routed, name, expected)
     assert routed == [expected]
 
 
-@pytest.mark.parametrize("issuer", ["Classy Media Group", "Meridian Utility Co"])      # lines only the new rule collapses: two share classes; common plus note lines
-@pytest.mark.parametrize("tail", [
-    "warrants", "preferred stock", "senior notes (the bonds)", "Class B shares", "depositary shares", "convertible notes", "units", "Series A", "ADR",
-])
-def test_a_named_kind_of_security_keeps_asking(routed, issuer, tail):
+@pytest.mark.parametrize("issuer", ["Classy Media Group", "Meridian Utility Co"])      # lines only the issuer-level rule collapses: two share classes; common plus note lines
+@pytest.mark.parametrize("tail", ["units", "Series A"])      # security terms the scope step does not handle keep asking
+def test_a_named_kind_of_security_the_scope_step_does_not_handle_keeps_asking(routed, issuer, tail):
     route(THESIS.format(f"the {issuer} {tail}"))
     assert routed == []
+
+
+@pytest.mark.parametrize("issuer", ["Classy Media Group", "Meridian Utility Co"])
+@pytest.mark.parametrize("tail", ["warrants", "preferred stock", "senior notes (the bonds)", "Class B shares", "depositary shares", "convertible notes", "ADR"])
+def test_a_named_kind_of_security_is_asked_about_or_labelled_never_resolved_silently(routed, issuer, tail):
+    # Round 4 (security scope): these used to ask with the generic "company not identified" message (round 3 kept them from resolving). They now resolve to the
+    # issuer and the scope step either asks which line or labels the answer as issuer-level; the stub answer here has no text, so the label goes to the note.
+    response = route(THESIS.format(f"the {issuer} {tail}"))
+    assert response.routing.get("pipeline") == "security_clarification" or response.routing.get("security_scope", {}).get("action") == "answered_at_issuer_level"
 
 
 def test_the_existing_warrant_and_unit_reduction_is_unchanged(routed):

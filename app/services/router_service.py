@@ -2013,6 +2013,42 @@ def _run_investment_pipeline(
     )
 
 
+def _security_clarification(company, question: str, request_id: str, decision) -> AgentAnswerResponse:
+    """The question names a kind of security and the issuer has several lines of that kind: ask which one."""
+    from ..schemas import GeneralFinanceAnswer as _GFA
+    from .security_scope import clarification_text
+    text = clarification_text(decision)
+    answer = _GFA(answer=text, bullets=[f"{name} - ticker: {ticker}" for ticker, name in decision.lines[:6]],
+                  caveats=["Use the ticker of the security you mean, or ask about the company as a whole.",
+                           "Security-specific evidence (terms, price, ranking, conversion or redemption rights) is not available in this analysis."])
+    return AgentAnswerResponse(
+        company=company.company_name or company.ticker, request_id=request_id, agents_used=["security_scope"],
+        answer={"general": answer.model_dump()},
+        routing={"intent": "company_analysis", "pipeline": "security_clarification", "candidates": [(t, n) for t, n in decision.lines[:6]],
+                 "security_scope": {"requested": decision.kinds, "action": "asked_which_security", "issuer_ticker": decision.ticker,
+                                    "matched_lines": [t for t, _ in decision.lines], "security_specific_evidence": "unavailable"}})
+
+
+def _run_scoped_pipeline(*, company, question: str, request_id: str, **kwargs) -> AgentAnswerResponse:
+    """`_run_investment_pipeline`, with the security scope step for questions that name a kind of security (warrants, preferred stock, notes or bonds,
+    depositary shares, a share class): ask which line when several fit, otherwise answer at issuer level and say so in the first sentence."""
+    decision = None
+    try:
+        from . import security_scope
+        decision = security_scope.decide(question, company.ticker, company.company_name)
+    except Exception as exc:      # the scope step must never break routing
+        logger.warning("[router] security scope failed: %r", exc)
+    if decision is not None and decision.action == "ask":
+        return _security_clarification(company, question, request_id, decision)
+    response = _run_investment_pipeline(company=company, question=question, request_id=request_id, **kwargs)
+    if decision is not None:
+        try:
+            security_scope.apply_label(response, decision)
+        except Exception as exc:
+            logger.warning("[router] security scope label failed: %r", exc)
+    return response
+
+
 def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     """Route verified company scope to the modern evidence-backed pipeline.
 
@@ -2594,7 +2630,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     "question": request.question[:120],
                 })
             )
-            return _run_investment_pipeline(
+            return _run_scoped_pipeline(
                 company=_explicit_company,
                 question=request.question,
                 request_id=request_id,
@@ -2638,7 +2674,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 "question": request.question,
             })
         )
-        return _run_investment_pipeline(
+        return _run_scoped_pipeline(
             company=_text_detected_company,
             question=request.question,
             request_id=request_id,

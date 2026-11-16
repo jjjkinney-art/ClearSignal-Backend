@@ -453,6 +453,8 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             token = token_match.group()
             if token.lstrip("$") in excluded and not token.startswith("$"):
                 continue
+            if len(token) == 1 and re.search(r"(?i)\b(?:class|series)\s+$", value[:token_match.start()]):
+                continue      # the letter that names a share class or series ("Class B shares"), not the ticker B
             item = directory.symbols.get(symbol(token))
             if item:
                 matches[item.ticker] = item
@@ -490,7 +492,11 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             for start, end in name_spans:      # spans may overlap ("Meridian Utility" inside "Meridian Utility Co"): blank by position
                 outside[start:end] = " " * (end - start)
             outside = "".join(outside)
-            if not SECURITY_INTENT.search(outside):
+            from .security_scope import requested_kinds
+            handled = requested_kinds(value, [item.name for item in matches.values()], name_spans, [item.ticker for item in matches.values()])
+            # A kind of security the scope step handles (warrants, preferred, notes or bonds, depositary shares, a share class) resolves to the issuer here and
+            # is then asked about or labelled; any other security term (units, rights, a series) still abstains.
+            if handled or not SECURITY_INTENT.search(outside):
                 issuer = representative_security(list(matches.values()), directory)
     if issuer is None:
         return None
