@@ -2388,6 +2388,20 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 )
             else:
                 _entity_resolution = resolve_entity(request.question)
+                # A static alias must not take a word the user typed as another issuer's ticker ("APLE" is Apple Hospitality, not the
+                # alias "aple" for Apple; "COKE" is Coca-Cola Consolidated, while "coke" in prose is the Coca-Cola brand).
+                if _entity_resolution.method == "alias_exact" and _entity_resolution.context is not None:
+                    try:
+                        from .issuer_identity import _load_directory as _ti_dir, symbol as _ti_symbol, typed_ticker_issuer
+                        _typed = typed_ticker_issuer(request.question, _entity_resolution.matched_text)
+                        _alias_issuer = _ti_dir().symbols.get(_ti_symbol(_entity_resolution.context.ticker))
+                        if _typed is not None and (_alias_issuer is None or _alias_issuer.cik != _typed.cik):
+                            from .company_detection import EntityResolution
+                            _entity_resolution = EntityResolution(
+                                CompanyContext(ticker=_typed.ticker, company_name=_typed.name, aliases=[request.question]),
+                                1.0, "sec_directory_exact", _entity_resolution.matched_text)
+                    except Exception as _typed_exc:      # identity preference must never break routing
+                        logger.warning("[router] typed-ticker preference failed: %r", _typed_exc)
                 # Exact official names and symbols outrank fuzzy suggestions.
                 # General-answer intents are excluded by the surrounding gate.
                 if _entity_resolution.method not in ("exact_ticker", "alias_exact"):

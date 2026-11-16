@@ -209,6 +209,28 @@ def representative_security(items: list, directory) -> "Issuer | None":
     return lines[0]      # directory order lists an issuer's larger line first (GOOGL before GOOG, ZG before Z)
 
 
+def typed_ticker_issuer(question: str, word: str) -> "Issuer | None":
+    """The issuer whose directory symbol the user TYPED as a ticker, for a word that a static alias would otherwise take.
+
+    The word must be a directory symbol (not a stop word or a protected generic ticker) and EVERY occurrence of it in the question must be written
+    the way a ticker is: upper case, or with a leading '$'. "APLE" is Apple Hospitality; "aple" or "Aple" in prose is a misspelling of Apple.
+    A question written entirely in capitals carries no case information, so nothing is decided here.
+    """
+    word = (word or "").strip().lstrip("$")
+    if not word or " " in word or not re.search(r"[a-z]", question or ""):
+        return None
+    from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS
+    if word.upper() in _TICKER_STOP_WORDS or word.upper() in PROTECTED_GENERIC_TICKERS:
+        return None
+    item = _load_directory().symbols.get(symbol(word))
+    if item is None:
+        return None
+    seen = list(re.finditer(rf"(?<![\w$])(\$?)({re.escape(word)})(?![\w])", question, re.I))
+    if not seen or any(not (m.group(1) == "$" or m.group(2) == m.group(2).upper()) for m in seen):
+        return None
+    return item
+
+
 def official_name_spans(value: str) -> list[tuple[tuple[int, int], list[Issuer]]]:
     """Where exact current official names occur in free text, and whose they are."""
     from .company_detection import mask_exchange_prefix
