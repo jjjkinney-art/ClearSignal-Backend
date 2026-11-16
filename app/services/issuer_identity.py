@@ -132,6 +132,12 @@ def exact_issuer(value: str, directory: Directory) -> Issuer | None:
     return matches[0] if len(matches) == 1 else None
 
 
+def title_tag(title: str) -> str:
+    """The registry tag at the end of an SEC title ("FIRST BANCORP /ME/" -> "ME", "RESOLUTION MINERALS LTD/ADR" -> "ADR"), upper case, or ""."""
+    match = re.search(r"/\s*([A-Za-z]{2,4})/?\s*$", title or "")
+    return match.group(1).upper() if match else ""
+
+
 def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int], list[Issuer]]]:
     """Exact official-name word windows in free text, as (character span, issuers)."""
     from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, _CONTEXT_WORDS
@@ -155,9 +161,14 @@ def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int
                     found = directory.names.get(legal, [])
             if found:
                 end = words[start + width - 1].end()
-                tag = re.match(r"[\s.,]*/[A-Za-z]{2,4}/?(?![A-Za-z0-9])", value[end:])
+                tag = re.match(r"[\s.,]*/([A-Za-z]{2,4})/?(?![A-Za-z0-9])", value[end:])
                 if tag:      # the registry tag written after the name ("... CORP /DE/") belongs to the name, not to a second company
                     end += tag.end()
+                    if len({item.cik for item in found}) > 1:
+                        # ... and it tells same-named issuers apart ("First Bancorp /ME/" is not "First Bancorp /PR/"): keep those titled with it.
+                        written = tag.group(1).upper()
+                        same = [item for item in found if (title_tag(item.name) or "") == written]
+                        found = same or found
                 windows.append(((words[start].start(), end), found))
     return windows
 
@@ -170,6 +181,32 @@ def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int
 # issuer. Several remaining symbols, or only F lines, still abstain.
 _FOREIGN_ORDINARY_LINE = re.compile(r"[A-Z]{4}F")
 _DERIVATIVE_SUFFIXES = frozenset({"W", "WS", "WT", "WW", "U", "R", "RT", "RW"})
+# A warrant, unit or rights line is the primary line plus one of these suffixes, with an optional class letter (BRKRW, BRKRU, ABCAW, ABCWSA).
+_SECURITY_LINE_SUFFIX = re.compile(r"(?:W|WS|WT|WW|U|UN|R|RT|RW|Z)[A-Z]?")
+# A question that names a kind of security is not company-level: nothing is resolved on the company's behalf.
+SECURITY_INTENT = re.compile(
+    r"\b(?:warrants?|preferred|preference\s+(?:shares?|stock)|depositary|adrs?|bonds?|debentures?|notes\s+due|"
+    r"(?:senior|subordinated|convertible|unsecured|exchangeable|baby)\s+(?:notes?|bonds?)|class\s+[a-z0-9]|series\s+[a-z0-9]{1,2}|units?|rights)\b", re.I)
+
+
+def representative_security(items: list, directory) -> "Issuer | None":
+    """The line that stands for an issuer in company-level work, or None when the lines belong to more than one CIK.
+
+    Class and series lines (symbol with '.' or '-') and foreign OTC lines give way to listed common lines; warrant, unit and rights
+    lines give way to the line they extend; of what remains, the first in directory order.
+    """
+    if not items or len({item.cik for item in items}) != 1:
+        return None
+    order = {ticker: n for n, ticker in enumerate(directory.symbols)}
+    lines = sorted({item.ticker: item for item in items}.values(), key=lambda item: (order.get(item.ticker, 10 ** 9), item.ticker))
+    plain = [item for item in lines if not re.search(r"[.-]", item.ticker)]
+    lines = plain or lines
+    listed = [item for item in lines if not _FOREIGN_ORDINARY_LINE.fullmatch(item.ticker)]
+    lines = listed or lines
+    names = {item.ticker for item in lines}
+    primary = [item for item in lines if not any(item.ticker != other and item.ticker.startswith(other) and _SECURITY_LINE_SUFFIX.fullmatch(item.ticker[len(other):]) for other in names)]
+    lines = primary or lines
+    return lines[0]      # directory order lists an issuer's larger line first (GOOGL before GOOG, ZG before Z)
 
 
 def official_name_spans(value: str) -> list[tuple[tuple[int, int], list[Issuer]]]:
@@ -374,6 +411,7 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
         from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS
         excluded = _TICKER_STOP_WORDS | frozenset(PROTECTED_GENERIC_TICKERS)
         matches = {}
+        token_lines = []      # symbols the user typed: an explicit security
         # Full exact name spans take precedence over ticker-like words inside
         # that name: SEC's "WD 40 CO" must not also select ticker WD.
         name_matches = _name_windows(value, directory)
@@ -396,6 +434,7 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             item = directory.symbols.get(symbol(token))
             if item:
                 matches[item.ticker] = item
+                token_lines.append(item.ticker)
                 # A symbol that is also another issuer's entire official name ("SUN" is Sunoco LP's symbol and an issuer's
                 # name; "HP" is Helmerich & Payne's symbol and HP Inc.'s name) names two issuers: it must not pick one.
                 for other in directory.names.get(token.lstrip("$").lower(), []):
@@ -422,6 +461,15 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
                 primary = [item for item in base if item.ticker not in derivatives]
                 base = primary if len(primary) == 1 else base
             issuer = base[0] if len(base) == 1 else None
+        if issuer is None and not token_lines:
+            # Every plausible security is one issuer's: a company-level question is about the issuer. A question that names a kind of
+            # security (warrants, preferred, notes, a share class) is not, and keeps asking.
+            outside = list(value)
+            for start, end in name_spans:      # spans may overlap ("Meridian Utility" inside "Meridian Utility Co"): blank by position
+                outside[start:end] = " " * (end - start)
+            outside = "".join(outside)
+            if not SECURITY_INTENT.search(outside):
+                issuer = representative_security(list(matches.values()), directory)
     if issuer is None:
         return None
     return CompanyContext(ticker=issuer.ticker, company_name=issuer.name, aliases=[value])

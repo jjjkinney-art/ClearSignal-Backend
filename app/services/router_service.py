@@ -2653,10 +2653,21 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             spans = official_name_spans(question)
         except Exception:
             return []
+        # A span lying inside a longer span is part of that longer name, not a second company ("Brookfield" in "Brookfield Renewable
+        # Partners"): the longest spans are offered first, and when several issuers are named each is offered once.
+        spans = [item for item in spans if not any(o is not item and o[0][0] <= item[0][0] and item[0][1] <= o[0][1] and (o[0][1] - o[0][0]) > (item[0][1] - item[0][0]) for o in spans)]
+        spans.sort(key=lambda item: item[0][0] - item[0][1])
         named = {}
         for _, issuers in spans:
             for issuer in issuers:
                 named.setdefault(issuer.ticker, (issuer.ticker, issuer.name, 1.0))
+        if len({issuer.cik for _, issuers in spans for issuer in issuers}) > 1:
+            seen_ciks, once = set(), {}
+            for _, issuers in spans:
+                for issuer in issuers:
+                    if issuer.cik not in seen_ciks:
+                        seen_ciks.add(issuer.cik); once[issuer.ticker] = (issuer.ticker, issuer.name, 1.0)
+            named = once
         return list(named.values())[:3]
 
     # When entity resolution failed (confidence 0.0) but we have candidate
