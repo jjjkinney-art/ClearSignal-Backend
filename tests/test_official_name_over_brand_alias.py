@@ -81,6 +81,8 @@ def discover(monkeypatch, name):
 
 
 @pytest.mark.parametrize("name,expected", [("Grab Holdings Ltd", "GRAB"), ("Core Scientific, Inc.", "CORZ"),
-                                           ("Alphabet Inc.", None), ("RUSH ENTERPRISES INC", None), ("T-Mobile US, Inc.", None)])
-def test_warrant_unit_and_right_lines_name_the_common_symbol_but_share_classes_still_abstain(monkeypatch, name, expected):
+                                           ("Alphabet Inc.", "GOOGL"), ("RUSH ENTERPRISES INC", "RUSHA"), ("T-Mobile US, Inc.", "TMUS")])
+def test_warrant_unit_and_right_lines_name_the_common_symbol_and_share_classes_the_first_listed_line(monkeypatch, name, expected):
+    # Changed on purpose (round 3, 2026-11-16): these were expected to abstain. Several lines of ONE issuer are one issuer for a
+    # company-level question; the first-listed line stands for it. Several issuers still abstain (tests elsewhere).
     assert discover(monkeypatch, name) == expected
