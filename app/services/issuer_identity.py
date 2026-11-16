@@ -262,6 +262,23 @@ _NAME_EDGE_STOP = frozenset("a an the of and for in on to is are was what which 
 _NAME_TAIL = frozenset("trust fund funds inc incorporated corp corporation co company companies ltd limited plc llc lp group holdings holding".split())
 
 
+_LEGAL_WORDS = frozenset("inc incorporated corp corporation co company ltd limited plc llc lp".split())
+_LOOSE_CACHE: dict = {}
+
+
+def _loose(text: str) -> str:
+    """A name key with its legal-form words removed, padded with spaces, for comparing a typed phrase with a name that carries 'Corp' or 'Inc' in its middle."""
+    return " " + " ".join(w for w in text.split() if w not in _LEGAL_WORDS) + " "
+
+
+def _loose_names(directory) -> list:
+    cached = _LOOSE_CACHE.get("names")
+    if cached is None or cached[0] is not directory.names:
+        cached = (directory.names, [(key, _loose(key)) for key in directory.names])
+        _LOOSE_CACHE["names"] = cached
+    return cached[1]
+
+
 def other_issuers_naming_phrase(value: str, hits: list[tuple[int, int]], own_ciks: set[str]) -> tuple[list[Issuer], str, bool]:
     """Issuers other than the matched one whose official name contains the phrase around a matched word.
 
@@ -280,31 +297,46 @@ def other_issuers_naming_phrase(value: str, hits: list[tuple[int, int]], own_cik
     words = [(m.group().lower(), m.start(), m.end()) for m in re.finditer(r"[A-Za-z0-9]+", masked)]
     own_keys = [" " + key + " " for key, items in directory.names.items() if any(i.cik in own_ciks for i in items)]
     best = None
+    loose_own = [_loose(own) for own in own_keys]
     for hit_start, hit_end in hits:
         covered = [n for n, (_, start, end) in enumerate(words) if start < hit_end and end > hit_start]
         if not covered:
             return [], "", False
         first, last = covered[0], covered[-1]
         hit_best = None
-        for left in range(0, 4):
-            for right in range(0, 5):
-                lo, hi = first - left, last + right
-                if (left + right == 0) or lo < 0 or hi >= len(words) or hi - lo + 1 > 8:
-                    continue
-                if words[lo][0] in _NAME_EDGE_STOP or words[hi][0] in _NAME_EDGE_STOP:
-                    continue
-                phrase = " ".join(w[0] for w in words[lo:hi + 1]); padded = " " + phrase + " "
-                core = " " + name_key(phrase) + " "      # the phrase without a trailing legal form: "... Acquisition Corp" is the same name as "... Acquisition"
-                if any(padded in own or core in own for own in own_keys):
-                    continue
-                found = {}
-                for key, items in directory.names.items():
-                    if padded in " " + key + " ":
-                        for item in items:
-                            if item.cik not in own_ciks:
-                                found.setdefault(item.cik, []).append((key, item))
-                if found and (hit_best is None or (hi - lo, -len(found)) > (hit_best[0], -len(hit_best[1]))):
-                    hit_best = (hi - lo, found, phrase)
+        for loose in (False, True):      # a legal-form word inside the other name ("Trust for Allstate Corp Securities") is passed over only when the exact phrase found nothing
+            if hit_best is not None:
+                break
+            loose_names = _loose_names(directory) if loose else None
+            for left in range(0, 4):
+                for right in range(0, 5):
+                    lo, hi = first - left, last + right
+                    if (left + right == 0) or lo < 0 or hi >= len(words) or hi - lo + 1 > 8:
+                        continue
+                    if words[lo][0] in _NAME_EDGE_STOP or words[hi][0] in _NAME_EDGE_STOP:
+                        continue
+                    phrase = " ".join(w[0] for w in words[lo:hi + 1]); padded = " " + phrase + " "
+                    core = " " + name_key(phrase) + " "      # the phrase without a trailing legal form: "... Acquisition Corp" is the same name as "... Acquisition"
+                    if any(padded in own or core in own for own in own_keys):
+                        continue
+                    found = {}
+                    if loose:
+                        lphrase = _loose(phrase)
+                        if len(lphrase.split()) < 2 or any(lphrase in own for own in loose_own):
+                            continue
+                        for key, lkey in loose_names:
+                            if lphrase in lkey:
+                                for item in directory.names[key]:
+                                    if item.cik not in own_ciks:
+                                        found.setdefault(item.cik, []).append((key, item))
+                    else:
+                        for key, items in directory.names.items():
+                            if padded in " " + key + " ":
+                                for item in items:
+                                    if item.cik not in own_ciks:
+                                        found.setdefault(item.cik, []).append((key, item))
+                    if found and (hit_best is None or (hi - lo, -len(found)) > (hit_best[0], -len(hit_best[1]))):
+                        hit_best = (hi - lo, found, phrase)
         if hit_best is None:
             return [], "", False      # this occurrence stands on its own ("... for T, given competition from T-Mobile US"): the word is really there
         if best is None or (hit_best[0], -len(hit_best[1])) > (best[0], -len(best[1])):

@@ -128,3 +128,33 @@ def test_a_word_that_also_stands_on_its_own_keeps_its_issuer(routed, monkeypatch
     monkeypatch.setattr(identity, "_load_directory", lambda p=identity.parse_directory(rows): p)
     route("What is the investment thesis for T, given competition from T-Mobile US, Inc.?")
     assert routed == ["T"]
+
+
+# --- round 2 (2026-11-16): a legal-form word in the MIDDLE of the longer name ("... Trust for Allstate Corp Securities ...") -------------------
+ROWS.update({
+    "50": {"ticker": "ALL", "cik_str": 899051, "title": "ALLSTATE CORP"},
+    "51": {"ticker": "GJT", "cik_str": 1319401, "title": "STRATS(SM) Trust for Allstate Corp Securities, Series 2006-3"},
+})
+
+
+def test_a_name_that_leaves_out_a_legal_word_inside_a_longer_name_asks(routed):
+    response = route(THESIS.format("STRATS for Allstate Securities Series 2006-3"))
+    assert routed == []                                   # not Allstate Corp
+    assert "GJT" in {c[0] for c in response.routing["candidates"]}      # and the intended issuer is offered
+
+
+@pytest.mark.parametrize("name", ["Allstate", "Allstate Corp", "Allstate Corporation", "ALLSTATE CORP"])
+def test_the_brand_with_or_without_its_legal_form_still_routes_to_the_brand(routed, name):
+    route(THESIS.format(name))
+    assert routed == ["ALL"]
+
+
+def test_the_longer_official_title_still_routes_to_its_own_issuer(routed):
+    route(THESIS.format("STRATS(SM) Trust for Allstate Corp Securities, Series 2006-3"))
+    assert routed == ["GJT"]
+
+
+def test_the_exact_phrase_check_is_tried_first(routed):
+    # The earlier cases keep their earlier answers: a phrase the exact comparison already finds is not re-decided by the looser one.
+    route(THESIS.format("Eaton Vance Duration Income Fund")); route(THESIS.format("Portland General Electric"))
+    assert routed == ["POR"]          # the first asks (no routing), the second routes to its own issuer
