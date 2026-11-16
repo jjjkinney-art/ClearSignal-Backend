@@ -1464,6 +1464,8 @@ def _extract_explicit_ticker(text: str) -> Optional[CompanyContext]:
         candidate = match.group(1)
         if candidate in _TICKER_STOP_WORDS:
             continue
+        if len(candidate) == 1 and re.search(r"(?i)\b(?:class|series)\s+$", text[:match.start()]):
+            continue      # the letter that names a share class or series ("Class C shares"), not the ticker C
         # A symbol written as the start of a hyphenated word is part of that word ("T-Mobile" is not "T"). A real class
         # suffix ("BRK-B") is consumed by the pattern itself, so a hyphen followed by a letter here means the word goes on.
         if text[match.end():match.end() + 2] and text[match.end()] == "-" and text[match.end() + 1:match.end() + 2].isalpha():
@@ -1819,6 +1821,19 @@ def resolve_selected_company(text: str) -> Optional[CompanyContext]:
     return None
 
 
+# An SEC registry tag written after an official name ("BANK OF AMERICA CORP /DE/", "FIRST BANCORP, INC /ME/", "RESOLUTION MINERALS LTD/ADR") is an annotation, not
+# a second company: the "DE" there is Delaware, not Deere. Only a tag that follows a legal-form word is masked, so slash-separated ticker lists ("AAPL/MSFT")
+# and an intentional "$DE" or "DE" are untouched. Offsets are preserved.
+_REGISTRY_TAG_AFTER_LEGAL_FORM = re.compile(
+    r"(?i)(\b(?:inc|incorporated|corp|corporation|co|company|ltd|limited|plc|llc|lp|l\.p|n\.v|s\.a|sa|nv|ag|se|holdings?|group|trust|fund|partners|bancorp)\b\.?,?)"
+    r"(\s*/\s*[A-Za-z]{2,4}/?)(?![A-Za-z0-9])")
+
+
+def mask_registry_tags(text: str) -> str:
+    """`text` with each registry tag that follows a legal-form word replaced by spaces (same length)."""
+    return _REGISTRY_TAG_AFTER_LEGAL_FORM.sub(lambda m: m.group(1) + " " * len(m.group(2)), text or "")
+
+
 def detect_companies(text: str, max_companies: int = 8) -> List[CompanyContext]:
     """Resolve multiple explicitly named companies in left-to-right order.
 
@@ -1836,6 +1851,7 @@ def detect_companies(text: str, max_companies: int = 8) -> List[CompanyContext]:
         return []
 
     matches: list[tuple[int, int, int, CompanyContext]] = []
+    text = mask_registry_tags(text)
 
     # Explicit uppercase tickers receive the highest priority for an identical
     # span.  Stop-word and registry rules are identical to single detection.
@@ -1843,6 +1859,8 @@ def detect_companies(text: str, max_companies: int = 8) -> List[CompanyContext]:
         ticker = match.group(1).replace("-", ".")
         if ticker in _TICKER_STOP_WORDS or ticker not in _COMPANY_DB:
             continue
+        if len(ticker) == 1 and re.search(r"(?i)\b(?:class|series)\s+$", text[:match.start()]):
+            continue      # the letter that names a share class or series ("Class C shares"), not the ticker C
         matches.append((match.start(), match.end(), 0, _make_context(ticker, ticker)))
 
     lower = text.lower()

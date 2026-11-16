@@ -71,7 +71,9 @@ def _strip_names(question: str, titles: list[str], spans: list[tuple[int, int]],
 
 
 def requested_kinds(question: str, titles: list[str] | None = None, spans: list[tuple[int, int]] | None = None, tickers: list[str] | None = None) -> list[str]:
-    outside = _strip_names(question, titles or [], spans or [], tickers)
+    from .company_detection import mask_registry_tags
+    # A registry tag after an official name ("Vibra Energia S.A./ADR", "Inficon Holding AG/ADR") is part of the name, not a request for depositary shares.
+    outside = _strip_names(mask_registry_tags(question), titles or [], spans or [], tickers)
     return [kind for kind, pattern in _KINDS.items() if pattern.search(outside)]
 
 

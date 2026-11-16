@@ -137,3 +137,18 @@ def test_the_letter_naming_a_share_class_is_not_a_ticker(routed, monkeypatch):
     assert routed == ["ONLY"] and visible(response).startswith(scope.LABEL_START)
     routed.clear(); route(THESIS.format("B"))
     assert routed == ["B"]                                    # the ticker B on its own is still the ticker
+
+
+@pytest.mark.parametrize("question", [
+    "What is the investment thesis for Vibra Energia S.A./ADR, what supports it, and what could invalidate it?",
+    "Which valuation assumptions would make Inficon Holding AG/ADR attractive or unattractive?",
+    "What is the investment thesis for RESOLUTION MINERALS LTD/ADR, what supports it?",
+    "What about Industria de Diseno Textil Inditex SA / ADR today?",
+])
+def test_a_registry_tag_in_an_official_name_is_not_a_security_term(question):
+    assert scope.requested_kinds(question) == []
+
+
+def test_an_adr_named_outside_a_registry_tag_is_still_a_security_term():
+    assert scope.requested_kinds("What is the outlook for the Vibra Energia S.A. ADR?") == ["depositary"]
+    assert scope.requested_kinds("Compare Inficon Holding AG/ADR with its ADRs") == ["depositary"]
