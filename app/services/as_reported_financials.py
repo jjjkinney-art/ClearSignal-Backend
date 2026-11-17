@@ -32,8 +32,13 @@ from ..providers.sec_client import AS_REPORTED_FORMS, SecFactRecord
 from ..schemas import RetrievedEvidence
 
 ANCHOR = "Assets"
+# Measures that can legitimately be zero or negative (a loss, an operating deficit, cash used). Revenue cannot.
+SIGNED_MEASURES = ("operating income", "net income", "operating cash flow")
 MAX_STALENESS_DAYS = 550
 ANNUAL_PREFIXES = ("10-K", "20-F", "40-F")
+FOREIGN_ANNUAL_PREFIXES = ("20-F", "40-F")
+TIMING_NOTE = " This is the issuer's latest annual period in its structured SEC data; interim results published on Form 6-K are not read in this version."
+INTERIM_FORMS = ("10-Q", "10-Q/A")   # the interim periodic report: only 10-Q filers (not 6-K) carry interim facts
 BASES = {"us-gaap": "US-GAAP", "ifrs-full": "IFRS"}
 CORE = {
     "revenue": {
@@ -116,12 +121,27 @@ def _annual(record: SecFactRecord) -> bool:
     return days is not None and record.form.startswith(ANNUAL_PREFIXES) and 330 <= days <= 385
 
 
+def _interim(record: SecFactRecord) -> bool:
+    """A discrete quarter or a year-to-date duration reported on a 10-Q (the same durations the USD/EUR path accepts)."""
+    days = _duration(record)
+    return days is not None and record.form in INTERIM_FORMS and 70 <= days <= 300
+
+
 def _comparable(current: SecFactRecord, prior: SecFactRecord) -> bool:
     if (current.cik != prior.cik or current.taxonomy != prior.taxonomy or current.concept != prior.concept
-            or current.unit != prior.unit or not _annual(current) or not _annual(prior)):
+            or current.unit != prior.unit):
+        return False
+    if not ((_annual(current) and _annual(prior)) or (_interim(current) and _interim(prior))):
         return False
     gap = (date.fromisoformat(current.end) - date.fromisoformat(prior.end)).days
     return 350 <= gap <= 380 and abs(_duration(current) - _duration(prior)) <= 7
+
+
+def _period_label(record: SecFactRecord) -> str:
+    days = _duration(record)
+    if days is None or _annual(record):
+        return f"FY{record.end[:4]}"
+    return f"quarter ended {record.end}" if days <= 100 else f"year-to-date period {record.start} to {record.end}"
 
 
 def _proof_taxonomy(proof) -> Optional[str]:
@@ -160,7 +180,7 @@ def _bind(record: SecFactRecord, *, ticker: str, expected_cik: str) -> Optional[
     if record.inline_binding is not None:
         return _bind_inline(record, ticker=ticker, expected_cik=expected_cik)
     if (record.taxonomy not in BASES or not re.fullmatch(r"[A-Z]{3}", record.unit or "") or not record.concept
-            or record.form not in AS_REPORTED_FORMS or not expected_cik.isdigit() or not record.cik.isdigit()
+            or (record.form not in AS_REPORTED_FORMS and record.form not in INTERIM_FORMS) or not expected_cik.isdigit() or not record.cik.isdigit()
             or int(expected_cik) != int(record.cik) or not _ACCESSION.fullmatch(record.accession or "")
             or isinstance(record.value, bool)):
         return None
@@ -187,12 +207,44 @@ def _bind(record: SecFactRecord, *, ticker: str, expected_cik: str) -> Optional[
             published_at=record.filed))
     output = claim.to_dict()
     output.update({
-        "period_start": record.start, "period_end": record.end, "period": f"FY{record.end[:4]}",
+        "period_start": record.start, "period_end": record.end, "period": _period_label(record),
         "scope": "consolidated", "currency": record.unit, "label": record.label,
         # Additive metadata for this slice: where the figure was reported and on what basis.
         "taxonomy": record.taxonomy, "reporting_basis": BASES[record.taxonomy],
     })
     return output
+
+
+def _signed_movement(ticker: str, name: str, metric_name: str, current: SecFactRecord, prior: SecFactRecord) -> str:
+    """The movement of a measure that is zero or negative in either year, worded without a percentage (a percentage of a
+    loss, or across a sign change, misleads). Same meaning as the US-GAAP USD/EUR path; amounts keep the filing's own unit."""
+    unit = current.unit
+    difference = abs(Decimal(str(current.value)) - Decimal(str(prior.value)))
+    both_negative = current.value < 0 and prior.value < 0
+    if metric_name == "operating cash flow":
+        def state(value):
+            return "cash used" if value < 0 else "cash provided" if value > 0 else "zero net cash flow"
+        if both_negative:
+            used_change = -(Decimal(str(current.value)) - Decimal(str(prior.value)))
+            what = "was unchanged" if used_change == 0 else "increased" if used_change > 0 else "decreased"
+            movement = f"cash used in operating activities {what}" + (f" by {_short(difference, unit)}" if used_change else "")
+        else:
+            movement = f"operating cash flow moved from {state(prior.value)} to {state(current.value)}"
+    elif metric_name in ("operating income", "net income"):
+        negative, positive = "a loss", "a profit"
+        if metric_name == "operating income":
+            negative, positive = "an operating loss", "an operating profit"
+        if both_negative:
+            state = (f"loss narrowed by {_short(difference, unit)}" if current.value > prior.value
+                     else f"loss widened by {_short(difference, unit)}" if current.value < prior.value else "loss was unchanged")
+            movement = f"{name} was a loss in both periods; the {state}"
+        else:
+            def state_of(value):
+                return negative if value < 0 else positive if value > 0 else "zero"
+            movement = f"{name} moved from {state_of(prior.value)} to {state_of(current.value)}, a change of {_short(difference, unit)}"
+    else:  # unreachable: callers only pass SIGNED_MEASURES
+        raise ValueError(metric_name)
+    return f"{ticker} {movement}; signed amounts:"
 
 
 def evidence_from_pair(current: SecFactRecord, prior: SecFactRecord, *, ticker: str, expected_cik: str,
@@ -202,12 +254,17 @@ def evidence_from_pair(current: SecFactRecord, prior: SecFactRecord, *, ticker: 
         return None, "periods_not_comparable"
     if prior.value == 0:
         return None, "prior_value_zero"
-    if current.value <= 0 or prior.value <= 0:
+    signed = current.value <= 0 or prior.value <= 0
+    if signed and metric_name not in SIGNED_MEASURES:
+        # Revenue is never zero or negative in a usable comparison; a loss, a negative operating result or cash used are
+        # real states of the measures in SIGNED_MEASURES and are worded without a percentage (below).
         return None, "non_positive_value"
     name = metric_label(metric_name, current.concept)
     change = ((Decimal(str(current.value)) - Decimal(str(prior.value))) / abs(Decimal(str(prior.value))) * 100)
     current_text, prior_text = _short_pair(current.value, prior.value, current.unit)
-    if change == 0:
+    if signed:
+        lead, link = _signed_movement(ticker, name, metric_name, current, prior), "from"
+    elif change == 0:
         # Equal amounts: nothing moved, so no direction and no percentage.
         lead, link = f"{ticker} {name} was unchanged at", "the same as"
     else:
@@ -221,6 +278,10 @@ def evidence_from_pair(current: SecFactRecord, prior: SecFactRecord, *, ticker: 
     summary = (f"{lead} {current_text} for the period {current.start} to {current.end}, {link} "
                f"{prior_text} in the comparable prior-year period {prior.start} to {prior.end}. "
                f"Reported in {current.unit} under {BASES[current.taxonomy]}; no currency conversion was applied.")
+    if current.form.startswith(FOREIGN_ANNUAL_PREFIXES):
+        # A foreign issuer's interim results are published on Form 6-K, which carries no structured facts: say so, so an annual
+        # figure is not read as the issuer's latest reported period.
+        summary += TIMING_NOTE
     claims = [claim for record in (current, prior)
               if (claim := _bind(record, ticker=ticker, expected_cik=expected_cik)) is not None]
     if len(claims) != 2:
@@ -299,12 +360,71 @@ def choose_basis(records: Sequence[SecFactRecord]):
     top = max(latest.values())
     bases = [key for key, end in latest.items() if end == top]
     if len(bases) != 1:
-        return None, None, "ambiguous_basis_or_currency"
+        primary = _primary_basis(annual, bases)
+        if primary is None:
+            return None, None, "ambiguous_basis_or_currency"
+        bases = [primary]
     return bases[0][0], bases[0][1], top if anchors else None
 
 
-def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str):
-    """(evidence, withheld): withheld is a list of {metric, reason, concepts}. Pure over ``records``."""
+# A basis is the statements' own presentation when its annual filings carry the prior-year columns; a convenience translation
+# (for example US dollars beside a filer's own currency) is given for the latest year only, so each filing carries one period.
+PRIMARY_COLUMN_SHARE = 0.9      # share of (filing, core concept) groups carrying two or more annual periods
+TRANSLATION_COLUMN_SHARE = 0.5  # at or below this share the basis is a single-period translation
+
+
+def _column_share(annual: Sequence[SecFactRecord], key) -> float:
+    core = {concept for by in CORE.values() for concepts in by.values() for concept in concepts}
+    groups: dict = {}
+    for r in annual:
+        if (r.taxonomy, r.unit) == key and r.concept in core and _annual(r):
+            groups.setdefault((r.accession, r.concept), set()).add(r.end)
+    return sum(1 for ends in groups.values() if len(ends) >= 2) / len(groups) if groups else 0.0
+
+
+def _primary_basis(annual: Sequence[SecFactRecord], bases: Sequence[tuple]):
+    """The one (taxonomy, currency) among equally recent bases that is the issuer's own presentation, or None.
+
+    It must carry prior-year columns in its filings (share >= PRIMARY_COLUMN_SHARE) while every other tied basis is a
+    single-period translation (share <= TRANSLATION_COLUMN_SHARE). Anything else stays ambiguous and is withheld."""
+    shares = {key: _column_share(annual, key) for key in bases}
+    primary = [key for key, share in shares.items() if share >= PRIMARY_COLUMN_SHARE]
+    if len(primary) == 1 and all(shares[key] <= TRANSLATION_COLUMN_SHARE for key in bases if key != primary[0]):
+        return primary[0]
+    return None
+
+
+def _interim_candidate(records: Sequence[SecFactRecord], concept: str, *, taxonomy: str, currency: str, ticker: str, cik: str, name: str):
+    """The latest 10-Q period of one concept against the same period a year earlier: (evidence, why).
+
+    Same selection as the USD/EUR path: the newest period end, the newest filing of it, the shortest duration (a quarter before a
+    year-to-date), no choice made between conflicting observations, and a prior period of the same length one year earlier."""
+    rows = [r for r in records if r.taxonomy == taxonomy and r.concept == concept and r.unit == currency and _interim(r)]
+    if not rows:
+        return None, None
+    latest_end = max(r.end for r in rows)
+    at_end = [r for r in rows if r.end == latest_end]
+    newest = max(r.filed for r in at_end)
+    at_end = [r for r in at_end if r.filed == newest]
+    shortest = min(_duration(r) for r in at_end)
+    current = _latest_unambiguous_fact([r for r in at_end if abs(_duration(r) - shortest) <= 7], include_start=True)
+    if current is None:
+        return None, "ambiguous_current_observation"
+    priors = [r for r in rows if r.end < current.end and _comparable(current, r)]
+    if not priors:
+        return None, "no_comparable_prior_year_period"
+    prior_end = max(r.end for r in priors)
+    prior = _latest_unambiguous_fact([r for r in priors if r.end == prior_end], include_start=True)
+    if prior is None:
+        return None, "ambiguous_prior_observation"
+    return evidence_from_pair(current, prior, ticker=ticker, expected_cik=cik, metric_name=name)
+
+
+def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str, interim: Sequence[SecFactRecord] = ()):
+    """(evidence, withheld): withheld is a list of {metric, reason, concepts}. Pure over ``records``.
+
+    ``interim`` (10-Q facts, default none) lets a measure be compared on its latest quarter or year-to-date period when that is
+    later than its latest annual period, in the basis chosen from the annual facts; annual-only callers are unchanged."""
     taxonomy, currency, anchor_end = choose_basis(records)
     if taxonomy is None:
         return [], [{"metric": "all", "reason": anchor_end, "concepts": []}]
@@ -338,6 +458,12 @@ def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str
                 reasons.append((concept, "stale_relative_to_latest_balance_sheet"))
                 continue
             candidates.append(item)
+        for concept in by_tax.get(taxonomy, ()):
+            item, why = _interim_candidate(interim, concept, taxonomy=taxonomy, currency=currency, ticker=ticker, cik=cik, name=name)
+            if item is not None:
+                candidates.append(item)
+            elif why is not None:
+                reasons.append((concept, why))
         if candidates:
             # Aliases are ordered, never joined; the latest current period wins. For revenue, concepts that disagree
             # for that period resolve to the issuer's total revenues; otherwise ties keep the configured order.
@@ -360,6 +486,15 @@ def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str
     return evidence, withheld
 
 
+def _interim_records(data: Optional[dict], cik: str, boundary: Optional[date]) -> list[SecFactRecord]:
+    """The 10-Q facts of the as-reported concepts, from the response already held (no request)."""
+    from ..providers.sec_client import as_reported_records_from_facts
+    records = as_reported_records_from_facts(data, cik, specs=requested_specs(), forms=INTERIM_FORMS) if data else []
+    if boundary is not None:
+        records = [r for r in records if date.fromisoformat(r.filed) <= boundary and date.fromisoformat(r.end) <= boundary]
+    return records
+
+
 def evidence_from_response(data: Optional[dict], ticker: str, cik: str, *, boundary: Optional[date] = None):
     """Build annual comparisons from the Company Facts response the request already holds. (evidence, withheld).
 
@@ -371,4 +506,41 @@ def evidence_from_response(data: Optional[dict], ticker: str, cik: str, *, bound
         records = [r for r in records if date.fromisoformat(r.filed) <= boundary and date.fromisoformat(r.end) <= boundary]
     if not records:
         return [], []
-    return build_comparisons(records, ticker=ticker, cik=cik)
+    return build_comparisons(records, ticker=ticker, cik=cik, interim=_interim_records(data, cik, boundary))
+
+
+NEWER_BASIS_DAYS = 90
+
+
+def reported_basis_replacement(main_evidence, data: Optional[dict], ticker: str, cik: str, *, boundary: Optional[date] = None):
+    """The as-reported comparisons that should replace the US-GAAP USD/EUR comparisons already built, or None to keep them.
+
+    The USD/EUR path reads only USD and EUR facts. For a filer that reports in another currency those can be a US-dollar
+    convenience translation (one period per filing, at a different rate each year) or, when the translation stopped years ago,
+    a long-stale figure. This returns the issuer's own presentation instead when (1) its currency differs from the one the
+    existing comparisons use, or (2) its latest period is more than NEWER_BASIS_DAYS later than theirs. It never mixes the
+    two sources, converts nothing, reads the response the request already holds (no further request), and keeps the existing
+    comparisons whenever the basis is ambiguous or builds nothing. Returns (evidence, withheld) or None.
+    """
+    from ..providers.sec_client import as_reported_records_from_facts
+    if not main_evidence or not data:
+        return None
+    records = as_reported_records_from_facts(data, cik, specs=requested_specs())
+    if boundary is not None:
+        records = [r for r in records if date.fromisoformat(r.filed) <= boundary and date.fromisoformat(r.end) <= boundary]
+    if not records:
+        return None
+    taxonomy, currency, _ = choose_basis(records)
+    if taxonomy is None:
+        return None
+    evidence, withheld = build_comparisons(records, ticker=ticker, cik=cik, interim=_interim_records(data, cik, boundary))
+    if not evidence:
+        return None
+    main_units = {claim.get("unit") for item in main_evidence for claim in (item.verified_claims or [])}
+    main_end = max((item.reporting_period_end or "" for item in main_evidence), default="")
+    new_end = max(item.reporting_period_end or "" for item in evidence)
+    newer = bool(main_end) and (date.fromisoformat(new_end) - date.fromisoformat(main_end)).days > NEWER_BASIS_DAYS
+    if currency in main_units and not newer:
+        return None
+    return evidence, withheld
+

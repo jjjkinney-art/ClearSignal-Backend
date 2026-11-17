@@ -44,17 +44,17 @@ def discover(text):
 
 def test_the_longest_exact_name_wins_over_a_shorter_name_inside_it(directory):
     assert discover(THESIS.format("SOUTHERN COPPER CORP")) == "SCCO"
-    # Unchanged limit: SOUTHERN CO's other securities carry no class suffix
-    # (SO, SOJC), so its base symbol is not unique and it still abstains.
-    assert discover(THESIS.format("SOUTHERN CO")) is None
+    # Changed on purpose (round 3): SOUTHERN CO's lines (SO, SOJC) are one issuer's, so a company-level question is about the issuer
+    # and resolves to its first-listed line instead of asking which security.
+    assert discover(THESIS.format("SOUTHERN CO")) == "SO"
     # Two separately named companies remain ambiguous.
     assert discover("Compare SOUTHERN COPPER CORP with SOUTHERN CO") is None
 
 
 def test_one_issuers_securities_resolve_to_its_base_symbol(directory):
     assert discover(THESIS.format("LINCOLN NATIONAL CORP")) == "LNC"
-    # Two base symbols of one issuer (two share classes) still need a selection.
-    assert discover(THESIS.format("Alphabet Inc.")) is None
+    # Changed on purpose (round 3): two share classes of ONE issuer are still one issuer; the first-listed class stands for it.
+    assert discover(THESIS.format("Alphabet Inc.")) == "GOOGL"
 
 
 def test_unrelated_text_identifies_nothing(directory):
@@ -85,10 +85,12 @@ def test_a_ticker_word_inside_an_official_name_does_not_select_another_company(r
 
 def test_a_ticker_word_inside_an_ambiguous_official_name_is_not_trusted(routed):
     response = route(THESIS.format("T-Mobile US, Inc."))
-    # Not AT&T: identification stays unresolved and suggests the named issuer.
-    assert routed == []
-    text = response.answer["general"]["answer"]
-    assert "Did you mean" in text and "(TMUS)" in text and "AT&T" not in text
+    # Never AT&T. Either identification stays unresolved and suggests the named issuer, or (since a symbol that starts a
+    # hyphenated word is no longer read as that symbol) T-Mobile US itself is selected.
+    assert routed in ([], ["TMUS"])
+    if routed == []:
+        text = response.answer["general"]["answer"]
+        assert "Did you mean" in text and "(TMUS)" in text and "AT&T" not in text
 
 
 def test_a_plain_ticker_question_keeps_its_ticker(routed):

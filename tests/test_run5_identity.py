@@ -39,8 +39,8 @@ def discover(text):
 
 def test_a_us_listing_beside_its_foreign_ordinary_otc_line_names_the_issuer(directory):
     assert discover(THESIS.format("SUMITOMO MITSUI FINANCIAL GROUP, INC.")) == "SMFG"
-    # Two share classes of one issuer still need an explicit selection.
-    assert discover(THESIS.format("Alphabet Inc.")) is None
+    # Changed on purpose (round 3): two share classes of ONE issuer are one issuer for a company-level question; the first-listed class stands for it.
+    assert discover(THESIS.format("Alphabet Inc.")) == "GOOGL"
 
 
 def test_registrants_sharing_a_name_core_stay_ambiguous_even_with_a_legal_form(directory):
@@ -121,10 +121,10 @@ def edge_directory(monkeypatch):
 
 
 @pytest.mark.parametrize("name,expected", [
-    ("CLASSCO HOLDINGS INC", None),        # share classes still need a selection
+    ("CLASSCO HOLDINGS INC", "CLSA"),      # changed on purpose (round 3): share classes of one issuer resolve to the first-listed class
     ("PREFCO ENERGY INC", "PRFC"),         # common beside exchange and OTC preferred lines
     ("ADRCO AG", "ADRCY"),                 # the US ADR line beside the OTC ordinary line
-    ("ONLYCO LTD", None),                  # only OTC lines: unchanged abstention
+    ("ONLYCO LTD", "ONLYF"),               # changed on purpose (round 3): only OTC lines, all one issuer's: the first-listed line stands for it
     ("PREFCO ENERGY PARTNERS INC", "PRFE"),  # the longer, different registrant name wins
     ("SOLO FINANCE CORP", "SOLOF"),        # a sole symbol is never excluded by the rule
 ])

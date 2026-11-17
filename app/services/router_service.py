@@ -2013,6 +2013,43 @@ def _run_investment_pipeline(
     )
 
 
+def _security_clarification(company, question: str, request_id: str, decision) -> AgentAnswerResponse:
+    """The question names a kind of security and the issuer has several lines of that kind: ask which one."""
+    from ..schemas import GeneralFinanceAnswer as _GFA
+    from .security_scope import clarification_text
+    text = clarification_text(decision)
+    answer = _GFA(answer=text, bullets=[f"{name} - ticker: {ticker}" for ticker, name in decision.lines[:6]],
+                  caveats=["Use the ticker of the security you mean, or ask about the company as a whole.",
+                           "Security-specific evidence (terms, price, ranking, conversion or redemption rights) is not available in this analysis."])
+    return AgentAnswerResponse(
+        company=company.company_name or company.ticker, request_id=request_id, agents_used=["security_scope"],
+        answer={"general": answer.model_dump()},
+        routing={"intent": "company_analysis", "pipeline": "security_clarification", "candidates": [(t, n) for t, n in decision.lines[:6]],
+                 "security_scope": {"requested": decision.kinds, "action": "asked_which_security", "issuer_ticker": decision.ticker,
+                                    "matched_lines": [t for t, _ in decision.lines], "security_specific_evidence": "unavailable"}})
+
+
+def _run_scoped_pipeline(*, company, question: str, request_id: str, scope_decision=None, **kwargs) -> AgentAnswerResponse:
+    """`_run_investment_pipeline`, with the security scope step for questions that name a kind of security (warrants, preferred stock, notes or bonds,
+    depositary shares, a share class): ask which line when several fit, otherwise answer at issuer level and say so in the first sentence."""
+    decision = scope_decision
+    try:
+        from . import security_scope
+        if decision is None:
+            decision = security_scope.decide(question, company.ticker, company.company_name)
+    except Exception as exc:      # the scope step must never break routing
+        logger.warning("[router] security scope failed: %r", exc)
+    if decision is not None and decision.action == "ask":
+        return _security_clarification(company, question, request_id, decision)
+    response = _run_investment_pipeline(company=company, question=question, request_id=request_id, **kwargs)
+    if decision is not None:
+        try:
+            security_scope.apply_label(response, decision)
+        except Exception as exc:
+            logger.warning("[router] security scope label failed: %r", exc)
+    return response
+
+
 def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     """Route verified company scope to the modern evidence-backed pipeline.
 
@@ -2165,6 +2202,28 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                            request.question, re.IGNORECASE))
     )
     if _comparative_requested and not _selected_historical_comparison:
+        # Two or more lines of ONE issuer ("GOOG and GOOGL", "F and F-PB", "RGTI with RGTIW") are not a ranking between companies: answer for the issuer and say so.
+        try:
+            from . import security_scope as _scope_mod
+            _same_issuer = _scope_mod.same_issuer_comparison(request.question, [c.ticker for c in _comparison_companies])
+        except Exception as _same_exc:
+            logger.warning("[router] same-issuer comparison check failed: %r", _same_exc)
+            _same_issuer = None
+        if _same_issuer is not None:
+            _decision, _rep = _same_issuer
+            return _run_scoped_pipeline(
+                company=CompanyContext(ticker=_rep.ticker, company_name=_rep.name, aliases=[request.question]),
+                question=request.question,
+                request_id=str(uuid.uuid4()),
+                scope_decision=_decision,
+                memory_context_block=getattr(request, "memory_context_block", None),
+                memory_context_data=getattr(request, "memory_context_data", None),
+                dossier_context_block=getattr(request, "dossier_context_block", None),
+                personalization_context_data=getattr(request, "personalization_context_data", None),
+                research_memory_context_block=getattr(request, "research_memory_context_block", None),
+                research_memory_context_data=getattr(request, "research_memory_context_data", None),
+                as_of=request.as_of,
+            )
         if len(_comparison_companies) >= 2:
             request_id = str(uuid.uuid4())
             _comparison = build_comparative_ranking(
@@ -2388,6 +2447,20 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 )
             else:
                 _entity_resolution = resolve_entity(request.question)
+                # A static alias must not take a word the user typed as another issuer's ticker ("APLE" is Apple Hospitality, not the
+                # alias "aple" for Apple; "COKE" is Coca-Cola Consolidated, while "coke" in prose is the Coca-Cola brand).
+                if _entity_resolution.method == "alias_exact" and _entity_resolution.context is not None:
+                    try:
+                        from .issuer_identity import _load_directory as _ti_dir, symbol as _ti_symbol, typed_ticker_issuer
+                        _typed = typed_ticker_issuer(request.question, _entity_resolution.matched_text)
+                        _alias_issuer = _ti_dir().symbols.get(_ti_symbol(_entity_resolution.context.ticker))
+                        if _typed is not None and (_alias_issuer is None or _alias_issuer.cik != _typed.cik):
+                            from .company_detection import EntityResolution
+                            _entity_resolution = EntityResolution(
+                                CompanyContext(ticker=_typed.ticker, company_name=_typed.name, aliases=[request.question]),
+                                1.0, "sec_directory_exact", _entity_resolution.matched_text)
+                    except Exception as _typed_exc:      # identity preference must never break routing
+                        logger.warning("[router] typed-ticker preference failed: %r", _typed_exc)
                 # Exact official names and symbols outrank fuzzy suggestions.
                 # General-answer intents are excluded by the surrounding gate.
                 if _entity_resolution.method not in ("exact_ticker", "alias_exact"):
@@ -2395,11 +2468,24 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
-                elif _entity_resolution.method == "exact_ticker" and _entity_resolution.context is not None:
+                    else:
+                        from .issuer_identity import symbol_name_collisions
+                        _pair = symbol_name_collisions(request.question)
+                        if _pair:
+                            from .company_detection import EntityResolution
+                            _entity_resolution = EntityResolution(
+                                None, 0.0, "not_found", request.question,
+                                candidates=[(item.ticker, item.name, 1.0) for item in _pair],
+                                rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
+                elif _entity_resolution.method in ("exact_ticker", "alias_exact") and _entity_resolution.context is not None:
                     # A ticker-shaped word that occurs only inside other issuers'
                     # official names ("DE" in "BETTERWARE DE MEXICO, S.A.P.I. DE
                     # C.V", "T" in "T-Mobile US, Inc.") is part of those names,
-                    # not a second company. The official name wins when it
+                    # not a second company. The same holds for a well-known brand
+                    # alias ("coca-cola" in "COCA-COLA EUROPACIFIC PARTNERS plc",
+                    # "blackrock" in "BlackRock Capital Allocation Term Trust"):
+                    # when the alias occurs only inside another issuer's full
+                    # official name, that name wins. The official name wins when it
                     # identifies one issuer; otherwise the ticker is not trusted
                     # and the named issuer's securities become suggestions.
                     from .issuer_identity import official_name_spans, symbol
@@ -2408,8 +2494,21 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     _names = [(span, found) for span, found in official_name_spans(request.question)
                               if _ticker not in {item.ticker for item in found}]
                     _hits = [hit.span() for hit in re.finditer(
-                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question)] if _token else []
-                    if _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
+                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question,
+                        re.IGNORECASE if _entity_resolution.method == "alias_exact" else 0)] if _token else []
+                    # One more genuine collision: the word is this issuer's symbol AND another issuer's entire official name
+                    # (symbol SUN is Sunoco LP; an issuer is registered as "SUN"). Neither reading is safe: ask.
+                    from .issuer_identity import _load_directory as _identity_directory
+                    _own = _identity_directory().symbols.get(_ticker)
+                    _same_name = [item for item in _identity_directory().names.get(_token.lower().lstrip("$"), [])
+                                  if _own is not None and item.cik != _own.cik]
+                    if _same_name and _own is not None and _entity_resolution.method == "exact_ticker":
+                        from .company_detection import EntityResolution
+                        _entity_resolution = EntityResolution(
+                            None, 0.0, "not_found", _entity_resolution.matched_text,
+                            candidates=[(_own.ticker, _own.name, 1.0)] + [(item.ticker, item.name, 1.0) for item in _same_name],
+                            rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
+                    elif _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
                                      for start, end in _hits):
                         from .company_detection import EntityResolution
                         _official = discover_company(request.question, question_text=True, as_of=request.as_of)
@@ -2425,6 +2524,43 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                                 rejection_reason="ticker_inside_official_name",
                                 fallback_reason="candidates_available",
                             )
+            if (_entity_resolution is not None and _entity_resolution.context is not None
+                    and _entity_resolution.method in ("exact_ticker", "alias_exact", "sec_directory_exact")):
+                # The matched word (a brand alias or a ticker-like word) may be the start or the middle of a LONGER proper name that is
+                # not written exactly as the SEC titles it ("Eaton Vance Duration Income Fund", "Universal Health Realty Income").
+                # When the matched issuer's own name does not contain that longer phrase and another issuer's official name does, the
+                # alias is not trusted: one issuer whose name merely continues with legal or generic words is that issuer; otherwise ask.
+                try:
+                    from .issuer_identity import _load_directory as _id_dir, other_issuers_naming_phrase, symbol as _id_symbol
+                    _own = _id_dir().symbols.get(_id_symbol(_entity_resolution.context.ticker))
+                    _tok = (_entity_resolution.matched_text or "").strip().lstrip("$")
+                    if _entity_resolution.method == "sec_directory_exact":
+                        from .issuer_identity import official_name_spans
+                        _spans = [span for span, found in official_name_spans(request.question)
+                                  if _own is not None and any(item.cik == _own.cik for item in found)]
+                        if not _spans and _own is not None:      # the issuer was selected by a ticker-like word in the text
+                            _spans = [m.span() for m in re.finditer(
+                                rf"(?<![\w$])\$?{re.escape(_own.ticker.replace('.', '-'))}(?!\w)|(?<![\w$])\$?{re.escape(_own.ticker)}(?!\w)", request.question)]
+                    else:
+                        _spans = [m.span() for m in re.finditer(
+                            rf"(?<![\w$])\$?{re.escape(_tok)}(?!\w)", request.question,
+                            re.IGNORECASE if _entity_resolution.method == "alias_exact" else 0)] if _tok else []
+                    if _own is not None and _spans:
+                        _others, _phrase, _sole = other_issuers_naming_phrase(request.question, _spans, {_own.cik})
+                        if _others:
+                            from .company_detection import EntityResolution
+                            if _sole and len(_others) == 1:
+                                _only = _others[0]
+                                _entity_resolution = EntityResolution(
+                                    CompanyContext(ticker=_only.ticker, company_name=_only.name, aliases=[request.question]),
+                                    1.0, "sec_directory_name_phrase", _phrase)
+                            else:
+                                _entity_resolution = EntityResolution(
+                                    None, 0.0, "not_found", _entity_resolution.matched_text,
+                                    candidates=[(item.ticker, item.name, 1.0) for item in _others],
+                                    rejection_reason="word_inside_longer_issuer_name", fallback_reason="candidates_available")
+                except Exception as _phrase_exc:      # identity guard must never break routing
+                    logger.warning("[router] phrase guard failed: %r", _phrase_exc)
             logger.info(
                 json.dumps({
                     "event": "entity_resolution",
@@ -2517,7 +2653,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     "question": request.question[:120],
                 })
             )
-            return _run_investment_pipeline(
+            return _run_scoped_pipeline(
                 company=_explicit_company,
                 question=request.question,
                 request_id=request_id,
@@ -2561,7 +2697,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 "question": request.question,
             })
         )
-        return _run_investment_pipeline(
+        return _run_scoped_pipeline(
             company=_text_detected_company,
             question=request.question,
             request_id=request_id,
@@ -2590,10 +2726,21 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             spans = official_name_spans(question)
         except Exception:
             return []
+        # A span lying inside a longer span is part of that longer name, not a second company ("Brookfield" in "Brookfield Renewable
+        # Partners"): the longest spans are offered first, and when several issuers are named each is offered once.
+        spans = [item for item in spans if not any(o is not item and o[0][0] <= item[0][0] and item[0][1] <= o[0][1] and (o[0][1] - o[0][0]) > (item[0][1] - item[0][0]) for o in spans)]
+        spans.sort(key=lambda item: item[0][0] - item[0][1])
         named = {}
         for _, issuers in spans:
             for issuer in issuers:
                 named.setdefault(issuer.ticker, (issuer.ticker, issuer.name, 1.0))
+        if len({issuer.cik for _, issuers in spans for issuer in issuers}) > 1:
+            seen_ciks, once = set(), {}
+            for _, issuers in spans:
+                for issuer in issuers:
+                    if issuer.cik not in seen_ciks:
+                        seen_ciks.add(issuer.cik); once[issuer.ticker] = (issuer.ticker, issuer.name, 1.0)
+            named = once
         return list(named.values())[:3]
 
     # When entity resolution failed (confidence 0.0) but we have candidate
@@ -2614,14 +2761,28 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         _entity_resolution is not None
         and any(score >= _DYM_MIN_CONFIDENCE for _, _, score in _entity_resolution.candidates)
     )
+    # A company named by the first word(s) of its official name ("Toyota", "Alibaba", "Afya") is offered as itself, not as
+    # whichever aliases the question's other words happen to resemble. Suggestions only: nothing is selected from a prefix.
+    _prefix_issuers = []
+    if _entity_resolution is not None and _entity_resolution.context is None and _has_intent:
+        try:
+            from .issuer_identity import name_prefix_candidates
+            _prefix_issuers = name_prefix_candidates(request.question)
+        except Exception:
+            _prefix_issuers = []
     if (
         _entity_resolution is not None
         and _entity_resolution.context is None
         and _has_intent
-        and _has_quality_candidates
+        and (_has_quality_candidates or _prefix_issuers)
     ):
         request_id = str(uuid.uuid4())
-        candidates = _named_issuer_candidates(request.question) or _entity_resolution.candidates[:3]
+        if _entity_resolution.rejection_reason == "word_inside_longer_issuer_name":
+            candidates = list(_entity_resolution.candidates[:5])        # the issuers whose names contain the longer phrase
+        else:
+            candidates = (_named_issuer_candidates(request.question)
+                          or [(item.ticker, item.name, 1.0) for item in _prefix_issuers]
+                          or _entity_resolution.candidates[:3])
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",

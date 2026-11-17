@@ -430,6 +430,12 @@ def fetch_verified_metric_evidence(
             )) is not None
         ]
         item = candidates[0] if candidates else None
+        if (item is not None and len(candidates) > 1 and metric_name == "net income"
+                and getattr(settings, "latest_alias_net_income_enabled", False) is True):
+            # Same rule as revenue below, for the one other measure with two interchangeable-in-time concepts: an issuer that stopped tagging
+            # NetIncomeLoss keeps tagging ProfitLoss. The candidate with the latest current period; equal periods keep the configured order
+            # (NetIncomeLoss), and each candidate is already a complete same-concept, same-unit pair, so values are never joined.
+            item = max(candidates, key=lambda candidate: candidate.reporting_period_end or "")
         if metric_name == "revenue" and item is not None:
             # Issuers change revenue concepts over time (Alphabet moved from
             # RevenueFromContractWithCustomerExcludingAssessedTax to Revenues),
@@ -450,6 +456,17 @@ def fetch_verified_metric_evidence(
     if _as_reported:
         from .annual_filing_facts import note_company_facts
         note_company_facts(_response.get("data"))
+    if evidence and _as_reported and not is_decision_monitoring_request(question or ""):
+        # A filer reporting in another currency: the issuer's own presentation replaces a USD translation or a long-stale figure.
+        from .as_reported_financials import reported_basis_replacement
+        replacement = reported_basis_replacement(evidence, _response.get("data"), ticker, cik, boundary=boundary)
+        if replacement is not None:
+            from .evidence_outcomes import note_as_reported_withheld
+            evidence, _withheld = replacement
+            note_as_reported_withheld(_withheld, [
+                {"title": item.title, "period_end": item.reporting_period_end} for item in evidence])
+            from .annual_filing_facts import note_withheld
+            note_withheld(_withheld)
     if not evidence and _as_reported and not is_decision_monitoring_request(question or ""):
         # IFRS or non-USD/EUR company facts, as reported (default off): annual comparisons only, no conversion,
         # from the response above (no further request), and never for decision-threshold questions.
