@@ -2777,10 +2777,12 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         and (_has_quality_candidates or _prefix_issuers)
     ):
         request_id = str(uuid.uuid4())
+        _exact_named = []
         if _entity_resolution.rejection_reason == "word_inside_longer_issuer_name":
             candidates = list(_entity_resolution.candidates[:5])        # the issuers whose names contain the longer phrase
         else:
-            candidates = (_named_issuer_candidates(request.question)
+            _exact_named = _named_issuer_candidates(request.question)
+            candidates = (_exact_named
                           or [(item.ticker, item.name, 1.0) for item in _prefix_issuers]
                           or _entity_resolution.candidates[:3])
         logger.info(
@@ -2796,20 +2798,36 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             suggestion_text = " or ".join(
                 f"{name} ({ticker})" for ticker, name, _ in candidates
             )
-            did_you_mean = _GFA(
-                answer=(
-                    f"The company could not be identified with sufficient confidence. "
-                    f"Did you mean {suggestion_text}? "
-                    f"Try entering the exact company name or ticker symbol (e.g. VRTX, NVO, ISRG)."
-                ),
-                bullets=[
-                    f"{name} — ticker: {ticker}" for ticker, name, _ in candidates
-                ],
-                caveats=[
-                    "Use the exact ticker symbol for reliable results (e.g. VRTX for Vertex Pharmaceuticals).",
-                    "Company names are matched exactly — check spelling and try the full legal name.",
-                ],
-            )
+            if _exact_named:
+                # The question names these issuers by an exact official name that more than one issuer or listed security carries: the
+                # name is not misspelt or incomplete, it is shared. Telling the user to check the spelling or try the full legal name would be wrong.
+                did_you_mean = _GFA(
+                    answer=(
+                        f"The name you gave matches more than one issuer or listed security. "
+                        f"Did you mean {suggestion_text}? Reply with the ticker of the one you mean."
+                    ),
+                    bullets=[
+                        f"{name} — ticker: {ticker}" for ticker, name, _ in candidates
+                    ],
+                    caveats=[
+                        "Use the ticker to choose between issuers or securities that share a name.",
+                    ],
+                )
+            else:
+                did_you_mean = _GFA(
+                    answer=(
+                        f"The company could not be identified with sufficient confidence. "
+                        f"Did you mean {suggestion_text}? "
+                        f"Try entering the exact company name or ticker symbol (e.g. VRTX, NVO, ISRG)."
+                    ),
+                    bullets=[
+                        f"{name} — ticker: {ticker}" for ticker, name, _ in candidates
+                    ],
+                    caveats=[
+                        "Use the exact ticker symbol for reliable results (e.g. VRTX for Vertex Pharmaceuticals).",
+                        "Company names are matched exactly — check spelling and try the full legal name.",
+                    ],
+                )
         else:
             # No candidates at all — firm rejection, no hallucinated routing.
             did_you_mean = _GFA(
