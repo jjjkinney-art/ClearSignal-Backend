@@ -415,6 +415,21 @@ def other_issuers_naming_phrase(value: str, hits: list[tuple[int, int]], own_cik
     return issuers[:6], phrase, sole
 
 
+# Legal forms and country words that are ALSO tickers ("Siemens AG" is not First Majestic Silver, "Allianz SE" is not Sea Limited, "Santander USA" is not Liberty All-Star).
+# In free text such a word written after a name word is part of that name; written on its own ("the thesis for AG") or with a "$" it is still a ticker.
+_LEGAL_FORM_AND_COUNTRY_WORDS = frozenset("AG SA SE AB BV KG NV OY AS LP LLC LTD PLC INC CORP CO SPA SAB GMBH UK USA EU UAE".split())
+_NOT_A_NAME_WORD = frozenset("analyze analyse explain show rate review value price outlook update summarize summary".split())
+
+
+def _follows_a_name_word(value: str, start: int) -> bool:
+    """True when the word just before `start` looks like part of a company name: capitalised (or all capitals) and not a function or question word."""
+    before = re.search(r"([A-Za-z][A-Za-z.&'\u2019-]*)[\s,]+$", value[:start])
+    if not before:
+        return False
+    word = before.group(1)
+    return word[0].isupper() and word.lower() not in _NAME_EDGE_STOP and word.lower() not in _NOT_A_NAME_WORD and word.lower() not in _QUESTION_WORDS
+
+
 def discover_company(value: str, *, question_text: bool = False, as_of=None) -> CompanyContext | None:
     """Resolve exact official names/tickers; ambiguous and historical gaps close.
 
@@ -455,6 +470,8 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
                 continue
             if len(token) == 1 and re.search(r"(?i)\b(?:class|series)\s+$", value[:token_match.start()]):
                 continue      # the letter that names a share class or series ("Class B shares"), not the ticker B
+            if token in _LEGAL_FORM_AND_COUNTRY_WORDS and _follows_a_name_word(value, token_match.start()):
+                continue      # "Siemens AG", "Allianz SE", "Santander USA": the legal form or country word belongs to the name that precedes it
             item = directory.symbols.get(symbol(token))
             if item:
                 matches[item.ticker] = item
