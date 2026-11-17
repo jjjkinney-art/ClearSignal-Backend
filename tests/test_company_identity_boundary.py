@@ -51,7 +51,8 @@ def test_official_directory_never_infers_historical_identity(directory):
 def test_official_free_text_requires_unambiguous_exact_issuer(directory):
     assert identity.discover_company("What evidence identifies risks at WD-40?", question_text=True).ticker == "WDFC"
     assert identity.discover_company("WDFC versus CLASS-A", question_text=True) is None
-    assert identity.discover_company("Example Class", question_text=True) is None
+    # Changed on purpose (round 3): two class lines of ONE issuer in a question are one issuer; a structured selection (test above) still withholds.
+    assert identity.discover_company("Example Class", question_text=True).ticker == "CLASS.A"
 
 
 def test_directory_rejects_conflicting_symbols_and_malformed_ciks():

@@ -195,7 +195,7 @@ AS_REPORTED_FORMS = ("10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A")
 
 
 def as_reported_records_from_facts(
-    data: dict, cik: str, *, specs: tuple[tuple[str, str], ...],
+    data: dict, cik: str, *, specs: tuple[tuple[str, str], ...], forms: tuple[str, ...] = AS_REPORTED_FORMS,
 ) -> list[SecFactRecord]:
     """Annual observations of explicit (taxonomy, concept) pairs, in every currency unit they report.
 
@@ -215,7 +215,7 @@ def as_reported_records_from_facts(
         for unit in units:
             if re.fullmatch(r"[A-Z]{3}", str(unit)):
                 records.extend(parse_company_fact_records(
-                    data, concept=concept, unit=unit, taxonomy=taxonomy, forms=AS_REPORTED_FORMS))
+                    data, concept=concept, unit=unit, taxonomy=taxonomy, forms=forms))
     return records
 
 
