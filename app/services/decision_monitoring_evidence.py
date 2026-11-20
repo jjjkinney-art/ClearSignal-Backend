@@ -103,6 +103,21 @@ def _newer_filing_coverage(foundation, items, references):
             'older_comparisons': older}
 
 
+def _retain_comparisons(foundation) -> bool:
+    """The flag is on and the foundation holds at least one verified reported comparison."""
+    from ..config import settings
+    return (getattr(settings, "threshold_comparisons_retained_enabled", False) is True
+            and any(row.get('claim_kind') == 'reported_financial_comparison' for row in foundation.get('claims', [])))
+
+
+def _margin_missing_text() -> str:
+    from .evidence_outcomes import recorded_pair_reasons, revenue_unavailable_clause, _best_reason
+    clause = revenue_unavailable_clause(_best_reason(recorded_pair_reasons('revenue')))
+    return ('No operating margin or margin benchmark has been calculated: it needs verified operating income and revenue '
+            f'comparisons for the same period, and {clause}. The comparisons above are reported historical figures, '
+            'not benchmarks or thresholds. ')
+
+
 def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
     # The existing producer rechecks identity, raw facts, periods, currencies,
     # filing versions, summary and citation bindings. Model annotations cannot
@@ -121,8 +136,12 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
         # A bank reports no operating-income line: the same partial path, but
         # the margin is not applicable rather than unverified.
         not_applicable = 'operating income' in foundation.get('not_applicable', ())
-        if 'operating income' not in foundation['unanswered_parts'] and not not_applicable:
+        # Flagged: the verified comparisons stay even though no operating margin can be calculated (for example when the
+        # revenue comparison is unavailable). They remain reported historical comparisons: no benchmark, no threshold.
+        retained = _retain_comparisons(foundation)
+        if 'operating income' not in foundation['unanswered_parts'] and not not_applicable and not retained:
             return None
+        margin_missing_with_operating_income = retained and 'operating income' not in foundation['unanswered_parts'] and not not_applicable
         observations = [row for row in foundation['inferences']
                         if row['kind'] == 'financial_inference']
         answer = 'Evidence-backed financial monitoring (partial)\n\n'
@@ -134,6 +153,7 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
         answer += ('\n\n' + ('Banks report no operating-income line, so no operating margin '
                    'or margin benchmark applies. Pretax income, if shown, is supplementary '
                    'profitability context. ' if not_applicable else
+                   _margin_missing_text() if margin_missing_with_operating_income else
                    'Operating income was not verified, so no operating margin '
                    'or margin benchmark has been calculated. Pretax income, if '
                    'shown, is supplementary profitability context and does not '
@@ -146,7 +166,9 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
                    'breakpoints and quantified earnings impacts remain unverified.')
         return {'answer': answer, 'benchmarks': [], 'calculations': observations,
                 'foundation': foundation,
-                'unanswered_parts': [] if not_applicable else ['operating income', 'operating margin']}
+                'unanswered_parts': ([] if not_applicable else
+                                     (['operating margin'] + (['revenue'] if 'revenue' in foundation['unanswered_parts'] else []))
+                                     if margin_missing_with_operating_income else ['operating income', 'operating margin'])}
     benchmarks = []
     for row in calculations:
         benchmarks.append({

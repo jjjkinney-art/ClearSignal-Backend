@@ -40,7 +40,8 @@ REASONS = {
     "unavailable": ("registration_only_filing_list", "concept_absent_from_returned_facts"),
     "unsupported": ("ifrs_taxonomy", "non_usd_reporting", "annual_form_not_read", "interim_form_not_read",
                     "no_same_period_pair", "conflicting_evidence", "selection_rules_not_met",
-                    "as_reported_comparison_withheld"),
+                    "as_reported_comparison_withheld", "comparisons_stale", "comparisons_not_used_for_threshold",
+                    "comparisons_not_used"),
     "failed": ("facts_retrieval_failed", "filing_list_failed", "filing_too_large", "filing_not_read",
                "time_limit"),
     "not_attempted": ("identity_unresolved", "no_filing_listed", "not_requested", "no_provider",
@@ -88,6 +89,7 @@ class OutcomeNotes:
         self.as_reported_withheld: list[dict] = []  # comparisons the as-reported slice declined, with why
         self.as_reported_built: list[dict] = []  # comparisons it built (title, period end) before admission
         self.annual_filing_read: Optional[dict] = None  # a 20-F read through the annual filing path (form, currencies)
+        self.pair_outcomes: list[dict] = []  # per measure and concept: the comparison was built, or the rule that stopped it
 
     # Once the request has given up on a task, that task's outcome is final: a worker that keeps
     # running in the background cannot add, change or complete anything. ``task`` is the writer
@@ -130,6 +132,11 @@ class OutcomeNotes:
         with self._lock:
             if not self._late(task):
                 self.annual_filing_read = dict(row)
+
+    def add_pair_outcome(self, row: dict, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.pair_outcomes.append(dict(row))
 
     def add_selected(self, task: str, form: str):
         with self._lock:
@@ -227,6 +234,23 @@ def note_as_reported_withheld(rows, built=()) -> None:
     _safe(lambda notes: notes.add_as_reported_withheld(rows or [], _task.get(), built or ()))
 
 
+def note_pair_outcome(measure: str, concept: str, evidence, reason_fn) -> None:
+    """What the pair builder did for one concept: built a comparison, or stopped at a named rule. ``reason_fn`` is only
+    called when notes are active, so nothing is computed otherwise."""
+    def action(notes):
+        built = evidence is not None
+        notes.add_pair_outcome({"measure": measure, "concept": concept, "status": "built" if built else "none",
+                                "reason": None if built else reason_fn(),
+                                "period_end": getattr(evidence, "reporting_period_end", None) if built else None}, _task.get())
+    _safe(action)
+
+
+def note_pair_dropped(measure: str, period_end, reason: str) -> None:
+    """A built comparison that retrieval set aside, with the rule."""
+    _safe(lambda notes: notes.add_pair_outcome({"measure": measure, "concept": None, "status": "dropped", "reason": reason,
+                                                "period_end": period_end}, _task.get()))
+
+
 def note_annual_filing_read(form: str, currencies) -> None:
     _safe(lambda notes: notes.add_annual_filing_read({"form": form, "currencies": sorted(currencies)}, _task.get()))
 
@@ -306,6 +330,119 @@ def _text_fact_failure(failure):
             "not evidence that no data exists; trying again may give a fuller answer.")
 
 
+# What the pair builder said about each measure, in words that claim no more than it recorded.
+_PAIR_REASON_TEXT = {
+    "no_records": "the company-facts data holds no figures for it",
+    "no_period_fits_form": "none of its figures covers a period that fits its filing form",
+    "mixed_period_families": "its latest period mixes annual and quarterly figures",
+    "ambiguous_current_period": "its latest figure is reported with conflicting values",
+    "no_prior_year_observation": "no figure for the same period one year earlier was found",
+    "ambiguous_prior_period": "its prior-year figure is reported with conflicting values",
+    "prior_value_zero": "its prior-year figure is zero, so a change cannot be expressed",
+    "claims_not_bound": "its figures could not be bound to their filings",
+    "invalid_request": "the request for it was not valid",
+}
+_PAIR_REASON_RANK = ("prior_value_zero", "no_prior_year_observation", "ambiguous_prior_period", "ambiguous_current_period",
+                     "mixed_period_families", "claims_not_bound", "no_period_fits_form", "no_records", "invalid_request")
+_CORE_MEASURES = ("revenue", "operating income", "net income", "operating cash flow")
+
+
+def revenue_unavailable_clause(best) -> str:
+    """Why there is no revenue comparison, in words that claim only what the pair builder recorded."""
+    return ({"prior_value_zero": "the prior-year revenue figure is zero, so no revenue comparison could be expressed",
+             "no_prior_year_observation": "no revenue figure for the same period one year earlier was found",
+             "no_records": "the company-facts data holds no revenue figures"}.get(best)
+            or (f"revenue: {_PAIR_REASON_TEXT[best]}" if best else "no verified revenue comparison is available"))
+
+
+def recorded_pair_reasons(measure: str) -> list:
+    """The pair builder's recorded stop reasons for a measure in the active request (empty when nothing is being recorded)."""
+    notes = _notes.get()
+    if notes is None:
+        return []
+    return [o["reason"] for o in list(notes.pair_outcomes)
+            if o.get("measure") == measure and o.get("status") == "none" and o.get("reason")]
+_SEC_FACT = "SEC EDGAR \u2014 structured XBRL fact"
+
+
+def _best_reason(reasons):
+    found = set(reasons)
+    return next((r for r in _PAIR_REASON_RANK if r in found), None)
+
+
+def _in_core_order(measures):
+    return sorted(set(measures), key=lambda m: (_CORE_MEASURES.index(m) if m in _CORE_MEASURES else len(_CORE_MEASURES), m))
+
+
+def _other_basis_sentence(facts_row: dict) -> str:
+    """The same response also holds IFRS-tagged facts, which a decision-monitoring answer does not read in this version."""
+    taxonomies = facts_row.get("taxonomies") or {}
+    if not taxonomies.get("ifrs-full"):
+        return ""
+    currencies = (facts_row.get("currencies") or {}).get("ifrs-full") or []
+    return (f" The same response also holds IFRS-tagged facts ({taxonomies['ifrs-full']} concepts"
+            + (f", reported in {', '.join(currencies)}" if currencies else "")
+            + "), which a decision-monitoring answer does not read in this version.")
+
+
+def _pair_state(source_answer, notes, references, ok):
+    """Why no comparison is delivered although company facts were retrieved, from what the run recorded (never from a guess)."""
+    from ..config import settings
+    from .evidence_integrity import _STALE_AFTER_DAYS
+    outcomes = list(getattr(notes, "pair_outcomes", None) or []) if notes else []
+    facts = [ref for ref in references or [] if isinstance(ref, dict) and str(ref.get("source", "")).startswith(_SEC_FACT)]
+    stale = [ref for ref in facts if ref.get("freshness_status") == "stale"]
+    usable = [ref for ref in facts if ref.get("freshness_status") != "stale"]
+    built = _in_core_order(o["measure"] for o in outcomes if o.get("status") == "built")
+    dropped = _in_core_order(o["measure"] for o in outcomes if o.get("status") == "dropped")
+    kind = _kind(source_answer)
+    facts_row = ok[-1]
+    detail = {"built_measures": built, "dropped_measures": dropped, "pair_outcomes": outcomes, "present": facts_row.get("present", [])}
+    window = _STALE_AFTER_DAYS.get("regulatory_filing")
+    if stale and not usable:
+        latest = max((str(ref.get("reporting_period_end") or "") for ref in stale), default="") or None
+        when = f"the latest period they cover ended {latest}, which is " if latest else "they are "
+        return _record("reported_financials", "unsupported", "comparisons_stale", tried=True, source_family="sec_company_facts",
+                       detail={**detail, "stale_reference_ids": [ref.get("id") for ref in stale], "latest_period_end": latest, "freshness_window_days": window},
+                       user_text=(f"Company-facts data was retrieved and {len(stale)} comparison(s) of a current and a prior-period figure were built "
+                                  f"from it, but {when}older than the {window}-day freshness window for filings, so none is used as current evidence."
+                                  + (_other_basis_sentence(facts_row) if kind == "threshold" else "")))
+    if dropped and not built and not usable:
+        from .verified_sec_metric_service import _MAX_STALENESS_DAYS
+        return _record("reported_financials", "unsupported", "comparisons_stale", tried=True, source_family="sec_company_facts",
+                       detail={**detail, "issuer_staleness_days": _MAX_STALENESS_DAYS},
+                       user_text=(f"Company-facts data was retrieved and comparisons were built for {', '.join(dropped)}, but their latest period is more "
+                                  f"than {_MAX_STALENESS_DAYS} days older than the issuer's latest reported balance-sheet period, so they were not used."))
+    retained = getattr(settings, "threshold_comparisons_retained_enabled", False) is True
+    if kind == "threshold" and usable and not retained:
+        reasons = [o["reason"] for o in outcomes if o.get("measure") == "revenue" and o.get("status") == "none" and o.get("reason")]
+        best = _best_reason(reasons)
+        clause = revenue_unavailable_clause(best)
+        shown = ", ".join(built) if built else f"{len(usable)}"
+        return _record("reported_financials", "unsupported", "comparisons_not_used_for_threshold", tried=True, source_family="sec_company_facts",
+                       detail={**detail, "usable_reference_ids": [ref.get("id") for ref in usable], "revenue_reason": best},
+                       user_text=(f"Current and prior-period comparisons were built and verified from the company-facts data ({shown}), but none is shown "
+                                  f"in this answer: a decision-monitoring answer builds on an operating-margin baseline, which needs a revenue comparison, and "
+                                  f"{clause}. The comparisons are reported historical figures, not investment thresholds."))
+    if outcomes and not built and not dropped:
+        parts = []
+        for measure in _CORE_MEASURES:
+            best = _best_reason(o["reason"] for o in outcomes if o.get("measure") == measure and o.get("status") == "none" and o.get("reason"))
+            if best:
+                parts.append(f"{measure}: {_PAIR_REASON_TEXT[best]}")
+        if parts:
+            return _record("reported_financials", "unsupported", "no_same_period_pair", tried=True, source_family="sec_company_facts",
+                           detail=detail, user_text=("Company-facts data was retrieved, but no comparison of a current and a prior-period figure could be "
+                                                     "built: " + "; ".join(parts) + "."))
+    if built or usable:
+        return _record("reported_financials", "unsupported", "comparisons_not_used", tried=True, source_family="sec_company_facts", detail=detail,
+                       user_text=("Company-facts data was retrieved and comparison(s) of a current and a prior-period figure were built from it, "
+                                  "but none is used in this answer."))
+    return _record("reported_financials", "not_attempted", "not_recorded", tried=True, source_family="sec_company_facts", detail=detail,
+                   user_text=("Company-facts data was retrieved, but this run did not record why no comparison of a current and a prior-period "
+                              "figure is shown."))
+
+
 def _financial_state(source_answer, notes, references):
     facts = notes.facts_requests if notes else []
     ok = [row for row in facts if row.get("ok")]
@@ -383,10 +520,7 @@ def _financial_state(source_answer, notes, references):
                                  "for this issuer. This describes that response only; it does not establish that the "
                                  "issuer never reported the measure.")
     if ok:
-        return _record("reported_financials", "unsupported", "no_same_period_pair", tried=True,
-                       source_family="sec_company_facts", detail={"present": ok[-1].get("present", [])},
-                       user_text="Company-facts data was retrieved, but no comparison of a current and a prior-period "
-                                 "figure on the same basis could be built from it.")
+        return _pair_state(source_answer, notes, references, ok)
     if analysis.get("reason") == "comparisons_unavailable":
         return _record("reported_financials", "unsupported", "no_same_period_pair", tried=True,
                        source_family="sec_company_facts", detail={},

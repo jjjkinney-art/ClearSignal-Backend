@@ -224,6 +224,11 @@ class Settings(BaseSettings):
     # because the financial foundation needs two), and say specifically why each other measure was not compared.
     # Never applies to decision-threshold answers. Default off: with it off nothing changes.
     lone_comparison_enabled: bool = False
+    # With a decision-threshold question, keep the verified current/prior-period comparisons the financial foundation
+    # built even when no operating-margin baseline can be calculated (for example when the revenue comparison is
+    # unavailable), instead of discarding all of them. They are shown as reported historical comparisons, never as
+    # thresholds or benchmarks. Default off: with it off nothing changes.
+    threshold_comparisons_retained_enabled: bool = False
     # Quotes management's own present-tense liquidity sufficiency statement from the latest periodic filing the
     # metrics stage already reads (no additional request), with its adjacent sentences. Default off: with it off
     # nothing changes.

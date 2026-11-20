@@ -328,6 +328,21 @@ def _requested_metrics(question: str | None, *, include_defaults: bool = True) -
     return tuple(selected) or (_METRICS if include_defaults else ())
 
 
+def _note_pair_outcome(builder, records, ticker, cik, concept, metric_name, unit, candidate) -> None:
+    """Record what the pair builder did for one concept (evidence-outcome notes only; inert otherwise, no behavior change)."""
+    if builder is not comparable_metric_evidence:        # the duration builder only; balance-sheet measures are not core comparisons
+        return
+    from .evidence_outcomes import note_pair_outcome
+    from ..integrity.sec_metric_evidence import explain_no_comparable_metric
+    note_pair_outcome(metric_name, concept, candidate, lambda: explain_no_comparable_metric(
+        records, ticker=ticker, expected_cik=cik, concepts=(concept,), metric_name=metric_name, unit=unit))
+
+
+def _note_pair_dropped(metric_name, period_end) -> None:
+    from .evidence_outcomes import note_pair_dropped
+    note_pair_dropped(metric_name, period_end, "older_than_issuer_latest_period")
+
+
 def fetch_verified_metric_evidence(
     ticker: str, *, question: str | None = None, as_of: str | None = None,
 ) -> list[RetrievedEvidence]:
@@ -422,13 +437,15 @@ def fetch_verified_metric_evidence(
         # Concept aliases are ordered, not interchangeable observations. Try
         # each explicit taxonomy concept separately so an issuer exposing both
         # a narrow and broad concept cannot create a synthetic comparison.
-        candidates = [
-            candidate for concept in concepts
-            if (candidate := builder(
+        candidates = []
+        for concept in concepts:
+            candidate = builder(
                 records, ticker=ticker, expected_cik=cik,
                 concepts=(concept,), metric_name=financial_metric_label(metric_name, concept), unit=unit,
-            )) is not None
-        ]
+            )
+            _note_pair_outcome(builder, records, ticker, cik, concept, metric_name, unit, candidate)
+            if candidate is not None:
+                candidates.append(candidate)
         item = candidates[0] if candidates else None
         if (item is not None and len(candidates) > 1 and metric_name == "net income"
                 and getattr(settings, "latest_alias_net_income_enabled", False) is True):
@@ -450,6 +467,7 @@ def fetch_verified_metric_evidence(
                 - date.fromisoformat(item.reporting_period_end)
             ).days
             if age > _MAX_STALENESS_DAYS:
+                _note_pair_dropped(metric_name, item.reporting_period_end)
                 item = None
         if item is not None:
             evidence.append(item)
