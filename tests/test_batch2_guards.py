@@ -86,8 +86,22 @@ def test_a_fact_gets_the_first_lettered_cell_of_its_own_row():
 
 def test_a_fact_outside_a_table_row_has_no_label_and_malformed_input_gives_none():
     xml = statement(EXPENSE_ROW_LIKE).replace('<table>', '<p>').replace('</table>', '</p>').replace('<tr>', '<span>').replace('</tr>', '</span>')
-    assert parse_row_labels(xml, {'f0current'}) == {}
+    assert parse_row_labels(xml, {'f0current'}).get('f0current') is None
     assert parse_row_labels('<<<', {'x'}) == {} and parse_row_labels(None, {'x'}) == {} and parse_row_labels('<tr><td>A</td></tr>', set()) == {}
+
+
+def test_a_closed_earlier_row_or_a_look_alike_tag_never_supplies_a_label():
+    closed = '<table><tr><td>OPERATING EXPENSES</td></tr></table><p><ix:nonFraction id="x1" name="us-gaap:OperatingIncomeLoss">5</ix:nonFraction></p>'
+    track = '<track><td>OPERATING EXPENSES</td><ix:nonFraction id="x2" name="us-gaap:OperatingIncomeLoss">5</ix:nonFraction>'
+    nested = ('<table><tr><td>Operating income (loss)</td><td><table><tr><td>inner</td></tr></table></td>'
+              '<td><ix:nonFraction id="x3" name="us-gaap:OperatingIncomeLoss">5</ix:nonFraction></td></tr></table>')
+    assert parse_row_labels(closed, {'x1'})['x1'] is None and parse_row_labels(track, {'x2'})['x2'] is None
+    assert parse_row_labels(nested, {'x3'})['x3'] is None      # an inner closed row sits between: fail closed rather than guess
+
+
+def test_entities_and_markup_in_a_label_are_normalised():
+    xml = '<tr><td><span>Loss&nbsp;before taxes &amp; other</span></td><td><ix:nonFraction id="y" name="n">1</ix:nonFraction></td></tr>'
+    assert parse_row_labels(xml, {'y'})['y'] == 'Loss before taxes & other'
 
 
 @pytest.mark.parametrize('concept,label,value,expected', [
@@ -218,12 +232,14 @@ def test_the_answer_says_the_figure_was_withheld_and_why(row_check):
     record = next(r for r in build_evidence_outcomes(delivered, notes=notes, references=[{'id': 'E1', 'source': eo._SEC_FACT}]) if r['need'] == 'reported_financials')
     assert record['state'] == 'available' and record['missing_parts'][0]['reason'] == 'row_label_disputed'
     text = render_unknown_block([record])
-    assert 'also missing: operating income' in text and 'OPERATING EXPENSES' in text and 'No replacement figure' in text
+    assert 'also missing: operating income: Not used. The filing' in text and 'OPERATING EXPENSES' in text and 'No replacement figure' in text
+    assert 'operating income: operating income' not in text
     none_delivered = {'status': 'insufficient_claim_evidence', 'claims': [], 'unanswered_parts': ['operating income']}
     notes.facts_requests.append({'cik': '320193', 'ok': True, 'taxonomies': {'us-gaap': 5}, 'currencies': {'us-gaap': ['USD']}, 'requested': [], 'present': ['OperatingIncomeLoss'],
                                  'with_records': ['OperatingIncomeLoss'], 'requested_currencies': {}})
     record = next(r for r in build_evidence_outcomes(none_delivered, notes=notes, references=[]) if r['need'] == 'reported_financials')
     assert (record['state'], record['reason']) == ('unsupported', 'row_label_disputed') and 'OPERATING EXPENSES' in record['user_text']
+    assert record['user_text'].startswith('operating income: Not used.')
 
 
 # --- cross-filing sign disagreement --------------------------------------------------------------------------------
@@ -297,6 +313,7 @@ def test_the_conflict_is_recorded_for_the_answer_with_the_filings_and_no_resolut
                           notes, 'sec_metrics')()
     [row] = notes.withheld_figures
     assert row['reason'] == 'sign_conflict' and row['measure'] == 'pretax income'
+    assert row['text'].startswith('The prior period 2024-01-01 to 2024-12-31 is reported with the same amount and opposite signs')
     for needle in ('opposite signs', '20-F filed 2025-03-10 (negative)', '20-F filed 2026-03-10 (positive)', 'Neither sign is assumed',
                    'none is inferred from another measure', 'None of these filings is marked as an amendment'):
         assert needle in row['text']

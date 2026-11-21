@@ -697,8 +697,11 @@ def fetch_public_document(
         _stage("inline_facts_parsed")
         from ..config import settings as _settings
         if getattr(_settings, "row_label_check_enabled", False) is True and inline_facts:
+            from ..integrity.row_label_check import LABELLED_CONCEPTS
             from ..providers.sec_inline_facts import parse_row_labels
-            inline_row_labels = tuple(sorted(parse_row_labels(decoded, {f["fact_id"] for f in inline_facts}).items()))
+            # Only the income-natural concepts the rule judges: a bounded scan around each, not the whole document.
+            inline_row_labels = tuple(sorted(parse_row_labels(
+                decoded, {f["fact_id"] for f in inline_facts if f["concept"] in LABELLED_CONCEPTS}).items()))
         inline_member_facts = parse_member_observations(decoded, cik=inline_fact_cik,
                                                         concepts=inline_fact_concepts)
         _stage("member_facts_parsed")

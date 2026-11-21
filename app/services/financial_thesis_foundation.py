@@ -333,7 +333,7 @@ def _row_label_dispute(rebuilt, name: str) -> dict | None:
                 margin = (" No operating margin that depends on it is calculated." if concept == "OperatingIncomeLoss" else "")
                 return {"measure": name, "reason": "row_label_disputed", "concept": concept, "code": code,
                         "label": row["label"], "period_end": claim.get("period_end"), "accession": row.get("accession"),
-                        "text": (f"{name}: not used. The filing's own row for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
+                        "text": (f"Not used. The filing's own row for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
                                  f"so it does not match the tag it carries ({meaning}) and the figure is disputed. No replacement figure is "
                                  f"substituted.{margin}")}
     return None

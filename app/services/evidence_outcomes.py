@@ -276,7 +276,7 @@ def sign_conflict_text(measure: str, detail: dict) -> str:
         parts.append(f"the {conflict['role']} period {conflict['period_start']} to {conflict['period_end']} is reported with the same "
                      f"amount and opposite signs in different filings ({filings})")
     amendment = any(c.get("amendment_among_them") for c in detail.get("sign_conflicts", []))
-    return (f"{measure}: " + "; ".join(parts) + ". Same consolidated scope, unit and period in each. "
+    return ("; ".join(parts)[:1].upper() + "; ".join(parts)[1:] + ". Same consolidated scope, unit and period in each. "
             + ("One of these filings is an amendment, which does not by itself show which sign is right. " if amendment else
                "None of these filings is marked as an amendment. ")
             + "Neither sign is assumed, none is inferred from another measure, and no comparison is shown.")
@@ -582,7 +582,7 @@ def _financial_state(source_answer, notes, references):
         first = notes.withheld_figures[0]
         return _record("reported_financials", "unsupported", first["reason"], tried=True, source_family="sec_company_facts",
                        detail={"withheld_figures": [dict(row) for row in notes.withheld_figures]},
-                       user_text=" ".join(row["text"] for row in notes.withheld_figures))
+                       user_text=" ".join(f"{row['measure']}: {row['text']}" for row in notes.withheld_figures))
     if ok:
         return _pair_state(source_answer, notes, references, ok)
     if analysis.get("reason") == "comparisons_unavailable":

@@ -17,6 +17,7 @@ _TAX_PHRASE = re.compile(r"\b(?:before\s+)?(?:income\s+)?tax(?:es)?(?:\s+on\s+(?
 # Concepts whose natural sign is income-positive (a loss is a negative value).
 _INCOME_CONCEPTS = {"OperatingIncomeLoss", "NetIncomeLoss", "ProfitLoss",
                     "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"}
+LABELLED_CONCEPTS = frozenset(_INCOME_CONCEPTS)
 MEANING = {"OperatingIncomeLoss": "operating income or loss",
            "NetIncomeLoss": "net income or loss", "ProfitLoss": "net income or loss",
            "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest": "income or loss before income taxes"}

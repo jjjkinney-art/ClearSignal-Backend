@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation, localcontext
 import logging
 import re
-from html.parser import HTMLParser
+import html
 from xml.etree import ElementTree as ET
 
 XBRLI = 'http://www.xbrl.org/2003/instance'
@@ -349,55 +349,45 @@ def parse_inline_observations(text, *, cik, concepts, product_members=False, tax
     return tuple(observations)
 
 
-class _RowLabels(HTMLParser):
-    """The label of the table row each wanted inline fact sits on: the first cell of the row that holds letters.
+_FACT_TAG = re.compile(r"<ix:nonfraction\b[^>]*?\sid\s*=\s*[\"']([^\"']{1,200})[\"']", re.I)
+_CELL = re.compile(r"<t[dh]\b[^>]*>(.*?)</t[dh]\s*>", re.I | re.S)
+_TAGS = re.compile(r"<[^>]*>")
+_MAX_ROW_CHARS = 30_000
+_MAX_LABEL_CHARS = 300
 
-    Display markup only; nothing here changes which facts are accepted. A fact outside a table row gets no label."""
-    MAX_CELL = 300
 
-    def __init__(self, wanted):
-        super().__init__(convert_charrefs=True)
-        self.wanted, self.rows, self.labels = wanted, [], {}
-
-    def handle_starttag(self, tag, attrs):
-        tag = tag.lower()
-        if tag == 'tr':
-            self.rows.append({'cells': [], 'cur': None, 'size': 0, 'facts': []})
-        elif tag in ('td', 'th') and self.rows:
-            self.rows[-1]['cur'], self.rows[-1]['size'] = [], 0
-        elif tag.endswith('nonfraction') and self.rows:
-            identifier = dict(attrs).get('id')
-            if identifier in self.wanted:
-                self.rows[-1]['facts'].append(identifier)
-
-    def handle_data(self, data):
-        if self.rows and self.rows[-1]['cur'] is not None and self.rows[-1]['size'] < self.MAX_CELL:
-            self.rows[-1]['cur'].append(data)
-            self.rows[-1]['size'] += len(data)
-
-    def handle_endtag(self, tag):
-        tag = tag.lower()
-        if tag in ('td', 'th') and self.rows and self.rows[-1]['cur'] is not None:
-            row = self.rows[-1]
-            row['cells'].append(' '.join(''.join(row['cur']).split())[:self.MAX_CELL])
-            row['cur'] = None
-        elif tag == 'tr' and self.rows:
-            row = self.rows.pop()
-            label = next((cell for cell in row['cells'] if re.search(r'[A-Za-z]', cell)), None)
-            for identifier in row['facts']:
-                self.labels[identifier] = label
+def _row_start(lowered, position):
+    """Start of the table row that holds ``position``, or -1 when the fact is not inside an open row."""
+    start = lowered.rfind("<tr", 0, position)
+    while start != -1 and lowered[start + 3:start + 4] not in (" ", ">", "\n", "\t", "\r", "/"):
+        start = lowered.rfind("<tr", 0, start)
+    if start == -1 or lowered.find("</tr", start, position) != -1 or position - start > _MAX_ROW_CHARS:
+        return -1
+    return start
 
 
 def parse_row_labels(text, fact_ids):
-    """{fact_id: row label or None} for the wanted inline fact ids. Empty on oversized or unparseable input."""
+    """{fact_id: row label or None} for the wanted inline fact ids: the first cell of the fact's own table row that
+    holds letters. Display markup only; nothing here changes which facts are accepted. A fact outside an open table
+    row gets no label. Bounded scan around each wanted fact (no whole-document parse); empty on oversized input."""
     wanted = frozenset(fact_ids)
     if not wanted or not isinstance(text, str) or len(text) > 15_000_000:
         return {}
-    parser = _RowLabels(wanted)
+    lowered, labels = text.lower(), {}
     try:
-        for start in range(0, len(text), 65_536):
-            parser.feed(text[start:start + 65_536])
-        parser.close()
+        for match in _FACT_TAG.finditer(text):
+            fact_id = match.group(1)
+            if fact_id not in wanted or fact_id in labels:
+                continue
+            start = _row_start(lowered, match.start())
+            label = None
+            if start != -1:
+                for cell in _CELL.finditer(text, start, match.start()):
+                    words = " ".join(html.unescape(_TAGS.sub(" ", cell.group(1))).split())
+                    if re.search(r"[A-Za-z]", words):
+                        label = words[:_MAX_LABEL_CHARS]
+                        break
+            labels[fact_id] = label
     except Exception:  # display markup only; a failure means no labels, never a different answer
         return {}
-    return dict(parser.labels)
+    return labels
