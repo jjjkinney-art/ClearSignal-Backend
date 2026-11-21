@@ -16,11 +16,15 @@ _INCOME_WORD = re.compile(r"\b(?:income|profit|earnings|gain)\b", re.I)
 _TAX_PHRASE = re.compile(r"\b(?:before\s+)?(?:income\s+)?tax(?:es)?(?:\s+on\s+(?:income|profit|earnings))?\b", re.I)
 # Concepts whose natural sign is income-positive (a loss is a negative value).
 _INCOME_CONCEPTS = {"OperatingIncomeLoss", "NetIncomeLoss", "ProfitLoss",
-                    "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"}
+                    "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+                    # ifrs-full: operating profit, profit before tax, profit attributable to the parent's owners
+                    "ProfitLossFromOperatingActivities", "ProfitLossBeforeTax", "ProfitLossAttributableToOwnersOfParent"}
 LABELLED_CONCEPTS = frozenset(_INCOME_CONCEPTS)
 MEANING = {"OperatingIncomeLoss": "operating income or loss",
            "NetIncomeLoss": "net income or loss", "ProfitLoss": "net income or loss",
-           "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest": "income or loss before income taxes"}
+           "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest": "income or loss before income taxes",
+           "ProfitLossFromOperatingActivities": "operating profit or loss", "ProfitLossBeforeTax": "profit or loss before tax",
+           "ProfitLossAttributableToOwnersOfParent": "profit or loss attributable to the owners of the parent"}
 
 
 def normalize_amount(value) -> str | None:
@@ -30,25 +34,39 @@ def normalize_amount(value) -> str | None:
         return None
 
 
-def label_contradicts(concept: str, label: str | None, value) -> str | None:
-    """A reason code when the row label contradicts the concept's meaning, else None.
+def judge_label(concept: str, label: str | None, value, *, cells=(), restatement: bool = False) -> tuple[str, str | None]:
+    """(verdict, code) for one retained row.
 
-    expense_row               the concept is an income/loss result and the row is an expense line with no result word
-                              ("OPERATING EXPENSES" tagged OperatingIncomeLoss).
-    loss_row_positive_value   the row is labelled only as a loss, but the tagged value is positive income.
-    A row labelled as income with a negative value is NOT disputed: negative income is ordinary presentation.
+    contradicted  expense_row: an expense-only label on an income/loss result; loss_row_positive_value: a loss-only label on a positive
+                  income value in an ordinary statement.
+    ambiguous     the row cannot say what the figure is, so it is left unresolved (never withheld, never counted as clear):
+                  ambiguous_mixed_label: the label (or another lettered cell of the same row) names both an expense and a result;
+                  ambiguous_restatement_column: a loss-only label on a positive value inside a restatement table, where the same row label
+                  covers columns of opposite sign ("as previously reported", "adjustment", "as restated").
+    consistent    anything else, including a row labelled as income with a negative value (ordinary presentation).
     """
     if concept not in _INCOME_CONCEPTS or not isinstance(label, str) or not label.strip():
-        return None
-    if _EXPENSE_WORD.search(label) and not _RESULT_WORD.search(label):
-        return "expense_row"
+        return "consistent", None
+    others = [c for c in cells if isinstance(c, str) and c.strip() and c.strip() != label.strip()]
+    if _EXPENSE_WORD.search(label) and _RESULT_WORD.search(label):
+        return "ambiguous", "ambiguous_mixed_label"
+    if _EXPENSE_WORD.search(label):
+        if any(_RESULT_WORD.search(c) and not _EXPENSE_WORD.search(c) for c in others):
+            return "ambiguous", "ambiguous_mixed_label"
+        return "contradicted", "expense_row"
     try:
         positive = Decimal(str(value)) > 0
     except (InvalidOperation, ValueError, TypeError):
-        return None
+        return "consistent", None
     if positive and _LOSS_WORD.search(label) and not _INCOME_WORD.search(_TAX_PHRASE.sub(" ", label)):
-        return "loss_row_positive_value"
-    return None
+        return ("ambiguous", "ambiguous_restatement_column") if restatement else ("contradicted", "loss_row_positive_value")
+    return "consistent", None
+
+
+def label_contradicts(concept: str, label: str | None, value, *, cells=(), restatement: bool = False) -> str | None:
+    """The contradiction code, or None when the row is consistent OR unresolved (see judge_label)."""
+    verdict, code = judge_label(concept, label, value, cells=cells, restatement=restatement)
+    return code if verdict == "contradicted" else None
 
 
 # --------------------------------------------------------------------------------------------------
@@ -99,6 +117,8 @@ def assess(binding: dict, rows) -> dict:
       clear                  the cited filing's own retained row is consistent: the check was completed.
       other_filing_only      only other filings' rows were retained and none contradicts: the cited row was NOT checked.
       no_evidence            nothing retained for this fact: the cited row was NOT checked.
+      ambiguous              the cited filing's own row cannot say what the figure is (a mixed expense/result label, or a restatement column): the
+                             meaning is unresolved, so the figure is neither withheld nor counted as checked.
     ``other_filings`` lists what other filings said (never used as the cited row)."""
     same = [row for row in rows if _same_fact(binding, row)]
     cited = [row for row in same if row.get("accession") == binding["accession"]
@@ -106,13 +126,18 @@ def assess(binding: dict, rows) -> dict:
     others = [row for row in same if row not in cited]
 
     def judged(row):
-        return {"row": row, "code": label_contradicts(binding["concept"], row.get("label"), binding["amount"])}
+        verdict, code = judge_label(binding["concept"], row.get("label"), binding["amount"], cells=row.get("cells") or (),
+                                    restatement=bool(row.get("restatement")))
+        return {"row": row, "verdict": verdict, "code": code if verdict == "contradicted" else None, "unresolved": code if verdict == "ambiguous" else None}
     cited_j, other_j = [judged(r) for r in cited], [judged(r) for r in others]
     result = {"binding": binding, "other_filings": [{"accession": j["row"].get("accession"), "form": j["row"].get("form"),
-                                                       "label": j["row"].get("label"), "contradicts": j["code"]} for j in other_j]}
+                                                       "label": j["row"].get("label"), "contradicts": j["code"], "unresolved": j["unresolved"]} for j in other_j]}
     if any(j["code"] for j in cited_j):
         first = next(j for j in cited_j if j["code"])
         return {**result, "status": "contradicted", "code": first["code"], "row": first["row"]}
+    if any(j["unresolved"] for j in cited_j):
+        first = next(j for j in cited_j if j["unresolved"])
+        return {**result, "status": "ambiguous", "code": first["unresolved"], "row": first["row"]}
     if cited_j:
         return {**result, "status": "clear", "row": cited_j[0]["row"]}
     if any(j["code"] for j in other_j):
@@ -124,3 +149,5 @@ def assess(binding: dict, rows) -> dict:
 # Statuses that withhold the figure; the rest let it stand, and only "clear" means the cited row was actually checked.
 WITHHOLD = frozenset({"contradicted", "cross_filing_conflict"})
 COMPLETED = frozenset({"clear", "contradicted"})
+UNRESOLVED = frozenset({"ambiguous"})                    # evidence exists but cannot decide; distinct from contradicted and from unavailable
+UNAVAILABLE = frozenset({"other_filing_only", "no_evidence", "unbound_claim"})

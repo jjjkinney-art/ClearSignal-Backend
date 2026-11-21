@@ -354,9 +354,9 @@ AMENDED = '0000320193-26-000009'
 
 
 def label_row(label='OPERATING EXPENSES', *, accession=CUR_ACC, form='10-Q', concept='OperatingIncomeLoss', abs_value='148', start='2026-04-01',
-              end='2026-06-30', cik='320193', taxonomy='us-gaap', unit='USD', content_hash='a' * 64):
+              end='2026-06-30', cik='320193', taxonomy='us-gaap', unit='USD', content_hash='a' * 64, **extra):
     return {'cik': cik, 'taxonomy': taxonomy, 'unit': unit, 'concept': concept, 'start': start, 'end': end, 'abs_value': abs_value, 'signed_value': '-' + abs_value,
-            'label': label, 'accession': accession, 'form': form, 'document_url': URL, 'content_hash': content_hash, 'fact_id': 'f'}
+            'label': label, 'accession': accession, 'form': form, 'document_url': URL, 'content_hash': content_hash, 'fact_id': 'f', **extra}
 
 
 def notes_with_rows(*rows):

@@ -411,6 +411,8 @@ def fetch_verified_metric_evidence(
             if date.fromisoformat(record.filed) <= boundary
             and date.fromisoformat(record.end) <= boundary
         ]
+    from .evidence_outcomes import note_fact_index
+    note_fact_index(records)          # for the cross-filing sign check (notes only; inert otherwise)
     # Use a single unambiguous currency from the latest available balance-sheet
     # anchor (or requested monetary facts when no anchor is available). Never
     # prefer USD convenience translations or join currencies across periods.

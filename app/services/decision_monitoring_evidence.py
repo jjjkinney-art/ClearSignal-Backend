@@ -110,6 +110,21 @@ def _retain_comparisons(foundation) -> bool:
             and any(row.get('claim_kind') == 'reported_financial_comparison' for row in foundation.get('claims', [])))
 
 
+def _operating_income_unavailable_text() -> str:
+    """Why there is no operating margin, stated explicitly. Pretax income is supplementary context only and never an input to a margin."""
+    from .evidence_outcomes import current_notes
+    notes = current_notes()
+    withheld = any(row.get("measure") == "operating income" for row in (notes.withheld_figures if notes is not None else ()))
+    if withheld:
+        return ('Operating income is unavailable: the figure was withheld because the evidence for it is disputed (see "What remains unknown"). '
+                'No operating margin or margin benchmark has been calculated. Pretax income, if shown, is supplementary profitability context only: '
+                'it is not used to calculate any margin and does not stand in for operating income. ')
+    return ('Operating income was not verified, so no operating margin '
+            'or margin benchmark has been calculated. Pretax income, if '
+            'shown, is supplementary profitability context and does not '
+            'establish operating income. ')
+
+
 def _margin_missing_text() -> str:
     from .evidence_outcomes import recorded_pair_reasons, revenue_unavailable_clause, _best_reason
     clause = revenue_unavailable_clause(_best_reason(recorded_pair_reasons('revenue')))
@@ -154,10 +169,7 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
                    'or margin benchmark applies. Pretax income, if shown, is supplementary '
                    'profitability context. ' if not_applicable else
                    _margin_missing_text() if margin_missing_with_operating_income else
-                   'Operating income was not verified, so no operating margin '
-                   'or margin benchmark has been calculated. Pretax income, if '
-                   'shown, is supplementary profitability context and does not '
-                   'establish operating income. ') +
+                   _operating_income_unavailable_text()) +
                    'Evaluate each comparison against '
                    'its own reporting period; these observations do not establish '
                    'a common-period ratio or causal relationship. They do not '

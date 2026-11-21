@@ -96,6 +96,8 @@ class OutcomeNotes:
         self.row_labels: list[dict] = []  # labels of the rows the retained filing's inline core facts sit on
         self.withheld_figures: list[dict] = []  # figures set aside because the evidence disputes them (never replaced)
         self.label_checks: list[dict] = []  # per bound figure: what the row-label check concluded (completed or not)
+        self.fact_index: dict = {}  # fact_key -> observations of that fact in the Company Facts the request holds (for the sign check)
+        self.fact_index_rows = 0
 
     # Once the request has given up on a task, that task's outcome is final: a worker that keeps
     # running in the background cannot add, change or complete anything. ``task`` is the writer
@@ -148,6 +150,21 @@ class OutcomeNotes:
         with self._lock:
             if not self._late(task):
                 self.row_labels.extend(dict(row) for row in rows)
+
+    def add_fact_index(self, rows, task: Optional[str] = None):
+        """Company Facts observations (the guarded builder's and the as-reported builder's records); deduplicated, bounded."""
+        from ..integrity.fact_equivalence import fact_key
+        with self._lock:
+            if self._late(task):
+                return
+            for r in rows:
+                if self.fact_index_rows >= 60_000:
+                    break
+                bucket = self.fact_index.setdefault(fact_key(r["cik"], r["taxonomy"], r["concept"], r["unit"], r["start"], r["end"]), [])
+                ident = (r["accession"], str(r["value"]))
+                if not any((b["accession"], str(b["value"])) == ident for b in bucket):
+                    bucket.append(dict(r))
+                    self.fact_index_rows += 1
 
     def add_label_check(self, row: dict, task: Optional[str] = None):
         """One entry per figure and status: the foundation rechecks the same figure many times."""
@@ -274,15 +291,17 @@ def note_pair_outcome(measure: str, concept: str, evidence, reason_fn) -> None:
     _safe(action)
 
 
-def _filing_phrase(observation: dict) -> str:
-    return f"{observation['form']} filed {observation['filed']} ({'negative' if observation['sign'] == '-' else 'positive'})"
+def _filing_phrase(observation: dict, concept: str = "") -> str:
+    """The filing, its date and its sign; the concept too when it is a different but equivalent one (for example the IFRS tag of the same fact)."""
+    tag = f", tagged {observation['concept']}" if observation.get("concept") and concept and not str(observation["concept"]).endswith(":" + concept) else ""
+    return f"{observation['form']} filed {observation['filed']} ({'negative' if observation['sign'] == '-' else 'positive'}{tag})"
 
 
 def sign_conflict_text(measure: str, detail: dict) -> str:
     """The conflict as found: the filings and their signs, no resolution and no inference from another measure."""
     parts = []
     for conflict in detail.get("sign_conflicts", []):
-        filings = "; ".join(_filing_phrase(o) for o in conflict["observations"])
+        filings = "; ".join(_filing_phrase(o, conflict.get("concept", "")) for o in conflict["observations"])
         parts.append(f"the {conflict['role']} period {conflict['period_start']} to {conflict['period_end']} is reported with the same "
                      f"amount and opposite signs in different filings ({filings})")
     amendment = any(c.get("amendment_among_them") for c in detail.get("sign_conflicts", []))
@@ -295,6 +314,28 @@ def sign_conflict_text(measure: str, detail: dict) -> str:
 def note_row_labels(rows) -> None:
     """The labels of the rows a retained filing's inline core facts sit on (notes only; inert otherwise)."""
     _safe(lambda notes: notes.add_row_labels(rows, _task.get()))
+
+
+def note_fact_index(records) -> None:
+    """Index the Company Facts observations a request holds (notes only; inert otherwise). Records are SecFactRecord-like."""
+    from ..config import settings
+    if getattr(settings, "sign_conflict_guard_enabled", False) is not True:
+        return
+
+    def action(notes):
+        rows = [{"cik": str(int(r.cik)), "taxonomy": r.taxonomy, "concept": r.concept, "unit": r.unit, "start": r.start, "end": r.end,
+                 "value": r.value, "accession": r.accession, "form": r.form, "filed": r.filed}
+                for r in records if r.accession]
+        notes.add_fact_index(rows, _task.get())
+    _safe(action)
+
+
+def fact_index():
+    """The request's Company Facts index, or None with no verification context (distinct from an empty index)."""
+    notes = current_notes()
+    if notes is None:
+        return None
+    return notes.fact_index        # read after collection; writes from a stopped task are dropped
 
 
 def note_withheld_figure(row: dict) -> None:

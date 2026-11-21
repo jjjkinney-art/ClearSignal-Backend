@@ -67,19 +67,10 @@ def evidence_from_filing(document, filing, *, ticker, cik):
     accession = f'{compact[:10]}-{compact[10:12]}-{compact[12:]}'
     concepts = tuple(concept for group in FILING_METRICS.values() for concept in group)
     records = []
-    labels = dict(getattr(document, 'inline_row_labels', ()) or ())
-    label_rows = []
     for observation in document.inline_xbrl_facts:
         amount = validated_observation(observation, cik=cik, concepts=concepts)
         if amount is None or observation['end'] > filing.reporting_period_end:
             continue
-        if labels.get(observation['fact_id']):
-            from ..integrity.row_label_check import normalize_amount
-            label_rows.append({'cik': str(int(cik)), 'taxonomy': 'ifrs-full' if 'ifrs' in str(observation.get('concept_namespace')) else 'us-gaap',
-                               'unit': observation['unit'], 'concept': observation['concept'], 'start': observation['start'], 'end': observation['end'],
-                               'abs_value': normalize_amount(amount), 'signed_value': str(amount), 'label': labels[observation['fact_id']],
-                               'accession': accession, 'form': filing.document_type, 'document_url': document.final_url,
-                               'content_hash': document.content_hash, 'fact_id': observation['fact_id']})
         proof = {**observation, 'content_hash': document.content_hash,
             'document_url': document.final_url, 'filed': filing.timestamp,
             'form': filing.document_type, 'accession': accession}
@@ -88,6 +79,8 @@ def evidence_from_filing(document, filing, *, ticker, cik):
             start=observation['start'], end=observation['end'], filed=filing.timestamp,
             form=filing.document_type, accession=accession, filing_url=document.final_url,
             inline_binding=proof))
+    from .row_label_rows import label_rows_from_document
+    label_rows = label_rows_from_document(document, cik=cik, accession=accession, form=filing.document_type)
     if label_rows:
         from .evidence_outcomes import note_row_labels
         note_row_labels(label_rows)

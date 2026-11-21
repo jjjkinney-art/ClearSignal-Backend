@@ -1398,12 +1398,16 @@ def _run_investment_pipeline(
         [item for item in _ev_results.get("filing_metrics", []) if not _stage_context_item(item)],
         ticker=ticker, question=question,
     )
-    if getattr(_evidence_settings, "row_label_check_enabled", False) is True:
-        # Withheld figures leave the evidence list itself, so no response field (references, structured facts, text) carries them.
+    if (getattr(_evidence_settings, "row_label_check_enabled", False) is True
+            or getattr(_evidence_settings, "sign_conflict_guard_enabled", False) is True):
+        # Withheld figures leave EVERY evidence list the answer is built from (Company Facts, the filing's inline comparison, the annual
+        # report, the as-reported builder, and the explanations that quote them), so no response field carries them.
         from .financial_thesis_foundation import withhold_disputed_items
         _cik_for_labels = _sec_provider._load_ticker_cik_map().get(ticker) if ticker else None
         if isinstance(_cik_for_labels, str) and _cik_for_labels.isdigit():
             _sec_metric_evidence = withhold_disputed_items(_sec_metric_evidence, ticker=ticker, cik=_cik_for_labels)
+            _period_explanation_evidence = withhold_disputed_items(_period_explanation_evidence, ticker=ticker, cik=_cik_for_labels)
+            _ev_results["thesis_disclosures"] = withhold_disputed_items(_ev_results.get("thesis_disclosures", []), ticker=ticker, cik=_cik_for_labels)
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to

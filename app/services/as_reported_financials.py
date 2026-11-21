@@ -506,6 +506,8 @@ def evidence_from_response(data: Optional[dict], ticker: str, cik: str, *, bound
         records = [r for r in records if date.fromisoformat(r.filed) <= boundary and date.fromisoformat(r.end) <= boundary]
     if not records:
         return [], []
+    from .evidence_outcomes import note_fact_index
+    note_fact_index(records)      # for the cross-filing sign check (notes only; inert otherwise)
     return build_comparisons(records, ticker=ticker, cik=cik, interim=_interim_records(data, cik, boundary))
 
 

@@ -86,6 +86,13 @@ def filing_comparisons(document, ticker: str, cik: str):
 def extra_items(document, ticker: str, cik: str):
     """Evidence from the 20-F already fetched: its comparisons and management's stated explanations."""
     from .current_period_explanation import extract_annual_foreign_explanation
+    # The annual report's own row labels, for the row-label check (empty unless it is on); recorded whether or not a comparison is built.
+    from .row_label_rows import accession_from_url, label_rows_from_document
+    _rows = label_rows_from_document(document, cik=cik, accession=accession_from_url(getattr(document, "final_url", "") or ""),
+                                     form=getattr(document, "document_type", "20-F"), taxonomies=TAXONOMIES, currencies="*")
+    if _rows:
+        from .evidence_outcomes import note_row_labels
+        note_row_labels(_rows)
     comparisons, withheld = filing_comparisons(document, ticker, cik)
     explanations = extract_annual_foreign_explanation(document, comparisons, ticker=ticker, cik=cik) if comparisons else []
     return comparisons, explanations, withheld
