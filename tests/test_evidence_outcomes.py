@@ -259,15 +259,48 @@ def threshold_declined():
                                  'quantified earnings impact']}
 
 
+THRESHOLD_Q = ('Which valuation and operating assumptions would make X attractive or unattractive? '
+               'Explain decision thresholds, evidence and uncertainty without inventing figures.')
+
+
+def outcomes_through_fetch(monkeypatch, label):
+    """The real retrieval function over a retained body, with notes bound: facts and the pair builder's recorded outcomes."""
+    from app.services import verified_sec_metric_service as V
+    body = FACTS[label]
+    cik, ticker = str(body['cik']), label.split(' ')[0]
+    monkeypatch.setattr(sec_client.requests, 'get', lambda *a, **k: Reply(body))
+    monkeypatch.setattr(V, '_load_ticker_cik_map', lambda: {ticker: cik})
+    notes = OutcomeNotes()
+    bind_outcome_notes(lambda: V.fetch_verified_metric_evidence(ticker, question=THRESHOLD_Q), notes)()
+    return notes
+
+
 @pytest.mark.parametrize('label', ['GALT (Run 11, us-gaap, no revenue concept)', 'TWST (Run 5, us-gaap)',
                                    'FSTR (Run 5, us-gaap)'])
-def test_threshold_inputs_are_unsupported_when_facts_exist_but_no_pair_could_be_built(monkeypatch, label):
+def test_threshold_inputs_say_the_run_did_not_record_why_when_no_pair_outcome_was_noted(monkeypatch, label):
+    # Changed 2026-11-20 (review findings): facts retrieved but no pair outcome recorded used to be reported as
+    # "no comparison could be built" (unsupported / no_same_period_pair). That claimed more than was recorded.
     _, notes = facts_through_client(monkeypatch, label)
     rows = by_need(build_evidence_outcomes(threshold_declined(), notes=notes))
     assert set(rows) == {'reported_financials', 'change_drivers', 'decision_inputs'}
     for need in ('reported_financials', 'decision_inputs'):
+        assert (rows[need]['state'], rows[need]['reason'], rows[need]['tried']) == ('not_attempted', 'not_recorded', True)
+    assert 'did not record why' in rows['reported_financials']['user_text']
+
+
+@pytest.mark.parametrize('label', ['GALT (Run 11, us-gaap, no revenue concept)', 'TWST (Run 5, us-gaap)',
+                                   'FSTR (Run 5, us-gaap)'])
+def test_threshold_inputs_are_unsupported_with_the_recorded_rules_when_the_builder_found_no_pair(monkeypatch, label):
+    notes = outcomes_through_fetch(monkeypatch, label)
+    assert notes.pair_outcomes and not any(o['status'] == 'built' for o in notes.pair_outcomes)
+    rows = by_need(build_evidence_outcomes(threshold_declined(), notes=notes))
+    assert set(rows) == {'reported_financials', 'change_drivers', 'decision_inputs'}
+    for need in ('reported_financials', 'decision_inputs'):
         assert rows[need]['state'] == 'unsupported' and rows[need]['tried'] is True
-    assert rows['decision_inputs']['reason'] in {'no_same_period_pair', 'ifrs_taxonomy', 'non_usd_reporting'}
+        assert rows[need]['reason'] == 'no_same_period_pair'
+    text = rows['reported_financials']['user_text']
+    assert 'revenue: the company-facts data holds no figures for it' in text
+    assert 'operating income: no figure for the same period one year earlier was found' in text
 
 
 def test_galt_core_delivers_financials_but_reports_revenue_absent_from_the_returned_facts(monkeypatch):

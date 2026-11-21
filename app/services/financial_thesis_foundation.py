@@ -137,6 +137,23 @@ def _once_per_section(test):
 PRETAX_LIMITATION = ("The cited pretax-income comparison is supplementary profitability context. "
     "Pretax income includes effects outside operating profit; it does not establish operating income "
     "or an operating margin. Operating income remains unverified.")
+PRETAX_LIMITATION_WITHHELD = ("The cited pretax-income comparison is supplementary profitability context only. "
+    "Pretax income includes effects outside operating profit; it is not used to calculate any margin and does not stand in for operating income. "
+    "Operating income and the operating margin are unavailable: the figure was withheld because the evidence for it is disputed.")
+
+
+PRETAX_LIMITATION_UNRESOLVED = ("The cited pretax-income comparison is supplementary profitability context only. "
+    "Pretax income includes effects outside operating profit; it is not used to calculate any margin and does not stand in for operating income. "
+    "Operating income and the operating margin are unavailable: the evidence for the operating-income figure is unresolved.")
+
+
+def _pretax_limitation() -> str:
+    from .evidence_outcomes import current_notes
+    notes = current_notes()
+    rows = [r for r in (notes.withheld_figures if notes is not None else ()) if r.get("measure") == "operating income"]
+    if rows and rows[0].get("reason") == "row_label_unresolved":
+        return PRETAX_LIMITATION_UNRESOLVED
+    return PRETAX_LIMITATION_WITHHELD if rows else PRETAX_LIMITATION
 
 
 _THESIS_REUSE_OR_COMPARISON = re.compile(
@@ -223,7 +240,17 @@ def _risk_monitoring_inference(value, reference_id):
 
 def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
              expected_unit: str | None = None, instant: bool = False):
-    """Recheck both facts and the displayed summary with the existing producer."""
+    """Recheck both facts and the displayed summary with the existing producer, then the evidence checks (default off): a figure the filing's
+    own row label contradicts, or that another filing reports with the opposite sign, is not used on any path."""
+    rebuilt = _rebuild_unchecked(item, ticker=ticker, cik=cik, name=name, concepts=concepts, expected_unit=expected_unit, instant=instant)
+    if rebuilt is None:
+        return None
+    return rebuilt if _figure_ok(rebuilt, name, cik) else None
+
+
+def _rebuild_unchecked(item, *, ticker: str, cik: str, name: str, concepts: tuple,
+                       expected_unit: str | None = None, instant: bool = False):
+    """The existing reconstruction, unchanged."""
     # Explicit scenario bridges reconstruct one exact named per-share concept.
     # No mixed basic/diluted family; ordinary foundation callers retain money.
     if expected_unit is not None and (expected_unit not in PER_SHARE_UNITS
@@ -306,6 +333,175 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
     return rebuilt
 
 
+def _row_label_check_enabled() -> bool:
+    from ..config import settings
+    return getattr(settings, "row_label_check_enabled", False) is True
+
+
+def _sign_guard_enabled() -> bool:
+    from ..config import settings
+    return getattr(settings, "sign_conflict_guard_enabled", False) is True
+
+
+def _figure_ok(rebuilt, name: str, cik: str) -> bool:
+    """False when the figure must not be used, whatever path produced it (Company Facts, the filing's inline comparison, the annual report,
+    the as-reported builder). Both checks are default off; with neither on this is True and nothing is read."""
+    if not (_row_label_check_enabled() or _sign_guard_enabled()):
+        return True
+    return (not _row_label_check_enabled() or _row_label_ok(rebuilt, name, cik)) and (not _sign_guard_enabled() or _sign_index_ok(rebuilt, name, cik))
+
+
+_OPERATING_CONCEPTS = frozenset({"OperatingIncomeLoss", "ProfitLossFromOperatingActivities"})
+
+
+def _unresolved_text(result: dict, name: str) -> str:
+    row = result["row"]
+    why = "mixes an expense and a result" if result["code"] == "ambiguous_mixed_label" else "sits in a restatement table whose columns share one label"
+    return (f"Not used. The cited filing's own row (accession {result['binding']['accession']}) for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
+            "so the statement context does not establish what the figure is. This is unresolved, not contradicted: it is not used for an operating margin or a "
+            "monitoring baseline. No replacement figure is substituted.")
+
+
+def _row_label_ok(rebuilt, name: str, cik: str) -> bool:
+    """False when the figure must not be used. Every income-concept claim is judged only against labels bound to its own issuer,
+    taxonomy, unit, period, accession and document. A rebuild with no verification context (no request notes bound or held) is not a
+    completed check: it is recorded as such and fails closed rather than passing silently. Verdicts stay distinct: contradicted and
+    cross-filing conflicts withhold; ambiguous (unresolved), other-filing-only and no-evidence (unavailable) let the figure stand and
+    say so by status."""
+    from ..integrity.row_label_check import LABELLED_CONCEPTS, WITHHOLD, assess, binding_from_claim
+    from .evidence_outcomes import label_rows, note_label_check, note_verification, note_withheld_figure, record_context_missing
+    claims = [c for c in rebuilt.verified_claims if str(c.get("metric", "")).split(":")[-1] in LABELLED_CONCEPTS]
+    if not claims:
+        return True
+    rows = label_rows()
+    if rows is None:
+        record_context_missing(f"{name} ({str(claims[0].get('metric'))})")
+        return False
+    for claim in claims:
+        binding = binding_from_claim(claim, cik)
+        key = f"{claim.get('metric')}|{claim.get('period_end')}|{claim.get('raw_value')}"
+        if binding is None:
+            note_label_check(key, "unbound_claim")
+            if claim is claims[0]:
+                note_verification(name, "unbound_claim")
+            continue
+        result = assess(binding, rows)
+        if result["status"] == "ambiguous" and binding["concept"] in _OPERATING_CONCEPTS:
+            # Unresolved operating income is never called clear and never feeds a margin or a monitoring baseline: statement context does not
+            # establish what the figure is. Distinct from a contradiction (different reason and wording); nothing replaces it.
+            note_label_check(f"{binding['concept']}|{binding['end']}|{binding['abs_value']}|{binding['accession']}", "ambiguous",
+                             {"code": result["code"], "used": False})
+            note_withheld_figure({"measure": name, "reason": "row_label_unresolved", "status": "ambiguous", "concept": binding["concept"], "code": result["code"],
+                                  "label": result["row"]["label"], "period_end": binding["end"], "accession": binding["accession"],
+                                  "text": _unresolved_text(result, name)})
+            return False
+        note_label_check(f"{binding['concept']}|{binding['end']}|{binding['abs_value']}|{binding['accession']}", result["status"],
+                         {"other_filings": result["other_filings"], **({"code": result["code"]} if result.get("code") else {})}
+                         if result["other_filings"] or result.get("code") else None)
+        if result["status"] in WITHHOLD:
+            note_withheld_figure({"measure": name, "reason": "row_label_disputed", "status": result["status"], "concept": binding["concept"],
+                                  "code": result["code"], "label": result["row"]["label"], "period_end": binding["end"],
+                                  "accession": binding["accession"], "other_filings": result["other_filings"], "text": _dispute_text(result, name)})
+            return False
+        if claim is claims[0]:
+            note_verification(name, result["status"])      # the verification statement is about the current-period figure the answer shows
+    return True
+
+
+def _sign_index_ok(rebuilt, name: str, cik: str) -> bool:
+    """False when another filing's Company Facts observation of the SAME fact (equivalent concept, same issuer, unit and period) has the same
+    amount with the opposite sign. Evidence of one fact says nothing about a different one: total and parent-attributable income are never
+    conflated. The conflict is stated; neither sign is preferred and none is inferred."""
+    from ..integrity.fact_equivalence import opposite_sign_rows
+    from ..integrity.row_label_check import binding_from_claim, LABELLED_CONCEPTS
+    from .evidence_outcomes import fact_index, note_withheld_figure, record_context_missing, sign_conflict_text
+    index = fact_index()
+    claims = [c for c in rebuilt.verified_claims if isinstance(c, dict)]
+    if index is None:
+        if any(str(c.get("metric", "")).split(":")[-1] in LABELLED_CONCEPTS for c in claims):
+            record_context_missing(f"{name} sign check")
+            return False
+        return True
+    for position, claim in enumerate(claims):
+        binding = binding_from_claim(claim, cik)
+        if binding is None:
+            continue
+        rows = opposite_sign_rows(index, binding)
+        if not rows:
+            continue
+        ref = claim.get("document_ref") or {}
+        own = {"accession": binding["accession"], "form": claim.get("source") or "", "filed": str(ref.get("published_at") or ""),
+               "sign": "-" if Decimal(str(binding["amount"])) < 0 else "+", "amendment": str(claim.get("source") or "").endswith("/A"),
+               "concept": f"{binding['taxonomy']}:{binding['concept']}"}
+        others = [{"accession": r["accession"], "form": r["form"], "filed": r["filed"], "sign": "-" if Decimal(str(r["value"])) < 0 else "+",
+                   "amendment": str(r["form"]).endswith("/A"), "concept": f"{r['taxonomy']}:{r['concept']}"} for r in rows]
+        observations = sorted([own, *others], key=lambda o: (o["filed"], o["accession"]))
+        detail = {"sign_conflicts": [{"role": "current" if position == 0 else "prior", "concept": binding["concept"], "period_start": binding["start"],
+                                      "period_end": binding["end"], "unit": binding["unit"], "scope": "consolidated", "observations": observations,
+                                      "amendment_among_them": any(o["amendment"] for o in observations), "resolved": False}]}
+        note_withheld_figure({"measure": name, "reason": "sign_conflict", "concept": binding["concept"], "period_end": binding["end"],
+                              "text": sign_conflict_text(name, detail)})
+        return False
+    return True
+
+
+def _dispute_text(result: dict, name: str) -> str:
+    from ..integrity.row_label_check import MEANING
+    binding, row = result["binding"], result["row"]
+    why = ("is an expense line, not a result" if result["code"] == "expense_row" else "names a loss while the tagged value is a positive income")
+    margin = " No operating margin that depends on it is calculated." if binding["concept"] in {"OperatingIncomeLoss", "ProfitLossFromOperatingActivities"} else ""
+    meaning = MEANING.get(binding["concept"], binding["concept"])
+    if result["status"] == "contradicted":
+        return (f"Not used. The cited filing's own row (accession {binding['accession']}) for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
+                f"so it does not match the tag it carries ({meaning}) and the figure is disputed. No replacement figure is substituted.{margin}")
+    return (f"Not used. No row of the cited filing (accession {binding['accession']}) was retained for this figure. A different retained filing "
+            f"(accession {row.get('accession')}, form {row.get('form')}) labels the same period and amount \u201c{row['label']}\u201d, which {why}. "
+            f"That is a conflict between filings, not the cited row: the figure can be neither confirmed nor cleared, so it is not used. "
+            f"No replacement figure is substituted.{margin}")
+
+
+_EXPLANATION_METRICS = {"operating income": {"operating income"}, "net income": {"net income", "profit for the year"}}
+
+
+def withhold_disputed_items(items: list, *, ticker: str, cik: str) -> list:
+    """The evidence list without the comparisons the checks withhold, from ANY path (Company Facts, filing inline, annual report, as-reported),
+    so a withheld figure is absent from every representation: references, structured facts, claims, and the explanations and bridges that
+    quote it. Nothing replaces a withheld figure."""
+    if not (_row_label_check_enabled() or _sign_guard_enabled()):
+        return list(items)
+    kept = []
+    for item in items:
+        claims = getattr(item, "verified_claims", None) or []
+        concept = str(claims[0].get("metric", "")).split(":")[-1] if claims else ""
+        name = next((n for n, aliases in {**CORE_METRICS, **SUPPLEMENTARY_METRICS}.items() if concept in aliases), None)
+        if name is None:
+            name = next((n for n, by in _AS_REPORTED_CORE().items() if any(concept in cs for cs in by.values())), concept)
+        if claims and not _figure_ok(item, name, cik):
+            continue
+        kept.append(item)
+    from .evidence_outcomes import current_notes
+    notes = current_notes()
+    if notes is not None and notes.withheld_figures:
+        gone = set().union(*[_EXPLANATION_METRICS.get(row.get("measure"), set()) for row in notes.withheld_figures])
+        if gone:
+            kept = [i for i in kept if not (getattr(i, "period_explanations", None)
+                    and gone & set((i.period_explanations[0] or {}).get("metrics", {})))]
+    return kept
+
+
+def _AS_REPORTED_CORE() -> dict:
+    from .as_reported_financials import CORE
+    return CORE
+
+
+def _core_measure_withheld() -> bool:
+    """A comparison was withheld for a disputed figure in this request. The remaining verified comparisons then stand (the usual two-comparison
+    rule keeps one isolated observation from passing as a case; here the second one was removed by the dispute, not by the evidence)."""
+    from .evidence_outcomes import current_notes
+    notes = current_notes()
+    return bool(notes is not None and notes.withheld_figures)
+
+
 def build_financial_foundation(ticker: str, items: list, references: list[dict] | None,
                                *, expected_cik: str | None = None, allow_lone: bool = False,
                                withheld: list | None = None) -> dict | None:
@@ -367,7 +563,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         selected.append(item)
         core_comparisons[name] = (item, reference_id)
     # One isolated observation does not form a multi-dimensional financial case.
-    if len(rows) < (1 if allow_lone else 2):
+    if len(rows) < (1 if allow_lone or _core_measure_withheld() else 2):
         return None
     if len({item.verified_claims[0]["unit"] for item in selected}) != 1:
         # Independently valid comparisons in different currencies do not
@@ -503,7 +699,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         core_missing = [name for name in CORE_METRICS if name in missing]
         answer += lone_section(next(iter(core_comparisons)), core_missing, withheld)
     if supplemental:
-        answer += "\n\n" + (BANK_PRETAX_LIMITATION if sector == "bank" else PRETAX_LIMITATION)
+        answer += "\n\n" + (BANK_PRETAX_LIMITATION if sector == "bank" else _pretax_limitation())
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
         f"{row['text']} [{row['reference_ids'][0]}] {_once_per_section(row['conditional_test'])}"
         for row in interpretations)

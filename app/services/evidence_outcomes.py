@@ -21,6 +21,9 @@ from __future__ import annotations
 
 import re
 import threading
+import contextlib
+import collections
+import logging
 from contextvars import ContextVar
 from typing import Iterable, Optional
 
@@ -40,7 +43,8 @@ REASONS = {
     "unavailable": ("registration_only_filing_list", "concept_absent_from_returned_facts"),
     "unsupported": ("ifrs_taxonomy", "non_usd_reporting", "annual_form_not_read", "interim_form_not_read",
                     "no_same_period_pair", "conflicting_evidence", "selection_rules_not_met",
-                    "as_reported_comparison_withheld"),
+                    "as_reported_comparison_withheld", "comparisons_stale", "comparisons_not_used_for_threshold",
+                    "comparisons_not_used", "row_label_disputed", "row_label_unresolved", "sign_conflict"),
     "failed": ("facts_retrieval_failed", "filing_list_failed", "filing_too_large", "filing_not_read",
                "time_limit"),
     "not_attempted": ("identity_unresolved", "no_filing_listed", "not_requested", "no_provider",
@@ -88,6 +92,13 @@ class OutcomeNotes:
         self.as_reported_withheld: list[dict] = []  # comparisons the as-reported slice declined, with why
         self.as_reported_built: list[dict] = []  # comparisons it built (title, period end) before admission
         self.annual_filing_read: Optional[dict] = None  # a 20-F read through the annual filing path (form, currencies)
+        self.pair_outcomes: list[dict] = []  # per measure and concept: the comparison was built, or the rule that stopped it
+        self.row_labels: list[dict] = []  # labels of the rows the retained filing's inline core facts sit on
+        self.withheld_figures: list[dict] = []  # figures set aside because the evidence disputes them (never replaced)
+        self.label_checks: list[dict] = []  # per bound figure: what the row-label check concluded (completed or not)
+        self.verification: dict = {}  # measure -> statuses of the row-label check for the figures the sweep kept (what was and was not verified)
+        self.fact_index: dict = {}  # fact_key -> observations of that fact in the Company Facts the request holds (for the sign check)
+        self.fact_index_rows = 0
 
     # Once the request has given up on a task, that task's outcome is final: a worker that keeps
     # running in the background cannot add, change or complete anything. ``task`` is the writer
@@ -130,6 +141,49 @@ class OutcomeNotes:
         with self._lock:
             if not self._late(task):
                 self.annual_filing_read = dict(row)
+
+    def add_pair_outcome(self, row: dict, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.pair_outcomes.append(dict(row))
+
+    def add_row_labels(self, rows, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.row_labels.extend(dict(row) for row in rows)
+
+    def add_fact_index(self, rows, task: Optional[str] = None):
+        """Company Facts observations (the guarded builder's and the as-reported builder's records); deduplicated, bounded."""
+        from ..integrity.fact_equivalence import fact_key
+        with self._lock:
+            if self._late(task):
+                return
+            for r in rows:
+                if self.fact_index_rows >= 60_000:
+                    break
+                bucket = self.fact_index.setdefault(fact_key(r["cik"], r["taxonomy"], r["concept"], r["unit"], r["start"], r["end"]), [])
+                ident = (r["accession"], str(r["value"]))
+                if not any((b["accession"], str(b["value"])) == ident for b in bucket):
+                    bucket.append(dict(r))
+                    self.fact_index_rows += 1
+
+    def add_verification(self, measure: str, status: str, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.verification.setdefault(measure, set()).add(status)
+
+    def add_label_check(self, row: dict, task: Optional[str] = None):
+        """One entry per figure and status: the foundation rechecks the same figure many times."""
+        with self._lock:
+            if not self._late(task) and not any(r["key"] == row["key"] and r["status"] == row["status"] for r in self.label_checks):
+                self.label_checks.append(dict(row))
+
+    def add_withheld_figure(self, row: dict, task: Optional[str] = None):
+        """Idempotent: the same measure and reason is kept once (the foundation rechecks a figure many times)."""
+        with self._lock:
+            if not self._late(task) and not any(r.get("measure") == row.get("measure") and r.get("reason") == row.get("reason")
+                                                for r in self.withheld_figures):
+                self.withheld_figures.append(dict(row))
 
     def add_selected(self, task: str, form: str):
         with self._lock:
@@ -227,6 +281,144 @@ def note_as_reported_withheld(rows, built=()) -> None:
     _safe(lambda notes: notes.add_as_reported_withheld(rows or [], _task.get(), built or ()))
 
 
+def note_pair_outcome(measure: str, concept: str, evidence, reason_fn) -> None:
+    """What the pair builder did for one concept: built a comparison, or stopped at a named rule. ``reason_fn`` is only
+    called when notes are active, so nothing is computed otherwise."""
+    def action(notes):
+        built = evidence is not None
+        result = None if built else reason_fn()
+        reason, detail = result if isinstance(result, tuple) else (result, None)
+        notes.add_pair_outcome({"measure": measure, "concept": concept, "status": "built" if built else "none",
+                                "reason": reason, **({"detail": detail} if detail else {}),
+                                "period_end": getattr(evidence, "reporting_period_end", None) if built else None}, _task.get())
+        if reason == "sign_conflict" and detail:
+            notes.add_withheld_figure({"measure": measure, "reason": "sign_conflict", "concept": concept,
+                                       "text": sign_conflict_text(measure, detail)}, _task.get())
+    _safe(action)
+
+
+def _filing_phrase(observation: dict, concept: str = "") -> str:
+    """The filing, its date and its sign; the concept too when it is a different but equivalent one (for example the IFRS tag of the same fact)."""
+    tag = f", tagged {observation['concept']}" if observation.get("concept") and concept and not str(observation["concept"]).endswith(":" + concept) else ""
+    return f"{observation['form']} filed {observation['filed']} ({'negative' if observation['sign'] == '-' else 'positive'}{tag})"
+
+
+def sign_conflict_text(measure: str, detail: dict) -> str:
+    """The conflict as found: the filings and their signs, no resolution and no inference from another measure."""
+    parts = []
+    for conflict in detail.get("sign_conflicts", []):
+        filings = "; ".join(_filing_phrase(o, conflict.get("concept", "")) for o in conflict["observations"])
+        parts.append(f"the {conflict['role']} period {conflict['period_start']} to {conflict['period_end']} is reported with the same "
+                     f"amount and opposite signs in different filings ({filings})")
+    amendment = any(c.get("amendment_among_them") for c in detail.get("sign_conflicts", []))
+    return ("; ".join(parts)[:1].upper() + "; ".join(parts)[1:] + ". Same consolidated scope, unit and period in each. "
+            + ("One of these filings is an amendment, which does not by itself show which sign is right. " if amendment else
+               "None of these filings is marked as an amendment. ")
+            + "Neither sign is assumed, none is inferred from another measure, and no comparison is shown.")
+
+
+def note_row_labels(rows) -> None:
+    """The labels of the rows a retained filing's inline core facts sit on (notes only; inert otherwise)."""
+    _safe(lambda notes: notes.add_row_labels(rows, _task.get()))
+
+
+def note_fact_index(records) -> None:
+    """Index the Company Facts observations a request holds (notes only; inert otherwise). Records are SecFactRecord-like."""
+    from ..config import settings
+    if getattr(settings, "sign_conflict_guard_enabled", False) is not True:
+        return
+
+    def action(notes):
+        rows = [{"cik": str(int(r.cik)), "taxonomy": r.taxonomy, "concept": r.concept, "unit": r.unit, "start": r.start, "end": r.end,
+                 "value": r.value, "accession": r.accession, "form": r.form, "filed": r.filed}
+                for r in records if r.accession]
+        notes.add_fact_index(rows, _task.get())
+    _safe(action)
+
+
+def fact_index():
+    """The request's Company Facts index, or None with no verification context (distinct from an empty index)."""
+    notes = current_notes()
+    if notes is None:
+        return None
+    return notes.fact_index        # read after collection; writes from a stopped task are dropped
+
+
+def note_verification(measure: str, status: str) -> None:
+    _scoped(lambda notes: notes.add_verification(measure, status, _task.get()))
+
+
+def note_withheld_figure(row: dict) -> None:
+    _scoped(lambda notes: notes.add_withheld_figure(row, _task.get()))
+
+
+# The request scope: the request thread holds the request's notes for its whole run (worker threads are bound
+# explicitly by ``bind_outcome_notes``). A rebuild with neither is OUTSIDE the verification context.
+_scope: ContextVar[Optional[dict]] = ContextVar("evidence_outcome_scope", default=None)
+CONTEXT_MISSING: "collections.deque" = collections.deque(maxlen=200)
+_logger = logging.getLogger(__name__)
+
+
+@contextlib.contextmanager
+def request_scope():
+    holder = {"notes": None}
+    token = _scope.set(holder)
+    try:
+        yield holder
+    finally:
+        _scope.reset(token)
+
+
+def set_scope_notes(notes: Optional[OutcomeNotes]) -> None:
+    holder = _scope.get()
+    if holder is not None:
+        holder["notes"] = notes
+
+
+def current_notes() -> Optional[OutcomeNotes]:
+    """The notes of the request this code runs in: bound to this worker, else held by the request scope; None outside both."""
+    bound = _notes.get()
+    if bound is not None:
+        return bound
+    holder = _scope.get()
+    return holder["notes"] if holder else None
+
+
+def record_context_missing(what: str) -> None:
+    """A check that needed the verification context ran without it. This is not a completed check; it is counted and logged."""
+    CONTEXT_MISSING.append(what)
+    _logger.warning("row-label verification context missing: %s", what)
+
+
+def _scoped(action) -> None:
+    notes = current_notes()
+    if notes is None:
+        return
+    try:
+        action(notes)
+    except Exception:  # pragma: no cover - defensive
+        pass
+
+
+def label_rows() -> Optional[list]:
+    """The row labels retained in this request, or None when there is no verification context (distinct from an empty list)."""
+    notes = current_notes()
+    if notes is None:
+        return None
+    with notes._lock:
+        return [dict(row) for row in notes.row_labels]
+
+
+def note_label_check(key: str, status: str, detail: Optional[dict] = None) -> None:
+    _scoped(lambda notes: notes.add_label_check({"key": key, "status": status, **({"detail": detail} if detail else {})}))
+
+
+def note_pair_dropped(measure: str, period_end, reason: str) -> None:
+    """A built comparison that retrieval set aside, with the rule."""
+    _safe(lambda notes: notes.add_pair_outcome({"measure": measure, "concept": None, "status": "dropped", "reason": reason,
+                                                "period_end": period_end}, _task.get()))
+
+
 def note_annual_filing_read(form: str, currencies) -> None:
     _safe(lambda notes: notes.add_annual_filing_read({"form": form, "currencies": sorted(currencies)}, _task.get()))
 
@@ -306,6 +498,120 @@ def _text_fact_failure(failure):
             "not evidence that no data exists; trying again may give a fuller answer.")
 
 
+# What the pair builder said about each measure, in words that claim no more than it recorded.
+_PAIR_REASON_TEXT = {
+    "sign_conflict": "the same period is reported with the same amount and opposite signs in different filings, so neither is used",
+    "no_records": "the company-facts data holds no figures for it",
+    "no_period_fits_form": "none of its figures covers a period that fits its filing form",
+    "mixed_period_families": "its latest period mixes annual and quarterly figures",
+    "ambiguous_current_period": "its latest figure is reported with conflicting values",
+    "no_prior_year_observation": "no figure for the same period one year earlier was found",
+    "ambiguous_prior_period": "its prior-year figure is reported with conflicting values",
+    "prior_value_zero": "its prior-year figure is zero, so a change cannot be expressed",
+    "claims_not_bound": "its figures could not be bound to their filings",
+    "invalid_request": "the request for it was not valid",
+}
+_PAIR_REASON_RANK = ("sign_conflict", "prior_value_zero", "no_prior_year_observation", "ambiguous_prior_period", "ambiguous_current_period",
+                     "mixed_period_families", "claims_not_bound", "no_period_fits_form", "no_records", "invalid_request")
+_CORE_MEASURES = ("revenue", "operating income", "net income", "operating cash flow")
+
+
+def revenue_unavailable_clause(best) -> str:
+    """Why there is no revenue comparison, in words that claim only what the pair builder recorded."""
+    return ({"prior_value_zero": "the prior-year revenue figure is zero, so no revenue comparison could be expressed",
+             "no_prior_year_observation": "no revenue figure for the same period one year earlier was found",
+             "no_records": "the company-facts data holds no revenue figures"}.get(best)
+            or (f"revenue: {_PAIR_REASON_TEXT[best]}" if best else "no verified revenue comparison is available"))
+
+
+def recorded_pair_reasons(measure: str) -> list:
+    """The pair builder's recorded stop reasons for a measure in the active request (empty when nothing is being recorded)."""
+    notes = _notes.get()
+    if notes is None:
+        return []
+    return [o["reason"] for o in list(notes.pair_outcomes)
+            if o.get("measure") == measure and o.get("status") == "none" and o.get("reason")]
+_SEC_FACT = "SEC EDGAR \u2014 structured XBRL fact"
+
+
+def _best_reason(reasons):
+    found = set(reasons)
+    return next((r for r in _PAIR_REASON_RANK if r in found), None)
+
+
+def _in_core_order(measures):
+    return sorted(set(measures), key=lambda m: (_CORE_MEASURES.index(m) if m in _CORE_MEASURES else len(_CORE_MEASURES), m))
+
+
+def _other_basis_sentence(facts_row: dict) -> str:
+    """The same response also holds IFRS-tagged facts, which a decision-monitoring answer does not read in this version."""
+    taxonomies = facts_row.get("taxonomies") or {}
+    if not taxonomies.get("ifrs-full"):
+        return ""
+    currencies = (facts_row.get("currencies") or {}).get("ifrs-full") or []
+    return (f" The same response also holds IFRS-tagged facts ({taxonomies['ifrs-full']} concepts"
+            + (f", reported in {', '.join(currencies)}" if currencies else "")
+            + "), which a decision-monitoring answer does not read in this version.")
+
+
+def _pair_state(source_answer, notes, references, ok):
+    """Why no comparison is delivered although company facts were retrieved, from what the run recorded (never from a guess)."""
+    from ..config import settings
+    from .evidence_integrity import _STALE_AFTER_DAYS
+    outcomes = list(getattr(notes, "pair_outcomes", None) or []) if notes else []
+    facts = [ref for ref in references or [] if isinstance(ref, dict) and str(ref.get("source", "")).startswith(_SEC_FACT)]
+    stale = [ref for ref in facts if ref.get("freshness_status") == "stale"]
+    usable = [ref for ref in facts if ref.get("freshness_status") != "stale"]
+    built = _in_core_order(o["measure"] for o in outcomes if o.get("status") == "built")
+    dropped = _in_core_order(o["measure"] for o in outcomes if o.get("status") == "dropped")
+    kind = _kind(source_answer)
+    facts_row = ok[-1]
+    detail = {"built_measures": built, "dropped_measures": dropped, "pair_outcomes": outcomes, "present": facts_row.get("present", [])}
+    window = _STALE_AFTER_DAYS.get("regulatory_filing")
+    if stale and not usable:
+        latest = max((str(ref.get("reporting_period_end") or "") for ref in stale), default="") or None
+        when = f"the latest period they cover ended {latest}, which is " if latest else "they are "
+        return _record("reported_financials", "unsupported", "comparisons_stale", tried=True, source_family="sec_company_facts",
+                       detail={**detail, "stale_reference_ids": [ref.get("id") for ref in stale], "latest_period_end": latest, "freshness_window_days": window},
+                       user_text=(f"Company-facts data was retrieved and {len(stale)} comparison(s) of a current and a prior-period figure were built "
+                                  f"from it, but {when}older than the {window}-day freshness window for filings, so none is used as current evidence."
+                                  + (_other_basis_sentence(facts_row) if kind == "threshold" else "")))
+    if dropped and not built and not usable:
+        from .verified_sec_metric_service import _MAX_STALENESS_DAYS
+        return _record("reported_financials", "unsupported", "comparisons_stale", tried=True, source_family="sec_company_facts",
+                       detail={**detail, "issuer_staleness_days": _MAX_STALENESS_DAYS},
+                       user_text=(f"Company-facts data was retrieved and comparisons were built for {', '.join(dropped)}, but their latest period is more "
+                                  f"than {_MAX_STALENESS_DAYS} days older than the issuer's latest reported balance-sheet period, so they were not used."))
+    retained = getattr(settings, "threshold_comparisons_retained_enabled", False) is True
+    if kind == "threshold" and usable and not retained:
+        reasons = [o["reason"] for o in outcomes if o.get("measure") == "revenue" and o.get("status") == "none" and o.get("reason")]
+        best = _best_reason(reasons)
+        clause = revenue_unavailable_clause(best)
+        shown = ", ".join(built) if built else f"{len(usable)}"
+        return _record("reported_financials", "unsupported", "comparisons_not_used_for_threshold", tried=True, source_family="sec_company_facts",
+                       detail={**detail, "usable_reference_ids": [ref.get("id") for ref in usable], "revenue_reason": best},
+                       user_text=(f"Current and prior-period comparisons were built and verified from the company-facts data ({shown}), but none is shown "
+                                  f"in this answer: a decision-monitoring answer builds on an operating-margin baseline, which needs a revenue comparison, and "
+                                  f"{clause}. The comparisons are reported historical figures, not investment thresholds."))
+    if outcomes and not built and not dropped:
+        parts = []
+        for measure in _CORE_MEASURES:
+            best = _best_reason(o["reason"] for o in outcomes if o.get("measure") == measure and o.get("status") == "none" and o.get("reason"))
+            if best:
+                parts.append(f"{measure}: {_PAIR_REASON_TEXT[best]}")
+        if parts:
+            return _record("reported_financials", "unsupported", "no_same_period_pair", tried=True, source_family="sec_company_facts",
+                           detail=detail, user_text=("Company-facts data was retrieved, but no comparison of a current and a prior-period figure could be "
+                                                     "built: " + "; ".join(parts) + "."))
+    if built or usable:
+        return _record("reported_financials", "unsupported", "comparisons_not_used", tried=True, source_family="sec_company_facts", detail=detail,
+                       user_text=("Company-facts data was retrieved and comparison(s) of a current and a prior-period figure were built from it, "
+                                  "but none is used in this answer."))
+    return _record("reported_financials", "not_attempted", "not_recorded", tried=True, source_family="sec_company_facts", detail=detail,
+                   user_text=("Company-facts data was retrieved, but this run did not record why no comparison of a current and a prior-period "
+                              "figure is shown."))
+
+
 def _financial_state(source_answer, notes, references):
     facts = notes.facts_requests if notes else []
     ok = [row for row in facts if row.get("ok")]
@@ -382,11 +688,13 @@ def _financial_state(source_answer, notes, references):
                        user_text="None of the requested measures appears in the company-facts data returned by SEC "
                                  "for this issuer. This describes that response only; it does not establish that the "
                                  "issuer never reported the measure.")
+    if notes and notes.withheld_figures:
+        first = notes.withheld_figures[0]
+        return _record("reported_financials", "unsupported", first["reason"], tried=True, source_family="sec_company_facts",
+                       detail={"withheld_figures": [dict(row) for row in notes.withheld_figures]},
+                       user_text=" ".join(f"{row['measure']}: {row['text']}" for row in notes.withheld_figures))
     if ok:
-        return _record("reported_financials", "unsupported", "no_same_period_pair", tried=True,
-                       source_family="sec_company_facts", detail={"present": ok[-1].get("present", [])},
-                       user_text="Company-facts data was retrieved, but no comparison of a current and a prior-period "
-                                 "figure on the same basis could be built from it.")
+        return _pair_state(source_answer, notes, references, ok)
     if analysis.get("reason") == "comparisons_unavailable":
         return _record("reported_financials", "unsupported", "no_same_period_pair", tried=True,
                        source_family="sec_company_facts", detail={},
@@ -489,7 +797,51 @@ def _decision_inputs(source_answer, financial):
                              + ("" if financial["state"] == "available" else financial["user_text"]))
 
 
+def _withheld_parts(notes):
+    return [{"part": row["measure"], "state": "unsupported", "reason": row["reason"], "text": row["text"]}
+            for row in (getattr(notes, "withheld_figures", None) or [])]
+
+
+_VERIFICATION_MEASURES = {"operating income": r"operating (?:income|profit)", "net income": r"net income|profit for the year|profit\b",
+                          "pretax income": r"pretax income|profit before tax"}
+
+
+def verification_summary(source_answer, notes) -> dict:
+    """What the row-label check could and could not confirm for the income figures this answer shows. Empty unless the check ran."""
+    from ..integrity.row_label_check import UNAVAILABLE, UNRESOLVED
+    verification = getattr(notes, "verification", None) or {}
+    texts = [str(c.get("claim", "")) for c in (source_answer.get("claims") or []) if isinstance(c, dict)]
+    out = {"checked": [], "unresolved": [], "incomplete": []}
+    for measure, pattern in _VERIFICATION_MEASURES.items():
+        statuses = verification.get(measure)
+        if not statuses or not any(re.search(pattern, t, re.I) for t in texts):
+            continue
+        key = "incomplete" if statuses & UNAVAILABLE else "unresolved" if statuses & UNRESOLVED else "checked"
+        out[key].append(measure)
+    return out if any(out.values()) else {}
+
+
+def _verification_parts(source_answer, notes):
+    """verification_incomplete: the figures are shown, but the filing's own row labels were not available to confirm them. This is not a
+    finding that they are wrong, and it is different from a contradiction, an unresolved label, or a withheld figure."""
+    summary = verification_summary(source_answer, notes)
+    parts = []
+    if summary.get("incomplete"):
+        parts.append({"part": "statement verification", "state": "unverified", "reason": "verification_incomplete",
+                      "text": (f"the filing's own row labels were not available in this request to confirm {', '.join(summary['incomplete'])} against the statement "
+                               "presentation, so those figures are reported from structured data without that check. This is not a finding that they are wrong.")})
+    if summary.get("unresolved"):
+        parts.append({"part": "statement labels", "state": "unresolved", "reason": "row_label_unresolved",
+                      "text": (f"the row label of {', '.join(summary['unresolved'])} in the filing is ambiguous (a mixed expense/result label or a restatement column), "
+                               "so the statement context does not establish what the figure is; it is shown as reported and is neither confirmed nor contradicted.")})
+    return parts
+
+
 def _missing_parts(source_answer, notes):
+    return _withheld_parts(notes) + _verification_parts(source_answer, notes) + _missing_revenue_part(source_answer, notes)
+
+
+def _missing_revenue_part(source_answer, notes):
     """Revenue is the usual gap when operating income or profit was delivered without it."""
     if not notes:
         return []
@@ -540,6 +892,8 @@ def build_evidence_outcomes(source_answer: dict, *, notes: Optional[OutcomeNotes
             records.append(_record(need, "available", "bound", tried=True, source_family="sec_filing" if need != "reported_financials" else "sec_company_facts",
                                    reference_ids=ids, as_of=_as_of(source_answer, refs), freshness=_freshness(refs),
                                    missing_parts=_missing_parts(source_answer, notes) if need == "reported_financials" else [],
+                                   **({"detail": {"verification": verification_summary(source_answer, notes)}}
+                                      if need == "reported_financials" and verification_summary(source_answer, notes) else {}),
                                    user_text="Bound to the cited evidence."))
             if need == "reported_financials":
                 financial = records[-1]
@@ -593,7 +947,7 @@ def render_unknown_block(records: list[dict]) -> str:
     for row in records:
         for part in row["state"] == "available" and row["missing_parts"] or []:
             lines.append(f"- {_LABELS[row['need']]}, also missing: {part['part']}: "
-                         f"{_PART_TEXT.get(part['reason'], part['reason'])}.")
+                         + (part["text"] if part.get("text") else f"{_PART_TEXT.get(part['reason'], part['reason'])}."))
     return HEADER + "\n" + "\n".join(lines) if lines else ""
 
 

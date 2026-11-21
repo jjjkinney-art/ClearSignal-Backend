@@ -167,14 +167,44 @@ def _verified_claim(
     return output
 
 
-def comparable_metric_evidence(
+def _sign_guard_enabled() -> bool:
+    from ..config import settings
+    return getattr(settings, "sign_conflict_guard_enabled", False) is True
+
+
+def _sign_conflicts(eligible: Sequence[SecFactRecord], chosen: SecFactRecord) -> list[SecFactRecord]:
+    """Observations of the chosen fact's own concept, unit, start and end (same scope: Company Facts holds consolidated,
+    undimensioned facts only; same duration: identical start and end) in other filings with the same magnitude and the
+    opposite sign. Empty when no filing disagrees."""
+    value = Decimal(str(chosen.value))
+    if value == 0:
+        return []
+    return [record for record in eligible
+            if record.concept == chosen.concept and record.unit == chosen.unit
+            and record.start == chosen.start and record.end == chosen.end
+            and Decimal(str(record.value)) == -value]
+
+
+def _conflict_detail(role: str, chosen: SecFactRecord, others: Sequence[SecFactRecord]) -> dict:
+    """What was found, for the answer to state. Nothing is resolved: neither sign is preferred."""
+    def row(record):
+        return {"accession": record.accession, "form": record.form, "filed": record.filed,
+                "sign": "-" if Decimal(str(record.value)) < 0 else "+", "amendment": record.form.endswith("/A")}
+    observations = sorted([row(chosen), *(row(r) for r in others)], key=lambda r: (r["filed"], r["accession"] or ""))
+    return {"role": role, "concept": chosen.concept, "period_start": chosen.start, "period_end": chosen.end,
+            "unit": chosen.unit, "scope": "consolidated", "observations": observations,
+            "amendment_among_them": any(r["amendment"] for r in observations),
+            "resolved": False}
+
+
+def _comparable_metric(
     records: Sequence[SecFactRecord], *, ticker: str, expected_cik: str,
-    concepts: tuple[str, ...], metric_name: str, unit: str = "USD",
-) -> RetrievedEvidence | None:
-    """Return a latest-versus-prior-period fact, or fail closed on ambiguity."""
+    concepts: tuple[str, ...], metric_name: str, unit: str = "USD", detail: dict | None = None,
+) -> tuple[RetrievedEvidence | None, str | None]:
+    """The comparison and None, or None and the code of the rule that stopped it (see explain_no_comparable_metric)."""
     if (not ticker or not expected_cik.isdigit() or not concepts or not metric_name
             or unit not in {*REPORTING_CURRENCIES, "shares", *PER_SHARE_UNITS}):
-        return None
+        return None, "invalid_request"
     eligible = [
         record for record in records
         if record.cik.lstrip("0") == expected_cik.lstrip("0")
@@ -182,7 +212,9 @@ def comparable_metric_evidence(
         and _duration_matches_form(record)
     ]
     if not eligible:
-        return None
+        has_records = any(record.cik.lstrip("0") == expected_cik.lstrip("0") and record.concept in concepts
+                          and record.unit == unit for record in records)
+        return None, ("no_period_fits_form" if has_records else "no_records")
 
     latest_end = max(record.end for record in eligible)
     latest_period = [record for record in eligible if record.end == latest_end]
@@ -197,7 +229,7 @@ def comparable_metric_evidence(
         for record in latest_rows
     }
     if len(period_families) != 1:
-        return None
+        return None, "mixed_period_families"
     annual = period_families == {"annual"}
     selected_days = (
         max(_duration(record) for record in latest_rows)
@@ -209,7 +241,7 @@ def comparable_metric_evidence(
     ]
     current = _latest_unambiguous_fact(latest_rows, include_start=True)
     if current is None:
-        return None
+        return None, "ambiguous_current_period"
     current_days = _duration(current)
     current_family = "annual" if current.form.startswith(ANNUAL_FORM_PREFIXES) else "quarterly"
 
@@ -225,15 +257,25 @@ def comparable_metric_evidence(
                 and abs(prior_days - current_days) <= 7 and 350 <= gap <= 380):
             candidates.append(prior)
     if not candidates:
-        return None
+        return None, "no_prior_year_observation"
     prior_end = max(record.end for record in candidates)
     comparable = [record for record in candidates if record.end == prior_end]
     prior = _latest_unambiguous_fact(comparable, include_start=True)
     if prior is None:
-        return None
+        return None, "ambiguous_prior_period"
+    if _sign_guard_enabled():
+        # The same period reported with the same magnitude and the opposite sign in different filings is a conflict to
+        # investigate, not a revision to follow: neither the earlier nor the later sign is assumed correct, and no sign
+        # is inferred from another measure.
+        found = [_conflict_detail(role, chosen, others) for role, chosen in (("current", current), ("prior", prior))
+                 if (others := _sign_conflicts(eligible, chosen))]
+        if found:
+            if detail is not None:
+                detail["sign_conflicts"] = found
+            return None, "sign_conflict"
     cash_flow = current.concept == "NetCashProvidedByUsedInOperatingActivities"
     if prior.value == 0:
-        return None
+        return None, "prior_value_zero"
 
     metric_name = metric_label(metric_name, current.concept)
     change = ((Decimal(str(current.value)) - Decimal(str(prior.value)))
@@ -285,8 +327,8 @@ def comparable_metric_evidence(
         )) is not None
     ]
     if len(verified_claims) != 2:
-        return None
-    return RetrievedEvidence(
+        return None, "claims_not_bound"
+    evidence = RetrievedEvidence(
         title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,
         timestamp=current.filed, url=current.filing_url, relevance_score=0.99,
@@ -296,6 +338,37 @@ def comparable_metric_evidence(
         filed_at=current.filed, extraction_method="structured_xbrl",
         verified_claims=verified_claims,
     )
+    return evidence, None
+
+
+def comparable_metric_evidence(
+    records: Sequence[SecFactRecord], *, ticker: str, expected_cik: str,
+    concepts: tuple[str, ...], metric_name: str, unit: str = "USD",
+) -> RetrievedEvidence | None:
+    """Return a latest-versus-prior-period fact, or fail closed on ambiguity."""
+    return _comparable_metric(records, ticker=ticker, expected_cik=expected_cik, concepts=concepts,
+                              metric_name=metric_name, unit=unit)[0]
+
+
+def explain_no_comparable_metric(
+    records: Sequence[SecFactRecord], *, ticker: str, expected_cik: str,
+    concepts: tuple[str, ...], metric_name: str, unit: str = "USD", detail: dict | None = None,
+) -> str | None:
+    """Why ``comparable_metric_evidence`` returns nothing, as a code, or None when it returns a comparison.
+
+    no_records                 no record of the concept in the unit at all.
+    no_period_fits_form        records exist but none has a duration that fits its filing form.
+    mixed_period_families      the latest period carries both annual and quarterly observations.
+    ambiguous_current_period   the latest observation disagrees with itself.
+    no_prior_year_observation  no observation of the same length ended 350 to 380 days earlier.
+    ambiguous_prior_period     the prior-year observation disagrees with itself.
+    prior_value_zero           the prior-year value is zero, so a change cannot be expressed.
+    claims_not_bound           a fact could not be bound to its filing.
+    sign_conflict              (guard on) the chosen current or prior period is reported with the same magnitude and
+                               the opposite sign in another filing; ``detail["sign_conflicts"]`` lists the filings.
+    """
+    return _comparable_metric(records, ticker=ticker, expected_cik=expected_cik, concepts=concepts,
+                              metric_name=metric_name, unit=unit, detail=detail)[1]
 
 
 def comparable_instant_metric_evidence(

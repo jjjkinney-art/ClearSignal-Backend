@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation, localcontext
 import logging
 import re
+import html
 from xml.etree import ElementTree as ET
 
 XBRLI = 'http://www.xbrl.org/2003/instance'
@@ -346,3 +347,84 @@ def parse_inline_observations(text, *, cik, concepts, product_members=False, tax
                                  currencies=currencies) is not None:
             observations.append(observation)
     return tuple(observations)
+
+
+_FACT_TAG = re.compile(r"<ix:nonfraction\b[^>]*?\sid\s*=\s*[\"']([^\"']{1,200})[\"']", re.I)
+_CELL = re.compile(r"<t[dh]\b[^>]*>(.*?)</t[dh]\s*>", re.I | re.S)
+_TAGS = re.compile(r"<[^>]*>")
+_MAX_ROW_CHARS = 30_000
+_MAX_LABEL_CHARS = 300
+
+
+def _row_start(lowered, position):
+    """Start of the table row that holds ``position``, or -1 when the fact is not inside an open row."""
+    start = lowered.rfind("<tr", 0, position)
+    while start != -1 and lowered[start + 3:start + 4] not in (" ", ">", "\n", "\t", "\r", "/"):
+        start = lowered.rfind("<tr", 0, start)
+    if start == -1 or lowered.find("</tr", start, position) != -1 or position - start > _MAX_ROW_CHARS:
+        return -1
+    return start
+
+
+def parse_row_labels(text, fact_ids):
+    """{fact_id: row label or None} for the wanted inline fact ids: the first cell of the fact's own table row that
+    holds letters. Display markup only; nothing here changes which facts are accepted. A fact outside an open table
+    row gets no label. Bounded scan around each wanted fact (no whole-document parse); empty on oversized input."""
+    wanted = frozenset(fact_ids)
+    if not wanted or not isinstance(text, str) or len(text) > 15_000_000:
+        return {}
+    lowered, labels = text.lower(), {}
+    try:
+        for match in _FACT_TAG.finditer(text):
+            fact_id = match.group(1)
+            if fact_id not in wanted or fact_id in labels:
+                continue
+            start = _row_start(lowered, match.start())
+            label = None
+            if start != -1:
+                for cell in _CELL.finditer(text, start, match.start()):
+                    words = " ".join(html.unescape(_TAGS.sub(" ", cell.group(1))).split())
+                    if re.search(r"[A-Za-z]", words):
+                        label = words[:_MAX_LABEL_CHARS]
+                        break
+            labels[fact_id] = label
+    except Exception:  # display markup only; a failure means no labels, never a different answer
+        return {}
+    return labels
+
+
+# A restatement table puts the same row label over columns of different meaning ("as previously reported", an adjustment, "as restated"),
+# so a row label cannot say the sign of one column.
+_RESTATEMENT = re.compile(r"as\s+(?:previously\s+)?(?:reported|restated|revised|adjusted)|previously\s+reported|restate|restatement|revision\s+of|adjustments?\b", re.I)
+_MAX_TABLE_HEADER = 6_000
+
+
+def parse_row_context(text, fact_ids):
+    """{fact_id: {"cells": [other lettered cells of the fact's row before the fact], "restatement": bool}} for the wanted ids.
+
+    ``restatement`` is true when the header of the enclosing table (the text between the table's start and the fact's row, bounded)
+    carries restatement wording. Display markup only, bounded, and empty on oversized or unparseable input."""
+    wanted = frozenset(fact_ids)
+    if not wanted or not isinstance(text, str) or len(text) > 15_000_000:
+        return {}
+    lowered, out = text.lower(), {}
+    try:
+        for match in _FACT_TAG.finditer(text):
+            fact_id = match.group(1)
+            if fact_id not in wanted or fact_id in out:
+                continue
+            start = _row_start(lowered, match.start())
+            if start == -1:
+                out[fact_id] = {"cells": [], "restatement": False}
+                continue
+            cells = []
+            for cell in _CELL.finditer(text, start, match.start()):
+                words = " ".join(html.unescape(_TAGS.sub(" ", cell.group(1))).split())
+                if re.search(r"[A-Za-z]", words):
+                    cells.append(words[:_MAX_LABEL_CHARS])
+            table = lowered.rfind("<table", max(0, start - 60_000), start)
+            header = _TAGS.sub(" ", text[table:start])[:_MAX_TABLE_HEADER] if table != -1 else ""
+            out[fact_id] = {"cells": cells[1:4], "restatement": bool(_RESTATEMENT.search(html.unescape(header)))}
+    except Exception:  # display markup only
+        return {}
+    return out

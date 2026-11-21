@@ -134,6 +134,10 @@ class PublicDocument:
     text_selection: str = "prefix"
     canonical_content_hash: str | None = None
     inline_xbrl_facts: tuple[dict, ...] = ()
+    # fact_id -> label of the table row the fact sits on (row-label check flag only; empty otherwise).
+    inline_row_labels: tuple[tuple[str, str | None], ...] = ()
+    # fact_id -> {"cells": other lettered cells of the row, "restatement": bool} (same flag; empty otherwise).
+    inline_row_context: tuple[tuple[str, dict], ...] = ()
     # Revenue (and other requested concepts) disaggregated by one
     # srt:ProductOrServiceAxis member; never consolidated values.
     inline_member_facts: tuple[dict, ...] = ()
@@ -685,6 +689,8 @@ def fetch_public_document(
     decoded = body.decode(encoding, errors="replace")
     _stage("document_decoded")
     inline_facts = ()
+    inline_row_labels = ()
+    inline_row_context = ()
     inline_member_facts = ()
     if inline_fact_cik is not None:
         from ..providers.sec_inline_facts import parse_inline_observations, parse_member_observations
@@ -692,6 +698,14 @@ def fetch_public_document(
         inline_facts = parse_inline_observations(decoded, cik=inline_fact_cik, concepts=inline_fact_concepts,
                                                  taxonomies=inline_fact_taxonomies, currencies=_currencies)
         _stage("inline_facts_parsed")
+        from ..config import settings as _settings
+        if getattr(_settings, "row_label_check_enabled", False) is True and inline_facts:
+            from ..integrity.row_label_check import LABELLED_CONCEPTS
+            from ..providers.sec_inline_facts import parse_row_context, parse_row_labels
+            # Only the income-natural concepts the rule judges: a bounded scan around each, not the whole document.
+            _wanted = {f["fact_id"] for f in inline_facts if f["concept"] in LABELLED_CONCEPTS}
+            inline_row_labels = tuple(sorted(parse_row_labels(decoded, _wanted).items()))
+            inline_row_context = tuple(sorted((k, v) for k, v in parse_row_context(decoded, _wanted).items()))
         inline_member_facts = parse_member_observations(decoded, cik=inline_fact_cik,
                                                         concepts=inline_fact_concepts)
         _stage("member_facts_parsed")
@@ -778,6 +792,8 @@ def fetch_public_document(
         source_type=source_type, source_tier=source_tier,
         tables=tables,
         inline_xbrl_facts=inline_facts,
+        inline_row_labels=inline_row_labels,
+        inline_row_context=inline_row_context,
         inline_member_facts=inline_member_facts,
         segment_financial_tables=segment_tables,
         deposit_impairment_proofs=impairment_proofs,

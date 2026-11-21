@@ -10,6 +10,7 @@ replaced with machine learning or LLM‑based routing in the future.
 import json
 import logging
 import re
+import functools
 import time
 import uuid
 from datetime import datetime, timezone
@@ -88,6 +89,15 @@ from .watchlist_service import watchlist_service
 # emit JSON-formatted messages about routing decisions.  The FastAPI
 # application or calling code can configure logging handlers as needed.
 logger = logging.getLogger(__name__)
+
+
+def _in_request_scope(fn):
+    """Run ``fn`` inside the request scope that holds the request's outcome notes (the body stays in ``fn``)."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        with _outcome_notes_mod.request_scope():
+            return fn(*args, **kwargs)
+    return wrapper
 
 
 # An explicitly selected research comparison is an interactive, user-visible
@@ -1304,8 +1314,13 @@ def _run_investment_pipeline(
     _abandoned_evidence: list = []
     from ..config import settings as _evidence_settings
     # Evidence outcomes (default off): notes that only watch what the SEC clients already do.
+    # The row-label check and the sign guard also need the request's notes (they hold the retained labels and the conflict).
     _outcome_notes = (_outcome_notes_mod.OutcomeNotes()
-                      if getattr(_evidence_settings, "evidence_outcomes_enabled", False) is True else None)
+                      if any(getattr(_evidence_settings, _flag, False) is True for _flag in (
+                          "evidence_outcomes_enabled", "row_label_check_enabled", "sign_conflict_guard_enabled")) else None)
+    # The request thread holds the notes for its whole run (workers are bound explicitly), so every later rebuild has the
+    # verification context; a rebuild outside it is recorded as such, never passed as a completed check.
+    _outcome_notes_mod.set_scope_notes(_outcome_notes)
     _filing_scratch = _afacts.Scratch() if (_afacts.enabled() or _afacts.later_reports_enabled()) else None
     _filing_conflicts: list = []
     if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
@@ -1383,6 +1398,16 @@ def _run_investment_pipeline(
         [item for item in _ev_results.get("filing_metrics", []) if not _stage_context_item(item)],
         ticker=ticker, question=question,
     )
+    if (getattr(_evidence_settings, "row_label_check_enabled", False) is True
+            or getattr(_evidence_settings, "sign_conflict_guard_enabled", False) is True):
+        # Withheld figures leave EVERY evidence list the answer is built from (Company Facts, the filing's inline comparison, the annual
+        # report, the as-reported builder, and the explanations that quote them), so no response field carries them.
+        from .financial_thesis_foundation import withhold_disputed_items
+        _cik_for_labels = _sec_provider._load_ticker_cik_map().get(ticker) if ticker else None
+        if isinstance(_cik_for_labels, str) and _cik_for_labels.isdigit():
+            _sec_metric_evidence = withhold_disputed_items(_sec_metric_evidence, ticker=ticker, cik=_cik_for_labels)
+            _period_explanation_evidence = withhold_disputed_items(_period_explanation_evidence, ticker=ticker, cik=_cik_for_labels)
+            _ev_results["thesis_disclosures"] = withhold_disputed_items(_ev_results.get("thesis_disclosures", []), ticker=ticker, cik=_cik_for_labels)
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
@@ -1759,14 +1784,20 @@ def _run_investment_pipeline(
     # Apply the source boundary before any thesis can enter legacy snapshots,
     # comparison evaluation or the final account-owned response snapshot.
     from .source_answer import apply_evidence_gaps, apply_evidence_not_applicable, apply_source_answer_gate
-    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references,
-                                               as_reported_withheld=(_filing_scratch.withheld if _filing_scratch is not None else None))
+    # The gate runs on the request thread, where the request's outcome notes are not active; bind them so the
+    # monitoring text can name what the pair builder recorded (inert when notes are off).
+    _source_answer = _outcome_notes_mod.bind_outcome_notes(
+        lambda: apply_source_answer_gate(thesis, question, evidence, references=_evidence_references,
+                                         as_reported_withheld=(_filing_scratch.withheld if _filing_scratch is not None else None)),
+        _outcome_notes)()
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
     _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
     # Later 6-K report periods SEC lists after the annual year shown (as-reported flag; never for thresholds).
     from .source_answer import is_decision_monitoring_request as _is_threshold
-    _later_reports = ([] if _filing_scratch is None or _is_threshold(question)
+    # Decision-monitoring answers are covered only when the flag is on and the answer displays dated reported figures.
+    _later_reports = ([] if _filing_scratch is None or (_is_threshold(question) and not (
+                          _afacts.threshold_notice_enabled() and _afacts.displays_dated_figures(_source_answer)))
                       else _afacts.later_reports(evidence, _filing_scratch))
     _source_answer = _afacts.apply_later_reports_notice(thesis, _source_answer, _later_reports)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
@@ -1848,8 +1879,12 @@ def _run_investment_pipeline(
     # Comparison/legacy processing can mutate narrative fields. Reapply the
     # same boundary at serialization so those changes cannot reintroduce an
     # unsupported Services assertion into the emitted or saved response.
-    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references,
-                                               as_reported_withheld=(_filing_scratch.withheld if _filing_scratch is not None else None))
+    # The gate runs on the request thread, where the request's outcome notes are not active; bind them so the
+    # monitoring text can name what the pair builder recorded (inert when notes are off).
+    _source_answer = _outcome_notes_mod.bind_outcome_notes(
+        lambda: apply_source_answer_gate(thesis, question, evidence, references=_evidence_references,
+                                         as_reported_withheld=(_filing_scratch.withheld if _filing_scratch is not None else None)),
+        _outcome_notes)()
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
     _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
@@ -2395,11 +2430,24 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
-                elif _entity_resolution.method == "exact_ticker" and _entity_resolution.context is not None:
+                    else:
+                        from .issuer_identity import symbol_name_collisions
+                        _pair = symbol_name_collisions(request.question)
+                        if _pair:
+                            from .company_detection import EntityResolution
+                            _entity_resolution = EntityResolution(
+                                None, 0.0, "not_found", request.question,
+                                candidates=[(item.ticker, item.name, 1.0) for item in _pair],
+                                rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
+                elif _entity_resolution.method in ("exact_ticker", "alias_exact") and _entity_resolution.context is not None:
                     # A ticker-shaped word that occurs only inside other issuers'
                     # official names ("DE" in "BETTERWARE DE MEXICO, S.A.P.I. DE
                     # C.V", "T" in "T-Mobile US, Inc.") is part of those names,
-                    # not a second company. The official name wins when it
+                    # not a second company. The same holds for a well-known brand
+                    # alias ("coca-cola" in "COCA-COLA EUROPACIFIC PARTNERS plc",
+                    # "blackrock" in "BlackRock Capital Allocation Term Trust"):
+                    # when the alias occurs only inside another issuer's full
+                    # official name, that name wins. The official name wins when it
                     # identifies one issuer; otherwise the ticker is not trusted
                     # and the named issuer's securities become suggestions.
                     from .issuer_identity import official_name_spans, symbol
@@ -2408,8 +2456,21 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     _names = [(span, found) for span, found in official_name_spans(request.question)
                               if _ticker not in {item.ticker for item in found}]
                     _hits = [hit.span() for hit in re.finditer(
-                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question)] if _token else []
-                    if _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
+                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question,
+                        re.IGNORECASE if _entity_resolution.method == "alias_exact" else 0)] if _token else []
+                    # One more genuine collision: the word is this issuer's symbol AND another issuer's entire official name
+                    # (symbol SUN is Sunoco LP; an issuer is registered as "SUN"). Neither reading is safe: ask.
+                    from .issuer_identity import _load_directory as _identity_directory
+                    _own = _identity_directory().symbols.get(_ticker)
+                    _same_name = [item for item in _identity_directory().names.get(_token.lower().lstrip("$"), [])
+                                  if _own is not None and item.cik != _own.cik]
+                    if _same_name and _own is not None and _entity_resolution.method == "exact_ticker":
+                        from .company_detection import EntityResolution
+                        _entity_resolution = EntityResolution(
+                            None, 0.0, "not_found", _entity_resolution.matched_text,
+                            candidates=[(_own.ticker, _own.name, 1.0)] + [(item.ticker, item.name, 1.0) for item in _same_name],
+                            rejection_reason="symbol_equals_another_issuers_name", fallback_reason="candidates_available")
+                    elif _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
                                      for start, end in _hits):
                         from .company_detection import EntityResolution
                         _official = discover_company(request.question, question_text=True, as_of=request.as_of)
@@ -2614,14 +2675,25 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         _entity_resolution is not None
         and any(score >= _DYM_MIN_CONFIDENCE for _, _, score in _entity_resolution.candidates)
     )
+    # A company named by the first word(s) of its official name ("Toyota", "Alibaba", "Afya") is offered as itself, not as
+    # whichever aliases the question's other words happen to resemble. Suggestions only: nothing is selected from a prefix.
+    _prefix_issuers = []
+    if _entity_resolution is not None and _entity_resolution.context is None and _has_intent:
+        try:
+            from .issuer_identity import name_prefix_candidates
+            _prefix_issuers = name_prefix_candidates(request.question)
+        except Exception:
+            _prefix_issuers = []
     if (
         _entity_resolution is not None
         and _entity_resolution.context is None
         and _has_intent
-        and _has_quality_candidates
+        and (_has_quality_candidates or _prefix_issuers)
     ):
         request_id = str(uuid.uuid4())
-        candidates = _named_issuer_candidates(request.question) or _entity_resolution.candidates[:3]
+        candidates = (_named_issuer_candidates(request.question)
+                      or [(item.ticker, item.name, 1.0) for item in _prefix_issuers]
+                      or _entity_resolution.candidates[:3])
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",
@@ -3071,3 +3143,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         answer=answer_dict,
         routing=routing_decision,
     )
+
+
+# Every request runs inside its own request scope (applied here so the body of route_question stays where it is).
+route_question = _in_request_scope(route_question)

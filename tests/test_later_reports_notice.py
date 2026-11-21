@@ -63,21 +63,23 @@ def test_fortis_answer_names_the_three_later_quarters_and_the_latest_filings():
         ('0001666175-26-000042', 'a2026q3form6k.htm', '2026-11-03')]
 
 
-@pytest.mark.parametrize('key,form,periods,latest,undated', [
+@pytest.mark.parametrize('key,form,periods,latest,unidentified', [
     ('BP', '20-F', ['2026-03-31', '2026-06-30', '2026-09-30'], [('0000313807-26-000018', 'a30092026bp6kq3.htm')],
      ['a9499b.htm', 'a4317b.htm', 'a02november2026.htm']),
     ('MRX', '20-F', ['2026-03-31', '2026-06-30', '2026-09-30'], [('0001997464-26-000075', 'earningsrelease-6kfilingxc.htm')], []),
     ('BWMX', '20-F', ['2026-06-30'], [('0001213900-26-105780', 'ea0306957-6k_betterware.htm')], ['ea0308695-6k_betterware.htm']),
 ])
-def test_other_retained_foreign_issuers(key, form, periods, latest, undated):
+def test_other_retained_foreign_issuers(key, form, periods, latest, unidentified):
     found = af.later_reports([annual_item(key, form, '2025-12-31')], scratch_with(key))
     assert found[0]['periods'] == periods
     assert [(r['accession'], r['document']) for r in found[0]['latest']] == latest
-    assert [r['document'] for r in found[0]['undated']] == undated
+    assert [r['document'] for r in found[0]['unidentified']] == unidentified      # carry a report date that identifies no period
+    assert found[0]['undated'] == []                                               # none lacks a report date altogether
 
 
-def test_fortis_has_no_undated_filing_after_its_latest_dated_one():
-    assert af.later_reports(fortis_items(), scratch_with('FORFF'))[0]['undated'] == []
+def test_fortis_has_no_unidentified_filing_after_its_latest_dated_one():
+    row = af.later_reports(fortis_items(), scratch_with('FORFF'))[0]
+    assert row['unidentified'] == [] and row['undated'] == []
 
 
 def test_betterware_latest_dated_filing_is_not_called_the_latest_filing():
@@ -86,9 +88,12 @@ def test_betterware_latest_dated_filing_is_not_called_the_latest_filing():
     notice = af.later_reports_notice(af.later_reports([annual_item('BWMX', '20-F', '2025-12-31')], scratch_with('BWMX')))
     assert 'latest period' not in notice
     assert 'shows filings with later report dates: 2026-06-30. The filing dated 2026-06-30: Form 6-K filed 2026-10-01' in notice
-    assert ('It also lists 1 Form 6-K filing made after 2026-10-01 that does not give a later report date, so the period '
-            'covered, if any, is not stated (most recent: Form 6-K filed 2026-10-22 (accession 0001213900-26-111757, '
-            'document ea0308695-6k_betterware.htm)).') in notice
+    # The list DOES carry a report date for that 6-K (2026-10-22, the filing date); the notice must say it identifies no period,
+    # never that the filing gives no report date (corrected after review of the retained listings, 2026-11-20).
+    assert ('It also lists 1 Form 6-K filing made after 2026-10-01 whose list report date (2026-10-22) does not identify a '
+            'completed financial period (not a quarter end before the filing date), so the period covered, if any, is not stated '
+            '(most recent: Form 6-K filed 2026-10-22 (accession 0001213900-26-111757, document ea0308695-6k_betterware.htm)).') in notice
+    assert 'does not give a later report date' not in notice
 
 
 # --- rows that must not count -------------------------------------------------------------------------
@@ -119,7 +124,7 @@ def test_periods_must_be_whole_quarters_after_the_annual_year_end():
     af.bind_scratch(lambda: af.note_filing_list(LISTINGS['BWMX']['cik'], listing), scratch)()
     found = af.later_reports([annual_item('BWMX', '20-F', '2025-12-31')], scratch)
     assert found[0]['periods'] == ['2026-03-31']  # 2026-07-31 is seven months on, not a quarter end for this issuer
-    assert [r['document'] for r in found[0]['undated']] == ['x']  # reported as undated, never as a period
+    assert [r['document'] for r in found[0]['unidentified']] == ['x']  # its report date identifies no period: never counted as one, never called missing
 
 
 def test_a_later_annual_filing_counts_as_a_later_report():
@@ -155,18 +160,20 @@ def test_notice_states_the_year_the_report_dates_and_that_nothing_was_read():
         assert word not in notice.lower()
 
 
-def test_audiocodes_gets_a_notice_from_undated_filings_alone():
+def test_audiocodes_gets_a_notice_from_filings_whose_report_dates_identify_no_period():
     notice = af.later_reports_notice(af.later_reports([annual_item('AUDC', '20-F', '2025-12-31')], scratch_with('AUDC')))
-    assert ("SEC's filing list for this issuer shows 8 Form 6-K filings made after 2026-03-30 that do not give a later "
-            'report date, so the period covered, if any, is not stated (most recent: Form 6-K filed 2026-11-05 '
-            '(accession 0001185185-26-005190, document audltd6k110426.htm)).') in notice
-    assert 'later report dates' not in notice
+    found = af.later_reports([annual_item('AUDC', '20-F', '2025-12-31')], scratch_with('AUDC'))
+    dates = sorted({r['report'] for r in found[0]['unidentified']})
+    assert (f"SEC's filing list for this issuer shows 8 Form 6-K filings made after 2026-03-30 whose list report dates ({af._and(dates)}) "
+            'do not identify a completed financial period (not a quarter end before the filing date), so the period covered, if any, is not '
+            'stated (most recent: Form 6-K filed 2026-11-05 (accession 0001185185-26-005190, document audltd6k110426.htm)).') in notice
+    assert 'later report dates' not in notice and 'do not give a later report date' not in notice
 
 
 def test_undated_filings_before_the_annual_filing_are_not_counted():
     # The 6-K filed the same day as AudioCodes's 20-F (2026-03-30) and earlier ones are not later filings.
     found = af.later_reports([annual_item('AUDC', '20-F', '2025-12-31')], scratch_with('AUDC'))
-    assert all(r['filed'] > '2026-03-30' for r in found[0]['undated'])
+    assert all(r['filed'] > '2026-03-30' for r in found[0]['unidentified'])
     assert af.later_reports([annual_item('AUDC', '20-F', '2025-12-31', filed='2026-11-05')], scratch_with('AUDC')) == []
 
 
@@ -219,3 +226,54 @@ def test_listing_capture_makes_no_additional_request(monkeypatch):
     assert len(calls) == 2 and calls[0] == calls[1]  # one GET per call, with or without the scratch
     assert [e.url for e in without] == [e.url for e in with_scratch]
     assert len(scratch.listings['1666175']) == len(LISTINGS['FORFF']['recent']['form'])
+
+
+# --- review item a reviewed item (2026-11-20): list metadata versus verified financial periods ----------------------------------
+
+def synthetic_scratch(cik, rows):
+    """rows: (form, filed, report) triples as SEC's filing list would carry them; report '' means no report date."""
+    listing = {'form': [r[0] for r in rows], 'filingDate': [r[1] for r in rows], 'reportDate': [r[2] for r in rows],
+               'accessionNumber': [f'0000000000-26-{i:06d}' for i, _ in enumerate(rows, 1)], 'primaryDocument': [f'doc{i}.htm' for i, _ in enumerate(rows, 1)]}
+    scratch = af.Scratch()
+    af.bind_scratch(lambda: af.note_filing_list(cik, listing), scratch)()
+    return scratch
+
+
+def synthetic_annual(cik, end='2025-01-31', filed='2025-06-02'):
+    return SimpleNamespace(source_type='regulatory_filing', document_type='20-F', reporting_period_end=end, filed_at=filed, freshness_status='current',
+                           verified_claims=[{'metric': 'x'}], url=f'https://www.sec.gov/Archives/edgar/data/{cik}/000000000025000001/doc.htm')
+
+
+B005_LIKE = [('6-K', '2026-08-03', '2026-08-03'), ('6-K', '2026-08-24', '2026-08-24'), ('6-K', '2026-09-11', '2026-09-11'),
+             ('6-K', '2026-09-14', '2026-09-14'), ('6-K', '2026-09-29', '2026-09-29')]
+
+
+def test_six_ks_that_carry_report_dates_are_never_described_as_giving_none():
+    notice = af.later_reports_notice(af.later_reports([synthetic_annual('900001')], synthetic_scratch('900001', B005_LIKE)))
+    for phrase in ('do not give a later report date', 'does not give a later report date', 'no report date'):
+        assert phrase not in notice
+    assert 'whose list report dates (2026-08-03, 2026-08-24, 2026-09-11, 2026-09-14 and 2026-09-29) do not identify a completed financial period' in notice
+    assert 'cover the fiscal year ended 2025-01-31' in notice
+
+
+def test_the_notice_separates_list_metadata_from_periods_verified_inside_documents():
+    notice = af.later_reports_notice(af.later_reports([synthetic_annual('900001')], synthetic_scratch('900001', B005_LIKE)))
+    assert "Report dates in SEC's filing list are metadata entered by the filer, not financial periods verified inside the documents." in notice
+    assert 'None of these filings was read' in notice
+
+
+def test_an_entry_with_no_report_date_is_the_only_kind_called_undated():
+    rows = [('6-K', '2026-08-03', ''), ('6-K', '2026-09-11', '2026-09-11')]
+    found = af.later_reports([synthetic_annual('900002')], synthetic_scratch('900002', rows))[0]
+    assert [r['document'] for r in found['undated']] == ['doc1.htm'] and [r['document'] for r in found['unidentified']] == ['doc2.htm']
+    notice = af.later_reports_notice([found])
+    assert 'that carry no report date in the list, so the period covered, if any, is not stated' in notice
+    assert 'whose list report date (2026-09-11) does not identify a completed financial period' in notice
+
+
+def test_a_real_quarter_end_report_date_is_still_a_dated_period_and_still_metadata():
+    rows = [('6-K', '2026-05-12', '2026-04-30'), ('6-K', '2026-05-20', '2026-04-30')]       # not whole quarters after the year end: not a period
+    found = af.later_reports([synthetic_annual('900003', end='2025-12-31', filed='2026-03-31')], synthetic_scratch('900003', [('6-K', '2026-05-12', '2026-03-31')] + rows[:0]))[0]
+    assert found['periods'] == ['2026-03-31'] and found['unidentified'] == [] and found['undated'] == []
+    notice = af.later_reports_notice([found])
+    assert 'shows filings with later report dates: 2026-03-31.' in notice and 'metadata entered by the filer' in notice

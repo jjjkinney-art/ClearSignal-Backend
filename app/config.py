@@ -224,10 +224,32 @@ class Settings(BaseSettings):
     # because the financial foundation needs two), and say specifically why each other measure was not compared.
     # Never applies to decision-threshold answers. Default off: with it off nothing changes.
     lone_comparison_enabled: bool = False
+    # With a decision-threshold question, keep the verified current/prior-period comparisons the financial foundation
+    # built even when no operating-margin baseline can be calculated (for example when the revenue comparison is
+    # unavailable), instead of discarding all of them. They are shown as reported historical comparisons, never as
+    # thresholds or benchmarks. Default off: with it off nothing changes.
+    threshold_comparisons_retained_enabled: bool = False
+    # Row-label check (default off). When the latest periodic filing is already read, the label of the row each of
+    # its inline-tagged core facts sits on is kept for the request. A comparison whose figure the filing's own row
+    # label contradicts (an expense row tagged as operating income; a "loss" row carrying a positive income value)
+    # is withheld from every answer path, whether the figure came from Company Facts or the filing. Nothing is
+    # substituted. With no retained document the check cannot run and nothing changes.
+    row_label_check_enabled: bool = False
+    # Cross-filing sign guard (default off). When the same concept, period, unit and duration is reported with the
+    # same magnitude and opposite signs in different filings, the comparison is not built (neither sign is preferred)
+    # and the conflict, with the filings and any amendment evidence, is recorded for the answer.
+    sign_conflict_guard_enabled: bool = False
+    # Later-filings notice on decision-monitoring answers (default off; it still needs the as-reported flag that
+    # drives the notice). Applied only when the answer displays dated reported financial figures.
+    threshold_later_reports_notice_enabled: bool = False
     # Quotes management's own present-tense liquidity sufficiency statement from the latest periodic filing the
     # metrics stage already reads (no additional request), with its adjacent sentences. Default off: with it off
     # nothing changes.
     liquidity_statements_enabled: bool = False
+    # For net income only (NetIncomeLoss, ProfitLoss): when the preferred concept's latest complete comparison is older than an alias's, show the
+    # alias with the latest period (net income including noncontrolling interests, labelled as such), exactly as revenue already does. Values are
+    # never joined across concepts and an issuer current in its preferred concept is unchanged. Default off: with it off nothing changes.
+    latest_alias_net_income_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False

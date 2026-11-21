@@ -79,6 +79,11 @@ def evidence_from_filing(document, filing, *, ticker, cik):
             start=observation['start'], end=observation['end'], filed=filing.timestamp,
             form=filing.document_type, accession=accession, filing_url=document.final_url,
             inline_binding=proof))
+    from .row_label_rows import label_rows_from_document
+    label_rows = label_rows_from_document(document, cik=cik, accession=accession, form=filing.document_type)
+    if label_rows:
+        from .evidence_outcomes import note_row_labels
+        note_row_labels(label_rows)
     evidence = []
     for name, aliases in FILING_METRICS.items():
         for concept in aliases:

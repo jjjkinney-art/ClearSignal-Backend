@@ -86,6 +86,13 @@ def filing_comparisons(document, ticker: str, cik: str):
 def extra_items(document, ticker: str, cik: str):
     """Evidence from the 20-F already fetched: its comparisons and management's stated explanations."""
     from .current_period_explanation import extract_annual_foreign_explanation
+    # The annual report's own row labels, for the row-label check (empty unless it is on); recorded whether or not a comparison is built.
+    from .row_label_rows import accession_from_url, label_rows_from_document
+    _rows = label_rows_from_document(document, cik=cik, accession=accession_from_url(getattr(document, "final_url", "") or ""),
+                                     form=getattr(document, "document_type", "20-F"), taxonomies=TAXONOMIES, currencies="*")
+    if _rows:
+        from .evidence_outcomes import note_row_labels
+        note_row_labels(_rows)
     comparisons, withheld = filing_comparisons(document, ticker, cik)
     explanations = extract_annual_foreign_explanation(document, comparisons, ticker=ticker, cik=cik) if comparisons else []
     return comparisons, explanations, withheld
@@ -99,6 +106,17 @@ def later_reports_enabled() -> bool:
     """The later-reports notice follows the as-reported flag: it qualifies the annual answers that flag adds."""
     from ..config import settings
     return getattr(settings, "as_reported_financials_enabled", False) is True
+
+
+def displays_dated_figures(source_answer) -> bool:
+    """The answer shows at least one dated reported financial figure (a comparison or a reported fact)."""
+    return any(isinstance(c, dict) and str(c.get("claim_kind") or "").startswith("reported_")
+               for c in (source_answer or {}).get("claims") or [])
+
+
+def threshold_notice_enabled() -> bool:
+    from ..config import settings
+    return getattr(settings, "threshold_later_reports_notice_enabled", False) is True
 
 
 class Scratch:
@@ -331,10 +349,14 @@ def later_reports(evidence, scratch: Optional[Scratch]) -> list[dict]:
     * dated: the report date is a month end a whole number of quarters after the latest annual period in the
       answer and before its own filing date (a report date on or after the filing date does not state a completed
       period);
-    * undated: any other 6-K filed after the last dated one (or, if none, after the annual filing the answer
-      cites). SEC's list does not say which period, if any, these cover.
+    * unidentified: any other 6-K filed after the last dated one (or, if none, after the annual filing the answer
+      cites) that carries a report date which does not identify a completed period (the same day as the filing, a
+      date after it, or not a quarter end). The list does carry a report date for these; it just does not say which
+      period, if any, the filing covers;
+    * undated: any such 6-K whose list entry carries no report date at all.
 
-    A report date is filer-entered metadata; nothing here says a filing contains results.
+    A report date is filer-entered metadata in SEC's filing list, never a financial period verified inside a
+    document; nothing here says a filing contains results.
     """
     if scratch is None or not scratch.listings:
         return []
@@ -357,11 +379,16 @@ def later_reports(evidence, scratch: Optional[Scratch]) -> list[dict]:
             annual_end = date.fromisoformat(end)
         except ValueError:
             continue
-        dated, parsed = [], []
+        dated, parsed, no_report = [], [], []
         for row in scratch.listings.get(cik, []):
             try:
-                report, filed = date.fromisoformat(row["report"]), date.fromisoformat(row["filed"])
+                filed = date.fromisoformat(row["filed"])
             except (TypeError, ValueError):
+                continue
+            try:
+                report = date.fromisoformat(row["report"])
+            except (TypeError, ValueError):
+                no_report.append(row)        # the list entry carries no usable report date
                 continue
             parsed.append(row)
             months = (report.year - annual_end.year) * 12 + report.month - annual_end.month
@@ -370,11 +397,13 @@ def later_reports(evidence, scratch: Optional[Scratch]) -> list[dict]:
         periods = sorted({r["report"] for r in dated})
         latest = [r for r in dated if r["report"] == periods[-1]] if periods else []
         cutoff = max([r["filed"] for r in latest] or [annual_filed.get(cik) or end])
-        undated = sorted((r for r in parsed if r["form"] in INTERIM_FORMS and r not in dated and r["filed"] > cutoff),
+        unidentified = sorted((r for r in parsed if r["form"] in INTERIM_FORMS and r not in dated and r["filed"] > cutoff),
+                              key=lambda r: r["filed"], reverse=True)
+        undated = sorted((r for r in no_report if r["form"] in INTERIM_FORMS and r["filed"] > cutoff),
                          key=lambda r: r["filed"], reverse=True)
-        if periods or undated:
+        if periods or unidentified or undated:
             found.append({"cik": cik, "annual_period_end": end, "periods": periods, "latest": latest,
-                          "undated_after": cutoff, "undated": undated})
+                          "undated_after": cutoff, "unidentified": unidentified, "undated": undated})
     return found
 
 
@@ -394,17 +423,26 @@ def later_reports_notice(found: list[dict]) -> str:
             n = len(row["latest"])
             line += (f" SEC's filing list for this issuer shows filings with later report dates: {_and(row['periods'])}."
                      f" The filing{'s' if n > 1 else ''} dated {row['periods'][-1]}: {'; '.join(_filing(r) for r in row['latest'])}.")
-        if row["undated"]:
-            n = len(row["undated"])
+        if row.get("unidentified"):
+            n = len(row["unidentified"])
+            dates = sorted({r["report"] for r in row["unidentified"]})
             lead = "It also lists" if row["periods"] else "SEC's filing list for this issuer shows"
             line += (f" {lead} "
-                     f"{n} Form 6-K filing{'s' if n > 1 else ''} made after {row['undated_after']} that "
-                     f"{'do' if n > 1 else 'does'} not give a later report date, so the period covered, if any, is not "
-                     f"stated (most recent: {_filing(row['undated'][0])}).")
+                     f"{n} Form 6-K filing{'s' if n > 1 else ''} made after {row['undated_after']} whose list report "
+                     f"date{'s' if len(dates) > 1 else ''} ({_and(dates)}) {'do' if len(dates) > 1 else 'does'} not identify a "
+                     f"completed financial period (not a quarter end before the filing date), so the period covered, if any, is "
+                     f"not stated (most recent: {_filing(row['unidentified'][0])}).")
+        if row.get("undated"):
+            n = len(row["undated"])
+            lead = "It also lists" if (row["periods"] or row.get("unidentified")) else "SEC's filing list for this issuer shows"
+            line += (f" {lead} "
+                     f"{n} Form 6-K filing{'s' if n > 1 else ''} made after {row['undated_after']} that carry no report "
+                     f"date in the list, so the period covered, if any, is not stated (most recent: {_filing(row['undated'][0])}).")
         lines.append(line)
     end = _and(sorted({row["annual_period_end"] for row in found}))
     return (f"{LATER_HEADER}: " + " ".join(lines) + f" None of these filings was read, so nothing after {end} is "
-            "reflected and these figures may be out of date. This answer does not know what those filings contain.")
+            "reflected and these figures may be out of date. Report dates in SEC's filing list are metadata entered by the filer, "
+            "not financial periods verified inside the documents. This answer does not know what those filings contain.")
 
 
 def unanswered_part(row: dict) -> str:
