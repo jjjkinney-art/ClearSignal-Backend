@@ -167,9 +167,39 @@ def _verified_claim(
     return output
 
 
+def _sign_guard_enabled() -> bool:
+    from ..config import settings
+    return getattr(settings, "sign_conflict_guard_enabled", False) is True
+
+
+def _sign_conflicts(eligible: Sequence[SecFactRecord], chosen: SecFactRecord) -> list[SecFactRecord]:
+    """Observations of the chosen fact's own concept, unit, start and end (same scope: Company Facts holds consolidated,
+    undimensioned facts only; same duration: identical start and end) in other filings with the same magnitude and the
+    opposite sign. Empty when no filing disagrees."""
+    value = Decimal(str(chosen.value))
+    if value == 0:
+        return []
+    return [record for record in eligible
+            if record.concept == chosen.concept and record.unit == chosen.unit
+            and record.start == chosen.start and record.end == chosen.end
+            and Decimal(str(record.value)) == -value]
+
+
+def _conflict_detail(role: str, chosen: SecFactRecord, others: Sequence[SecFactRecord]) -> dict:
+    """What was found, for the answer to state. Nothing is resolved: neither sign is preferred."""
+    def row(record):
+        return {"accession": record.accession, "form": record.form, "filed": record.filed,
+                "sign": "-" if Decimal(str(record.value)) < 0 else "+", "amendment": record.form.endswith("/A")}
+    observations = sorted([row(chosen), *(row(r) for r in others)], key=lambda r: (r["filed"], r["accession"] or ""))
+    return {"role": role, "concept": chosen.concept, "period_start": chosen.start, "period_end": chosen.end,
+            "unit": chosen.unit, "scope": "consolidated", "observations": observations,
+            "amendment_among_them": any(r["amendment"] for r in observations),
+            "resolved": False}
+
+
 def _comparable_metric(
     records: Sequence[SecFactRecord], *, ticker: str, expected_cik: str,
-    concepts: tuple[str, ...], metric_name: str, unit: str = "USD",
+    concepts: tuple[str, ...], metric_name: str, unit: str = "USD", detail: dict | None = None,
 ) -> tuple[RetrievedEvidence | None, str | None]:
     """The comparison and None, or None and the code of the rule that stopped it (see explain_no_comparable_metric)."""
     if (not ticker or not expected_cik.isdigit() or not concepts or not metric_name
@@ -233,6 +263,16 @@ def _comparable_metric(
     prior = _latest_unambiguous_fact(comparable, include_start=True)
     if prior is None:
         return None, "ambiguous_prior_period"
+    if _sign_guard_enabled():
+        # The same period reported with the same magnitude and the opposite sign in different filings is a conflict to
+        # investigate, not a revision to follow: neither the earlier nor the later sign is assumed correct, and no sign
+        # is inferred from another measure.
+        found = [_conflict_detail(role, chosen, others) for role, chosen in (("current", current), ("prior", prior))
+                 if (others := _sign_conflicts(eligible, chosen))]
+        if found:
+            if detail is not None:
+                detail["sign_conflicts"] = found
+            return None, "sign_conflict"
     cash_flow = current.concept == "NetCashProvidedByUsedInOperatingActivities"
     if prior.value == 0:
         return None, "prior_value_zero"
@@ -312,7 +352,7 @@ def comparable_metric_evidence(
 
 def explain_no_comparable_metric(
     records: Sequence[SecFactRecord], *, ticker: str, expected_cik: str,
-    concepts: tuple[str, ...], metric_name: str, unit: str = "USD",
+    concepts: tuple[str, ...], metric_name: str, unit: str = "USD", detail: dict | None = None,
 ) -> str | None:
     """Why ``comparable_metric_evidence`` returns nothing, as a code, or None when it returns a comparison.
 
@@ -324,9 +364,11 @@ def explain_no_comparable_metric(
     ambiguous_prior_period     the prior-year observation disagrees with itself.
     prior_value_zero           the prior-year value is zero, so a change cannot be expressed.
     claims_not_bound           a fact could not be bound to its filing.
+    sign_conflict              (guard on) the chosen current or prior period is reported with the same magnitude and
+                               the opposite sign in another filing; ``detail["sign_conflicts"]`` lists the filings.
     """
     return _comparable_metric(records, ticker=ticker, expected_cik=expected_cik, concepts=concepts,
-                              metric_name=metric_name, unit=unit)[1]
+                              metric_name=metric_name, unit=unit, detail=detail)[1]
 
 
 def comparable_instant_metric_evidence(

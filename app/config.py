@@ -229,6 +229,19 @@ class Settings(BaseSettings):
     # unavailable), instead of discarding all of them. They are shown as reported historical comparisons, never as
     # thresholds or benchmarks. Default off: with it off nothing changes.
     threshold_comparisons_retained_enabled: bool = False
+    # Row-label check (default off). When the latest periodic filing is already read, the label of the row each of
+    # its inline-tagged core facts sits on is kept for the request. A comparison whose figure the filing's own row
+    # label contradicts (an expense row tagged as operating income; a "loss" row carrying a positive income value)
+    # is withheld from every answer path, whether the figure came from Company Facts or the filing. Nothing is
+    # substituted. With no retained document the check cannot run and nothing changes.
+    row_label_check_enabled: bool = False
+    # Cross-filing sign guard (default off). When the same concept, period, unit and duration is reported with the
+    # same magnitude and opposite signs in different filings, the comparison is not built (neither sign is preferred)
+    # and the conflict, with the filings and any amendment evidence, is recorded for the answer.
+    sign_conflict_guard_enabled: bool = False
+    # Later-filings notice on decision-monitoring answers (default off; it still needs the as-reported flag that
+    # drives the notice). Applied only when the answer displays dated reported financial figures.
+    threshold_later_reports_notice_enabled: bool = False
     # Quotes management's own present-tense liquidity sufficiency statement from the latest periodic filing the
     # metrics stage already reads (no additional request), with its adjacent sentences. Default off: with it off
     # nothing changes.

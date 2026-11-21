@@ -303,7 +303,40 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
             return None
     except (KeyError, TypeError, ValueError, ArithmeticError):
         return None
+    if _row_label_check_enabled() and (dispute := _row_label_dispute(rebuilt, name)):
+        from .evidence_outcomes import note_withheld_figure
+        note_withheld_figure(dispute)
+        return None
     return rebuilt
+
+
+def _row_label_check_enabled() -> bool:
+    from ..config import settings
+    return getattr(settings, "row_label_check_enabled", False) is True
+
+
+def _row_label_dispute(rebuilt, name: str) -> dict | None:
+    """The first figure of this comparison whose retained filing row label contradicts its tag, as a withheld-figure row.
+
+    Applies to every figure however it was obtained (Company Facts or the filing's inline facts): the label comes from a
+    filing this request already read. With no retained label there is nothing to check and nothing changes."""
+    from ..integrity.row_label_check import MEANING, label_contradicts
+    from .evidence_outcomes import row_labels_for
+    for claim in rebuilt.verified_claims:
+        concept = str(claim.get("metric", "")).split(":")[-1]
+        for row in row_labels_for(concept, claim.get("period_start"), claim.get("period_end"), claim.get("raw_value")):
+            code = label_contradicts(concept, row.get("label"), claim.get("raw_value"))
+            if code:
+                meaning = MEANING.get(concept, concept)
+                why = ("is an expense line, not a result" if code == "expense_row" else
+                       "names a loss while the tagged value is a positive income")
+                margin = (" No operating margin that depends on it is calculated." if concept == "OperatingIncomeLoss" else "")
+                return {"measure": name, "reason": "row_label_disputed", "concept": concept, "code": code,
+                        "label": row["label"], "period_end": claim.get("period_end"), "accession": row.get("accession"),
+                        "text": (f"{name}: not used. The filing's own row for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
+                                 f"so it does not match the tag it carries ({meaning}) and the figure is disputed. No replacement figure is "
+                                 f"substituted.{margin}")}
+    return None
 
 
 def build_financial_foundation(ticker: str, items: list, references: list[dict] | None,

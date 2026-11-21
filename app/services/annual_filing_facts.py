@@ -101,6 +101,17 @@ def later_reports_enabled() -> bool:
     return getattr(settings, "as_reported_financials_enabled", False) is True
 
 
+def displays_dated_figures(source_answer) -> bool:
+    """The answer shows at least one dated reported financial figure (a comparison or a reported fact)."""
+    return any(isinstance(c, dict) and str(c.get("claim_kind") or "").startswith("reported_")
+               for c in (source_answer or {}).get("claims") or [])
+
+
+def threshold_notice_enabled() -> bool:
+    from ..config import settings
+    return getattr(settings, "threshold_later_reports_notice_enabled", False) is True
+
+
 class Scratch:
     """One request's view of responses it already fetched (set by the existing fetches, read after collection)."""
 

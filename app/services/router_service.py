@@ -1304,8 +1304,10 @@ def _run_investment_pipeline(
     _abandoned_evidence: list = []
     from ..config import settings as _evidence_settings
     # Evidence outcomes (default off): notes that only watch what the SEC clients already do.
+    # The row-label check and the sign guard also need the request's notes (they hold the retained labels and the conflict).
     _outcome_notes = (_outcome_notes_mod.OutcomeNotes()
-                      if getattr(_evidence_settings, "evidence_outcomes_enabled", False) is True else None)
+                      if any(getattr(_evidence_settings, _flag, False) is True for _flag in (
+                          "evidence_outcomes_enabled", "row_label_check_enabled", "sign_conflict_guard_enabled")) else None)
     _filing_scratch = _afacts.Scratch() if (_afacts.enabled() or _afacts.later_reports_enabled()) else None
     _filing_conflicts: list = []
     if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
@@ -1770,7 +1772,9 @@ def _run_investment_pipeline(
     _source_answer = _afacts.apply_conflict_notice(thesis, _source_answer, _filing_conflicts)
     # Later 6-K report periods SEC lists after the annual year shown (as-reported flag; never for thresholds).
     from .source_answer import is_decision_monitoring_request as _is_threshold
-    _later_reports = ([] if _filing_scratch is None or _is_threshold(question)
+    # Decision-monitoring answers are covered only when the flag is on and the answer displays dated reported figures.
+    _later_reports = ([] if _filing_scratch is None or (_is_threshold(question) and not (
+                          _afacts.threshold_notice_enabled() and _afacts.displays_dated_figures(_source_answer)))
                       else _afacts.later_reports(evidence, _filing_scratch))
     _source_answer = _afacts.apply_later_reports_notice(thesis, _source_answer, _later_reports)
     _source_answer = _outcome_notes_mod.apply_evidence_outcomes(

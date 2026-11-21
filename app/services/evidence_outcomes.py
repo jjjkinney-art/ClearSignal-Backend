@@ -41,7 +41,7 @@ REASONS = {
     "unsupported": ("ifrs_taxonomy", "non_usd_reporting", "annual_form_not_read", "interim_form_not_read",
                     "no_same_period_pair", "conflicting_evidence", "selection_rules_not_met",
                     "as_reported_comparison_withheld", "comparisons_stale", "comparisons_not_used_for_threshold",
-                    "comparisons_not_used"),
+                    "comparisons_not_used", "row_label_disputed", "sign_conflict"),
     "failed": ("facts_retrieval_failed", "filing_list_failed", "filing_too_large", "filing_not_read",
                "time_limit"),
     "not_attempted": ("identity_unresolved", "no_filing_listed", "not_requested", "no_provider",
@@ -90,6 +90,8 @@ class OutcomeNotes:
         self.as_reported_built: list[dict] = []  # comparisons it built (title, period end) before admission
         self.annual_filing_read: Optional[dict] = None  # a 20-F read through the annual filing path (form, currencies)
         self.pair_outcomes: list[dict] = []  # per measure and concept: the comparison was built, or the rule that stopped it
+        self.row_labels: list[dict] = []  # labels of the rows the retained filing's inline core facts sit on
+        self.withheld_figures: list[dict] = []  # figures set aside because the evidence disputes them (never replaced)
 
     # Once the request has given up on a task, that task's outcome is final: a worker that keeps
     # running in the background cannot add, change or complete anything. ``task`` is the writer
@@ -137,6 +139,18 @@ class OutcomeNotes:
         with self._lock:
             if not self._late(task):
                 self.pair_outcomes.append(dict(row))
+
+    def add_row_labels(self, rows, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.row_labels.extend(dict(row) for row in rows)
+
+    def add_withheld_figure(self, row: dict, task: Optional[str] = None):
+        """Idempotent: the same measure and reason is kept once (the foundation rechecks a figure many times)."""
+        with self._lock:
+            if not self._late(task) and not any(r.get("measure") == row.get("measure") and r.get("reason") == row.get("reason")
+                                                for r in self.withheld_figures):
+                self.withheld_figures.append(dict(row))
 
     def add_selected(self, task: str, form: str):
         with self._lock:
@@ -239,10 +253,54 @@ def note_pair_outcome(measure: str, concept: str, evidence, reason_fn) -> None:
     called when notes are active, so nothing is computed otherwise."""
     def action(notes):
         built = evidence is not None
+        result = None if built else reason_fn()
+        reason, detail = result if isinstance(result, tuple) else (result, None)
         notes.add_pair_outcome({"measure": measure, "concept": concept, "status": "built" if built else "none",
-                                "reason": None if built else reason_fn(),
+                                "reason": reason, **({"detail": detail} if detail else {}),
                                 "period_end": getattr(evidence, "reporting_period_end", None) if built else None}, _task.get())
+        if reason == "sign_conflict" and detail:
+            notes.add_withheld_figure({"measure": measure, "reason": "sign_conflict", "concept": concept,
+                                       "text": sign_conflict_text(measure, detail)}, _task.get())
     _safe(action)
+
+
+def _filing_phrase(observation: dict) -> str:
+    return f"{observation['form']} filed {observation['filed']} ({'negative' if observation['sign'] == '-' else 'positive'})"
+
+
+def sign_conflict_text(measure: str, detail: dict) -> str:
+    """The conflict as found: the filings and their signs, no resolution and no inference from another measure."""
+    parts = []
+    for conflict in detail.get("sign_conflicts", []):
+        filings = "; ".join(_filing_phrase(o) for o in conflict["observations"])
+        parts.append(f"the {conflict['role']} period {conflict['period_start']} to {conflict['period_end']} is reported with the same "
+                     f"amount and opposite signs in different filings ({filings})")
+    amendment = any(c.get("amendment_among_them") for c in detail.get("sign_conflicts", []))
+    return (f"{measure}: " + "; ".join(parts) + ". Same consolidated scope, unit and period in each. "
+            + ("One of these filings is an amendment, which does not by itself show which sign is right. " if amendment else
+               "None of these filings is marked as an amendment. ")
+            + "Neither sign is assumed, none is inferred from another measure, and no comparison is shown.")
+
+
+def note_row_labels(rows) -> None:
+    """The labels of the rows a retained filing's inline core facts sit on (notes only; inert otherwise)."""
+    _safe(lambda notes: notes.add_row_labels(rows, _task.get()))
+
+
+def note_withheld_figure(row: dict) -> None:
+    _safe(lambda notes: notes.add_withheld_figure(row, _task.get()))
+
+
+def row_labels_for(concept: str, start: str, end: str, value) -> list:
+    """Labels recorded in this request for the same concept, period and absolute amount (any filing's own row)."""
+    from ..integrity.row_label_check import normalize_amount
+    notes = _notes.get()
+    amount = normalize_amount(value)
+    if notes is None or amount is None:
+        return []
+    with notes._lock:
+        return [dict(row) for row in notes.row_labels if row["concept"] == concept and row["start"] == start
+                and row["end"] == end and row["abs_value"] == amount]
 
 
 def note_pair_dropped(measure: str, period_end, reason: str) -> None:
@@ -332,6 +390,7 @@ def _text_fact_failure(failure):
 
 # What the pair builder said about each measure, in words that claim no more than it recorded.
 _PAIR_REASON_TEXT = {
+    "sign_conflict": "the same period is reported with the same amount and opposite signs in different filings, so neither is used",
     "no_records": "the company-facts data holds no figures for it",
     "no_period_fits_form": "none of its figures covers a period that fits its filing form",
     "mixed_period_families": "its latest period mixes annual and quarterly figures",
@@ -342,7 +401,7 @@ _PAIR_REASON_TEXT = {
     "claims_not_bound": "its figures could not be bound to their filings",
     "invalid_request": "the request for it was not valid",
 }
-_PAIR_REASON_RANK = ("prior_value_zero", "no_prior_year_observation", "ambiguous_prior_period", "ambiguous_current_period",
+_PAIR_REASON_RANK = ("sign_conflict", "prior_value_zero", "no_prior_year_observation", "ambiguous_prior_period", "ambiguous_current_period",
                      "mixed_period_families", "claims_not_bound", "no_period_fits_form", "no_records", "invalid_request")
 _CORE_MEASURES = ("revenue", "operating income", "net income", "operating cash flow")
 
@@ -519,6 +578,11 @@ def _financial_state(source_answer, notes, references):
                        user_text="None of the requested measures appears in the company-facts data returned by SEC "
                                  "for this issuer. This describes that response only; it does not establish that the "
                                  "issuer never reported the measure.")
+    if notes and notes.withheld_figures:
+        first = notes.withheld_figures[0]
+        return _record("reported_financials", "unsupported", first["reason"], tried=True, source_family="sec_company_facts",
+                       detail={"withheld_figures": [dict(row) for row in notes.withheld_figures]},
+                       user_text=" ".join(row["text"] for row in notes.withheld_figures))
     if ok:
         return _pair_state(source_answer, notes, references, ok)
     if analysis.get("reason") == "comparisons_unavailable":
@@ -623,7 +687,16 @@ def _decision_inputs(source_answer, financial):
                              + ("" if financial["state"] == "available" else financial["user_text"]))
 
 
+def _withheld_parts(notes):
+    return [{"part": row["measure"], "state": "unsupported", "reason": row["reason"], "text": row["text"]}
+            for row in (getattr(notes, "withheld_figures", None) or [])]
+
+
 def _missing_parts(source_answer, notes):
+    return _withheld_parts(notes) + _missing_revenue_part(source_answer, notes)
+
+
+def _missing_revenue_part(source_answer, notes):
     """Revenue is the usual gap when operating income or profit was delivered without it."""
     if not notes:
         return []
@@ -727,7 +800,7 @@ def render_unknown_block(records: list[dict]) -> str:
     for row in records:
         for part in row["state"] == "available" and row["missing_parts"] or []:
             lines.append(f"- {_LABELS[row['need']]}, also missing: {part['part']}: "
-                         f"{_PART_TEXT.get(part['reason'], part['reason'])}.")
+                         + (part["text"] if part.get("text") else f"{_PART_TEXT.get(part['reason'], part['reason'])}."))
     return HEADER + "\n" + "\n".join(lines) if lines else ""
 
 

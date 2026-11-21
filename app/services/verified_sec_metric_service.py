@@ -334,8 +334,12 @@ def _note_pair_outcome(builder, records, ticker, cik, concept, metric_name, unit
         return
     from .evidence_outcomes import note_pair_outcome
     from ..integrity.sec_metric_evidence import explain_no_comparable_metric
-    note_pair_outcome(metric_name, concept, candidate, lambda: explain_no_comparable_metric(
-        records, ticker=ticker, expected_cik=cik, concepts=(concept,), metric_name=metric_name, unit=unit))
+    def reason():
+        detail: dict = {}
+        code = explain_no_comparable_metric(records, ticker=ticker, expected_cik=cik, concepts=(concept,),
+                                            metric_name=metric_name, unit=unit, detail=detail)
+        return (code, detail) if detail else code
+    note_pair_outcome(metric_name, concept, candidate, reason)
 
 
 def _note_pair_dropped(metric_name, period_end) -> None:
