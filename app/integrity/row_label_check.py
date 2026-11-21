@@ -14,6 +14,9 @@ _LOSS_WORD = re.compile(r"\bloss(?:es)?\b", re.I)
 _INCOME_WORD = re.compile(r"\b(?:income|profit|earnings|gain)\b", re.I)
 # Tax wording names the tax, not the result: "Loss before taxes on income" is a loss row, "Income before income taxes" is not.
 _TAX_PHRASE = re.compile(r"\b(?:before\s+)?(?:income\s+)?tax(?:es)?(?:\s+on\s+(?:income|profit|earnings))?\b", re.I)
+# Tax-expense wording inside a result label ("Net income before income tax expense", "Income before provision for income taxes") is not an
+# operating expense line: it must not make the label read as mixed expense/result.
+_TAX_EXPENSE = re.compile(r"\b(?:before\s+)?(?:(?:provision|benefit)\s+(?:for|from)\s+)?(?:income\s+)?tax(?:es)?(?:\s+(?:expenses?|benefit|provision))?\b", re.I)
 # Concepts whose natural sign is income-positive (a loss is a negative value).
 _INCOME_CONCEPTS = {"OperatingIncomeLoss", "NetIncomeLoss", "ProfitLoss",
                     "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
@@ -48,9 +51,12 @@ def judge_label(concept: str, label: str | None, value, *, cells=(), restatement
     if concept not in _INCOME_CONCEPTS or not isinstance(label, str) or not label.strip():
         return "consistent", None
     others = [c for c in cells if isinstance(c, str) and c.strip() and c.strip() != label.strip()]
-    if _EXPENSE_WORD.search(label) and _RESULT_WORD.search(label):
+    # Tax-expense wording does not make an expense line when the label is otherwise a result ("Net (loss) income before income tax expense").
+    stripped = _TAX_EXPENSE.sub(" ", label)
+    expense_text = stripped if _RESULT_WORD.search(stripped) else label
+    if _EXPENSE_WORD.search(expense_text) and _RESULT_WORD.search(label):
         return "ambiguous", "ambiguous_mixed_label"
-    if _EXPENSE_WORD.search(label):
+    if _EXPENSE_WORD.search(expense_text):
         if any(_RESULT_WORD.search(c) and not _EXPENSE_WORD.search(c) for c in others):
             return "ambiguous", "ambiguous_mixed_label"
         return "contradicted", "expense_row"

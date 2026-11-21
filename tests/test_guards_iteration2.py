@@ -350,3 +350,21 @@ def test_every_as_reported_build_indexes_its_records_for_the_sign_check(sign_on)
     eo.bind_outcome_notes(lambda: ar.build_comparisons(records, ticker='AAPL', cik=CIK_N), notes, 'sec_metrics')()
     key = fact_key(CIK_N, 'us-gaap', NET, 'CAD', '2025-01-01', '2025-12-31')
     assert {(r['accession'], r['value']) for r in notes.fact_index[key]} == {('0000320193-26-000001', 920), ('0009999999-99-000001', -920)}
+
+
+# --- v2 finding: tax-expense wording inside a result label is not an expense line ------------------------------------------------------
+
+@pytest.mark.parametrize('concept,label,value,expected', [
+    (NET, 'Net (loss) income before income tax expense', 5, ('consistent', None)),
+    (NET, 'Net (loss) income before income tax expense', -5, ('consistent', None)),
+    (NET, 'Income before provision for income taxes', 5, ('consistent', None)),
+    (NET, 'Earnings before income taxes', 5, ('consistent', None)),
+    (OP, 'Operating income before income tax expense', 5, ('consistent', None)),
+    (OP, 'Total operating expenses and income before income tax expense', 5, ('ambiguous', 'ambiguous_mixed_label')),     # a real expense word still counts
+    (OP, 'OPERATING EXPENSES', 5, ('contradicted', 'expense_row')),
+    (OP, 'Total costs and expenses', 5, ('contradicted', 'expense_row')),
+    (OP, 'Total operating expenses and operating loss', 5, ('ambiguous', 'ambiguous_mixed_label')),
+    (NET, 'Net loss before income tax expense', 5, ('contradicted', 'loss_row_positive_value')),                              # a loss-only label is still a loss row
+])
+def test_tax_expense_wording_does_not_make_a_result_label_mixed(concept, label, value, expected):
+    assert judge_label(concept, label, value) == expected
