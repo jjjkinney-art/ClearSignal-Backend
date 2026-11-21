@@ -142,11 +142,18 @@ PRETAX_LIMITATION_WITHHELD = ("The cited pretax-income comparison is supplementa
     "Operating income and the operating margin are unavailable: the figure was withheld because the evidence for it is disputed.")
 
 
+PRETAX_LIMITATION_UNRESOLVED = ("The cited pretax-income comparison is supplementary profitability context only. "
+    "Pretax income includes effects outside operating profit; it is not used to calculate any margin and does not stand in for operating income. "
+    "Operating income and the operating margin are unavailable: the evidence for the operating-income figure is unresolved.")
+
+
 def _pretax_limitation() -> str:
     from .evidence_outcomes import current_notes
     notes = current_notes()
-    return (PRETAX_LIMITATION_WITHHELD if notes is not None and any(r.get("measure") == "operating income" for r in notes.withheld_figures)
-            else PRETAX_LIMITATION)
+    rows = [r for r in (notes.withheld_figures if notes is not None else ()) if r.get("measure") == "operating income"]
+    if rows and rows[0].get("reason") == "row_label_unresolved":
+        return PRETAX_LIMITATION_UNRESOLVED
+    return PRETAX_LIMITATION_WITHHELD if rows else PRETAX_LIMITATION
 
 
 _THESIS_REUSE_OR_COMPARISON = re.compile(
@@ -331,21 +338,6 @@ def _row_label_check_enabled() -> bool:
     return getattr(settings, "row_label_check_enabled", False) is True
 
 
-def _dispute_text(result: dict, name: str) -> str:
-    from ..integrity.row_label_check import MEANING
-    binding, row = result["binding"], result["row"]
-    why = ("is an expense line, not a result" if result["code"] == "expense_row" else "names a loss while the tagged value is a positive income")
-    margin = " No operating margin that depends on it is calculated." if binding["concept"] == "OperatingIncomeLoss" else ""
-    meaning = MEANING.get(binding["concept"], binding["concept"])
-    if result["status"] == "contradicted":
-        return (f"Not used. The cited filing's own row (accession {binding['accession']}) for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
-                f"so it does not match the tag it carries ({meaning}) and the figure is disputed. No replacement figure is substituted.{margin}")
-    return (f"Not used. No row of the cited filing (accession {binding['accession']}) was retained for this figure. A different retained filing "
-            f"(accession {row.get('accession')}, form {row.get('form')}) labels the same period and amount \u201c{row['label']}\u201d, which {why}. "
-            f"That is a conflict between filings, not the cited row: the figure can be neither confirmed nor cleared, so it is not used. "
-            f"No replacement figure is substituted.{margin}")
-
-
 def _sign_guard_enabled() -> bool:
     from ..config import settings
     return getattr(settings, "sign_conflict_guard_enabled", False) is True
@@ -359,6 +351,17 @@ def _figure_ok(rebuilt, name: str, cik: str) -> bool:
     return (not _row_label_check_enabled() or _row_label_ok(rebuilt, name, cik)) and (not _sign_guard_enabled() or _sign_index_ok(rebuilt, name, cik))
 
 
+_OPERATING_CONCEPTS = frozenset({"OperatingIncomeLoss", "ProfitLossFromOperatingActivities"})
+
+
+def _unresolved_text(result: dict, name: str) -> str:
+    row = result["row"]
+    why = "mixes an expense and a result" if result["code"] == "ambiguous_mixed_label" else "sits in a restatement table whose columns share one label"
+    return (f"Not used. The cited filing's own row (accession {result['binding']['accession']}) for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
+            "so the statement context does not establish what the figure is. This is unresolved, not contradicted: it is not used for an operating margin or a "
+            "monitoring baseline. No replacement figure is substituted.")
+
+
 def _row_label_ok(rebuilt, name: str, cik: str) -> bool:
     """False when the figure must not be used. Every income-concept claim is judged only against labels bound to its own issuer,
     taxonomy, unit, period, accession and document. A rebuild with no verification context (no request notes bound or held) is not a
@@ -366,7 +369,7 @@ def _row_label_ok(rebuilt, name: str, cik: str) -> bool:
     cross-filing conflicts withhold; ambiguous (unresolved), other-filing-only and no-evidence (unavailable) let the figure stand and
     say so by status."""
     from ..integrity.row_label_check import LABELLED_CONCEPTS, WITHHOLD, assess, binding_from_claim
-    from .evidence_outcomes import label_rows, note_label_check, note_withheld_figure, record_context_missing
+    from .evidence_outcomes import label_rows, note_label_check, note_verification, note_withheld_figure, record_context_missing
     claims = [c for c in rebuilt.verified_claims if str(c.get("metric", "")).split(":")[-1] in LABELLED_CONCEPTS]
     if not claims:
         return True
@@ -379,8 +382,19 @@ def _row_label_ok(rebuilt, name: str, cik: str) -> bool:
         key = f"{claim.get('metric')}|{claim.get('period_end')}|{claim.get('raw_value')}"
         if binding is None:
             note_label_check(key, "unbound_claim")
+            if claim is claims[0]:
+                note_verification(name, "unbound_claim")
             continue
         result = assess(binding, rows)
+        if result["status"] == "ambiguous" and binding["concept"] in _OPERATING_CONCEPTS:
+            # Unresolved operating income is never called clear and never feeds a margin or a monitoring baseline: statement context does not
+            # establish what the figure is. Distinct from a contradiction (different reason and wording); nothing replaces it.
+            note_label_check(f"{binding['concept']}|{binding['end']}|{binding['abs_value']}|{binding['accession']}", "ambiguous",
+                             {"code": result["code"], "used": False})
+            note_withheld_figure({"measure": name, "reason": "row_label_unresolved", "status": "ambiguous", "concept": binding["concept"], "code": result["code"],
+                                  "label": result["row"]["label"], "period_end": binding["end"], "accession": binding["accession"],
+                                  "text": _unresolved_text(result, name)})
+            return False
         note_label_check(f"{binding['concept']}|{binding['end']}|{binding['abs_value']}|{binding['accession']}", result["status"],
                          {"other_filings": result["other_filings"], **({"code": result["code"]} if result.get("code") else {})}
                          if result["other_filings"] or result.get("code") else None)
@@ -389,6 +403,8 @@ def _row_label_ok(rebuilt, name: str, cik: str) -> bool:
                                   "code": result["code"], "label": result["row"]["label"], "period_end": binding["end"],
                                   "accession": binding["accession"], "other_filings": result["other_filings"], "text": _dispute_text(result, name)})
             return False
+        if claim is claims[0]:
+            note_verification(name, result["status"])      # the verification statement is about the current-period figure the answer shows
     return True
 
 

@@ -114,8 +114,12 @@ def _operating_income_unavailable_text() -> str:
     """Why there is no operating margin, stated explicitly. Pretax income is supplementary context only and never an input to a margin."""
     from .evidence_outcomes import current_notes
     notes = current_notes()
-    withheld = any(row.get("measure") == "operating income" for row in (notes.withheld_figures if notes is not None else ()))
-    if withheld:
+    rows = [row for row in (notes.withheld_figures if notes is not None else ()) if row.get("measure") == "operating income"]
+    if rows and rows[0].get("reason") == "row_label_unresolved":
+        return ('Operating income is unavailable: the evidence for it is unresolved (its row label does not establish what the figure is; see "What remains unknown"). '
+                'No operating margin or margin benchmark has been calculated. Pretax income, if shown, is supplementary profitability context only: '
+                'it is not used to calculate any margin and does not stand in for operating income. ')
+    if rows:
         return ('Operating income is unavailable: the figure was withheld because the evidence for it is disputed (see "What remains unknown"). '
                 'No operating margin or margin benchmark has been calculated. Pretax income, if shown, is supplementary profitability context only: '
                 'it is not used to calculate any margin and does not stand in for operating income. ')

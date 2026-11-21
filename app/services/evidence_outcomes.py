@@ -44,7 +44,7 @@ REASONS = {
     "unsupported": ("ifrs_taxonomy", "non_usd_reporting", "annual_form_not_read", "interim_form_not_read",
                     "no_same_period_pair", "conflicting_evidence", "selection_rules_not_met",
                     "as_reported_comparison_withheld", "comparisons_stale", "comparisons_not_used_for_threshold",
-                    "comparisons_not_used", "row_label_disputed", "sign_conflict"),
+                    "comparisons_not_used", "row_label_disputed", "row_label_unresolved", "sign_conflict"),
     "failed": ("facts_retrieval_failed", "filing_list_failed", "filing_too_large", "filing_not_read",
                "time_limit"),
     "not_attempted": ("identity_unresolved", "no_filing_listed", "not_requested", "no_provider",
@@ -96,6 +96,7 @@ class OutcomeNotes:
         self.row_labels: list[dict] = []  # labels of the rows the retained filing's inline core facts sit on
         self.withheld_figures: list[dict] = []  # figures set aside because the evidence disputes them (never replaced)
         self.label_checks: list[dict] = []  # per bound figure: what the row-label check concluded (completed or not)
+        self.verification: dict = {}  # measure -> statuses of the row-label check for the figures the sweep kept (what was and was not verified)
         self.fact_index: dict = {}  # fact_key -> observations of that fact in the Company Facts the request holds (for the sign check)
         self.fact_index_rows = 0
 
@@ -165,6 +166,11 @@ class OutcomeNotes:
                 if not any((b["accession"], str(b["value"])) == ident for b in bucket):
                     bucket.append(dict(r))
                     self.fact_index_rows += 1
+
+    def add_verification(self, measure: str, status: str, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.verification.setdefault(measure, set()).add(status)
 
     def add_label_check(self, row: dict, task: Optional[str] = None):
         """One entry per figure and status: the foundation rechecks the same figure many times."""
@@ -336,6 +342,10 @@ def fact_index():
     if notes is None:
         return None
     return notes.fact_index        # read after collection; writes from a stopped task are dropped
+
+
+def note_verification(measure: str, status: str) -> None:
+    _scoped(lambda notes: notes.add_verification(measure, status, _task.get()))
 
 
 def note_withheld_figure(row: dict) -> None:
@@ -792,8 +802,43 @@ def _withheld_parts(notes):
             for row in (getattr(notes, "withheld_figures", None) or [])]
 
 
+_VERIFICATION_MEASURES = {"operating income": r"operating (?:income|profit)", "net income": r"net income|profit for the year|profit\b",
+                          "pretax income": r"pretax income|profit before tax"}
+
+
+def verification_summary(source_answer, notes) -> dict:
+    """What the row-label check could and could not confirm for the income figures this answer shows. Empty unless the check ran."""
+    from ..integrity.row_label_check import UNAVAILABLE, UNRESOLVED
+    verification = getattr(notes, "verification", None) or {}
+    texts = [str(c.get("claim", "")) for c in (source_answer.get("claims") or []) if isinstance(c, dict)]
+    out = {"checked": [], "unresolved": [], "incomplete": []}
+    for measure, pattern in _VERIFICATION_MEASURES.items():
+        statuses = verification.get(measure)
+        if not statuses or not any(re.search(pattern, t, re.I) for t in texts):
+            continue
+        key = "incomplete" if statuses & UNAVAILABLE else "unresolved" if statuses & UNRESOLVED else "checked"
+        out[key].append(measure)
+    return out if any(out.values()) else {}
+
+
+def _verification_parts(source_answer, notes):
+    """verification_incomplete: the figures are shown, but the filing's own row labels were not available to confirm them. This is not a
+    finding that they are wrong, and it is different from a contradiction, an unresolved label, or a withheld figure."""
+    summary = verification_summary(source_answer, notes)
+    parts = []
+    if summary.get("incomplete"):
+        parts.append({"part": "statement verification", "state": "unverified", "reason": "verification_incomplete",
+                      "text": (f"the filing's own row labels were not available in this request to confirm {', '.join(summary['incomplete'])} against the statement "
+                               "presentation, so those figures are reported from structured data without that check. This is not a finding that they are wrong.")})
+    if summary.get("unresolved"):
+        parts.append({"part": "statement labels", "state": "unresolved", "reason": "row_label_unresolved",
+                      "text": (f"the row label of {', '.join(summary['unresolved'])} in the filing is ambiguous (a mixed expense/result label or a restatement column), "
+                               "so the statement context does not establish what the figure is; it is shown as reported and is neither confirmed nor contradicted.")})
+    return parts
+
+
 def _missing_parts(source_answer, notes):
-    return _withheld_parts(notes) + _missing_revenue_part(source_answer, notes)
+    return _withheld_parts(notes) + _verification_parts(source_answer, notes) + _missing_revenue_part(source_answer, notes)
 
 
 def _missing_revenue_part(source_answer, notes):
@@ -847,6 +892,8 @@ def build_evidence_outcomes(source_answer: dict, *, notes: Optional[OutcomeNotes
             records.append(_record(need, "available", "bound", tried=True, source_family="sec_filing" if need != "reported_financials" else "sec_company_facts",
                                    reference_ids=ids, as_of=_as_of(source_answer, refs), freshness=_freshness(refs),
                                    missing_parts=_missing_parts(source_answer, notes) if need == "reported_financials" else [],
+                                   **({"detail": {"verification": verification_summary(source_answer, notes)}}
+                                      if need == "reported_financials" and verification_summary(source_answer, notes) else {}),
                                    user_text="Bound to the cited evidence."))
             if need == "reported_financials":
                 financial = records[-1]

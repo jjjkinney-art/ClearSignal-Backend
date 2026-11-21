@@ -251,15 +251,15 @@ def test_restatement_wording_in_the_enclosing_table_header_is_detected_and_cells
 
 
 def test_ambiguous_contradicted_and_unavailable_are_three_distinct_statuses_with_three_different_effects(labels_on):
-    ambiguous = notes_with_rows(label_row('Total operating expenses and operating loss', cells=[], restatement=False))
-    contradicted = notes_with_rows(label_row('OPERATING EXPENSES'))
+    """Net income: only a contradiction withholds. (Operating income is stricter, see the unresolved-operating-income tests.)"""
+    item = lambda: cf('NetIncomeLoss', 'net income', 90, 40)
+    ambiguous = notes_with_rows(label_row('Total expenses and net income', concept='NetIncomeLoss', abs_value='90', cells=[], restatement=False))
+    contradicted = notes_with_rows(label_row('Net loss', concept='NetIncomeLoss', abs_value='90'))
     unavailable = notes_with_rows()
-    kept_a = rebuild_in(ambiguous, cf('OperatingIncomeLoss', 'operating income', -148, -599)) is not None
-    kept_c = rebuild_in(contradicted, cf('OperatingIncomeLoss', 'operating income', -148, -599)) is not None
-    kept_u = rebuild_in(unavailable, cf('OperatingIncomeLoss', 'operating income', -148, -599)) is not None
+    kept = [rebuild_in(n, item(), 'net income', ('NetIncomeLoss',)) is not None for n in (ambiguous, contradicted, unavailable)]
     cur = lambda n: [c['status'] for c in n.label_checks if '|2026-06-30|' in c['key']][0]
     assert (cur(ambiguous), cur(contradicted), cur(unavailable)) == ('ambiguous', 'contradicted', 'no_evidence')
-    assert (kept_a, kept_c, kept_u) == (True, False, True)                                    # only the contradiction withholds
+    assert kept == [True, False, True]                                                          # only the contradiction withholds
     assert {'ambiguous'} == set(UNRESOLVED) and 'no_evidence' in UNAVAILABLE and 'contradicted' in WITHHOLD and 'ambiguous' not in WITHHOLD
     assert ambiguous.withheld_figures == [] and unavailable.withheld_figures == []
 
@@ -368,3 +368,96 @@ def test_every_as_reported_build_indexes_its_records_for_the_sign_check(sign_on)
 ])
 def test_tax_expense_wording_does_not_make_a_result_label_mixed(concept, label, value, expected):
     assert judge_label(concept, label, value) == expected
+
+
+# --- v3: ambiguous operating income is never "clear" and never feeds a margin or a baseline -------------------------------------------------
+
+def op_notes(label, **extra):
+    return notes_with_rows(label_row(label, **extra))
+
+
+@pytest.mark.parametrize('label,extra,code', [
+    ('Total operating expenses and operating loss', {}, 'ambiguous_mixed_label'),
+    ('Operating expenses and income from operations', {}, 'ambiguous_mixed_label'),
+    ('Operating loss', {'restatement': True, 'abs_value': '148'}, None),            # a loss label on a positive value inside a restatement table (value checked below)
+])
+def test_ambiguous_operating_income_is_unresolved_not_clear_and_not_used(labels_on, label, extra, code):
+    positive = label == 'Operating loss'
+    item = cf('OperatingIncomeLoss', 'operating income', 148 if positive else -148, 599 if positive else -599)
+    notes = op_notes(label, **extra)
+    assert rebuild_in(notes, item) is None                                                       # not used
+    status = [c['status'] for c in notes.label_checks if '|2026-06-30|' in c['key']][0]
+    assert status == 'ambiguous' and status != 'clear'
+    [row] = notes.withheld_figures
+    assert (row['reason'], row['status']) == ('row_label_unresolved', 'ambiguous') and row['reason'] != 'row_label_disputed'
+    assert 'unresolved, not contradicted' in row['text'] and 'not used for an operating margin or a monitoring baseline' in row['text']
+    assert 'No replacement figure is substituted' in row['text']
+
+
+def test_contradicted_unresolved_and_unavailable_operating_income_have_three_different_reasons_and_outcomes(labels_on):
+    item = lambda: cf('OperatingIncomeLoss', 'operating income', -148, -599)
+    out = {}
+    for name, notes in (('contradicted', op_notes('OPERATING EXPENSES')), ('unresolved', op_notes('Total operating expenses and operating loss')),
+                        ('unavailable', notes_with_rows())):
+        out[name] = (rebuild_in(notes, item()) is not None, [w['reason'] for w in notes.withheld_figures])
+    assert out == {'contradicted': (False, ['row_label_disputed']), 'unresolved': (False, ['row_label_unresolved']), 'unavailable': (True, [])}
+
+
+def test_unresolved_operating_income_feeds_no_margin_and_no_baseline_and_the_answer_says_so(labels_on):
+    items, refs, _ = pretax_case(op_label=None)
+    notes = op_notes('Total operating expenses and operating loss')
+    result = eo.bind_outcome_notes(lambda: build_decision_monitoring('AAPL', items, refs, expected_cik=CIK_N), notes, None)()
+    foundation = result['foundation']
+    assert not any(row['kind'] == 'operating_margin_calculation' for row in foundation['inferences']) and result['benchmarks'] == []
+    assert not any('operating income' in row['text'].lower() for row in foundation['inferences'])          # no monitoring baseline for it
+    assert not any('operating income' in row['claim'] for row in foundation['claims'])
+    text = result['answer']
+    assert 'Operating income is unavailable: the evidence for it is unresolved' in text and 'not used to calculate any margin' in text
+    assert 'disputed' not in text.split('Operating income is unavailable')[1].split('.')[0]
+
+
+def test_unresolved_net_income_is_kept_and_reported_as_unresolved_not_clear(labels_on):
+    notes = notes_with_rows(label_row('Total expenses and net income', concept='NetIncomeLoss', abs_value='90', cells=[], restatement=False))
+    assert rebuild_in(notes, cf('NetIncomeLoss', 'net income', 90, 40), 'net income', ('NetIncomeLoss',)) is not None
+    assert notes.verification == {'net income': {'ambiguous'}}
+
+
+# --- v3: an explicit verification-incomplete outcome ---------------------------------------------------------------------------------------
+
+def answer_with(*claims):
+    return {'status': 'attributed', 'claims': [{'claim_kind': 'reported_financial_comparison', 'reference_id': f'E{i}', 'claim': c} for i, c in enumerate(claims, 1)], 'unanswered_parts': []}
+
+
+def reported_record(answer, notes):
+    return next(r for r in eo.build_evidence_outcomes(answer, notes=notes, references=[{'id': 'E1', 'source': eo._SEC_FACT}, {'id': 'E2', 'source': eo._SEC_FACT}])
+                if r['need'] == 'reported_financial_comparison' or r['need'] == 'reported_financials')
+
+
+def test_figures_shown_without_row_evidence_are_reported_as_verification_incomplete(labels_on):
+    notes = notes_with_rows()                                                                   # a document was not read: no label at all
+    rebuild_in(notes, cf('NetIncomeLoss', 'net income', 90, 40), 'net income', ('NetIncomeLoss',))
+    answer = answer_with('AAPL net income attributable to parent increased 125.0% to $90 for the period 2026-04-01 to 2026-06-30, from $40 in the comparable prior-year period')
+    record = reported_record(answer, notes)
+    part = next(p for p in record['missing_parts'] if p['reason'] == 'verification_incomplete')
+    assert part['state'] == 'unverified' and 'net income' in part['text'] and 'not a finding that they are wrong' in part['text']
+    assert record['state'] == 'available' and record['detail']['verification'] == {'checked': [], 'unresolved': [], 'incomplete': ['net income']}
+    block = eo.render_unknown_block([record])
+    assert 'statement verification' in block and 'were not available in this request' in block
+
+
+def test_a_completed_check_is_not_reported_as_incomplete_and_an_unshown_measure_is_not_mentioned(labels_on):
+    notes = notes_with_rows(label_row('Net income', concept='NetIncomeLoss', abs_value='90'))
+    rebuild_in(notes, cf('NetIncomeLoss', 'net income', 90, 40), 'net income', ('NetIncomeLoss',))
+    record = reported_record(answer_with('AAPL net income attributable to parent increased 125.0% to $90 for the period 2026-04-01 to 2026-06-30'), notes)
+    assert record['detail']['verification'] == {'checked': ['net income'], 'unresolved': [], 'incomplete': []}
+    assert not [p for p in record['missing_parts'] if p['reason'] == 'verification_incomplete']
+    unseen = OutcomeNotes()
+    rebuild_in(unseen, cf('NetIncomeLoss', 'net income', 90, 40), 'net income', ('NetIncomeLoss',))
+    record = reported_record(answer_with('AAPL revenue increased 10.0% to $5 for the period 2026-04-01 to 2026-06-30'), unseen)
+    assert not [p for p in record['missing_parts'] if p['reason'] == 'verification_incomplete'] and 'verification' not in record['detail']
+
+
+def test_with_the_row_label_check_off_no_verification_statement_exists():
+    notes = OutcomeNotes()
+    assert rebuild_in(notes, cf('NetIncomeLoss', 'net income', 90, 40), 'net income', ('NetIncomeLoss',)) is not None
+    assert notes.verification == {} and eo.verification_summary(answer_with('AAPL net income rose'), notes) == {}
