@@ -502,3 +502,25 @@ def test_the_evidence_list_filter_removes_the_figure_from_every_downstream_field
     assert withhold_disputed_items(items, ticker='AAPL', cik='320193') != items            # no context: income figures fail closed, never pass as checked
     settings.row_label_check_enabled = False
     assert withhold_disputed_items(items, ticker='AAPL', cik='320193') == items
+
+
+def test_route_question_keeps_its_body_and_runs_inside_the_request_scope():
+    import inspect
+    from app.services import router_service
+    assert hasattr(router_service.route_question, '__wrapped__')                    # the decorator, not a second function holding the body
+    assert 'run_equity_agent(' in inspect.getsource(router_service.route_question)  # source-inspecting tests still see the body
+    seen = []
+    original = router_service._outcome_notes_mod.request_scope
+
+    class Spy:
+        def __enter__(self): seen.append('enter'); return original().__enter__()
+        def __exit__(self, *a): seen.append('exit')
+    router_service._outcome_notes_mod.request_scope = lambda: Spy()
+    try:
+        try:
+            router_service.route_question(type('R', (), {'conditional_valuation': object(), 'question': 'x'})())
+        except ValueError:
+            pass                                                                    # the explicit-scenario guard raises first; the scope still opened and closed
+    finally:
+        router_service._outcome_notes_mod.request_scope = original
+    assert seen == ['enter', 'exit']

@@ -10,6 +10,7 @@ replaced with machine learning or LLM‑based routing in the future.
 import json
 import logging
 import re
+import functools
 import time
 import uuid
 from datetime import datetime, timezone
@@ -2034,12 +2035,17 @@ def _run_investment_pipeline(
     )
 
 
+def _in_request_scope(fn):
+    """Run ``fn`` inside the request scope that holds the request's outcome notes (the body stays in ``fn``)."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        with _outcome_notes_mod.request_scope():
+            return fn(*args, **kwargs)
+    return wrapper
+
+
+@_in_request_scope
 def route_question(request: QuestionRequest) -> AgentAnswerResponse:
-    with _outcome_notes_mod.request_scope():
-        return _route_question(request)
-
-
-def _route_question(request: QuestionRequest) -> AgentAnswerResponse:
     """Route verified company scope to the modern evidence-backed pipeline.
 
     Structured company selections are authoritative and require exact identity.
