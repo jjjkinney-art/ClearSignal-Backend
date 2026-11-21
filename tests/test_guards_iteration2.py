@@ -333,3 +333,20 @@ def test_with_the_guards_off_the_pretax_wording_is_unchanged():
     result = build_decision_monitoring('AAPL', items, refs[:1] + refs[2:], expected_cik=CIK_N)
     assert result is not None and 'Operating income was not verified, so no operating margin or margin benchmark has been calculated.' in result['answer']
     assert 'unavailable' not in result['answer']
+
+
+def test_every_as_reported_build_indexes_its_records_for_the_sign_check(sign_on):
+    """The basis-replacement path builds comparisons without going through evidence_from_response; the index is fed where every build passes."""
+    def rec(**kw):
+        base = dict(cik=CIK_N, taxonomy='us-gaap', concept=NET, label=NET, unit='CAD', value=1, start='2024-01-01', end='2024-12-31', filed='2025-03-01', form='40-F',
+                    accession='0000320193-25-000001', filing_url=None)
+        base.update(kw)
+        base['filing_url'] = f"https://www.sec.gov/Archives/edgar/data/320193/{base['accession'].replace('-', '')}/{base['accession']}-index.htm"
+        return SecFactRecord(**base)
+    original = rec(value=920, start='2025-01-01', end='2025-12-31', accession='0000320193-26-000001', filed='2026-03-01')
+    flipped = rec(value=-920, start='2025-01-01', end='2025-12-31', accession='0009999999-99-000001', filed='2026-03-11')
+    records = [rec(value=900), original, flipped, rec(concept='Assets', start=None, end='2025-12-31', filed='2026-03-11', accession='0009999999-99-000001', value=9)]
+    notes = OutcomeNotes()
+    eo.bind_outcome_notes(lambda: ar.build_comparisons(records, ticker='AAPL', cik=CIK_N), notes, 'sec_metrics')()
+    key = fact_key(CIK_N, 'us-gaap', NET, 'CAD', '2025-01-01', '2025-12-31')
+    assert {(r['accession'], r['value']) for r in notes.fact_index[key]} == {('0000320193-26-000001', 920), ('0009999999-99-000001', -920)}

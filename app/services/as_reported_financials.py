@@ -425,6 +425,8 @@ def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str
 
     ``interim`` (10-Q facts, default none) lets a measure be compared on its latest quarter or year-to-date period when that is
     later than its latest annual period, in the basis chosen from the annual facts; annual-only callers are unchanged."""
+    from .evidence_outcomes import note_fact_index
+    note_fact_index([*records, *interim])      # every as-reported build, for the cross-filing sign check (notes only; inert otherwise)
     taxonomy, currency, anchor_end = choose_basis(records)
     if taxonomy is None:
         return [], [{"metric": "all", "reason": anchor_end, "concepts": []}]
@@ -506,8 +508,6 @@ def evidence_from_response(data: Optional[dict], ticker: str, cik: str, *, bound
         records = [r for r in records if date.fromisoformat(r.filed) <= boundary and date.fromisoformat(r.end) <= boundary]
     if not records:
         return [], []
-    from .evidence_outcomes import note_fact_index
-    note_fact_index(records)      # for the cross-filing sign check (notes only; inert otherwise)
     return build_comparisons(records, ticker=ticker, cik=cik, interim=_interim_records(data, cik, boundary))
 
 
