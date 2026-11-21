@@ -91,6 +91,15 @@ from .watchlist_service import watchlist_service
 logger = logging.getLogger(__name__)
 
 
+def _in_request_scope(fn):
+    """Run ``fn`` inside the request scope that holds the request's outcome notes (the body stays in ``fn``)."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        with _outcome_notes_mod.request_scope():
+            return fn(*args, **kwargs)
+    return wrapper
+
+
 # An explicitly selected research comparison is an interactive, user-visible
 # operation. Keep its worst-case server budget below the frontend's 90-second
 # request ceiling: retrieval (10s) + agents (16s) + synthesis (34s + 18s)
@@ -2035,16 +2044,6 @@ def _run_investment_pipeline(
     )
 
 
-def _in_request_scope(fn):
-    """Run ``fn`` inside the request scope that holds the request's outcome notes (the body stays in ``fn``)."""
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        with _outcome_notes_mod.request_scope():
-            return fn(*args, **kwargs)
-    return wrapper
-
-
-@_in_request_scope
 def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     """Route verified company scope to the modern evidence-backed pipeline.
 
@@ -3140,3 +3139,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         answer=answer_dict,
         routing=routing_decision,
     )
+
+
+# Every request runs inside its own request scope (applied here so the body of route_question stays where it is).
+route_question = _in_request_scope(route_question)
