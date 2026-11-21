@@ -75,9 +75,11 @@ def evidence_from_filing(document, filing, *, ticker, cik):
             continue
         if labels.get(observation['fact_id']):
             from ..integrity.row_label_check import normalize_amount
-            label_rows.append({'concept': observation['concept'], 'start': observation['start'], 'end': observation['end'],
-                               'abs_value': normalize_amount(amount), 'signed_value': str(amount),
-                               'label': labels[observation['fact_id']], 'accession': accession, 'form': filing.document_type})
+            label_rows.append({'cik': str(int(cik)), 'taxonomy': 'ifrs-full' if 'ifrs' in str(observation.get('concept_namespace')) else 'us-gaap',
+                               'unit': observation['unit'], 'concept': observation['concept'], 'start': observation['start'], 'end': observation['end'],
+                               'abs_value': normalize_amount(amount), 'signed_value': str(amount), 'label': labels[observation['fact_id']],
+                               'accession': accession, 'form': filing.document_type, 'document_url': document.final_url,
+                               'content_hash': document.content_hash, 'fact_id': observation['fact_id']})
         proof = {**observation, 'content_hash': document.content_hash,
             'document_url': document.final_url, 'filed': filing.timestamp,
             'form': filing.document_type, 'accession': accession}

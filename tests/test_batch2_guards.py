@@ -153,19 +153,22 @@ def test_without_labels_or_notes_nothing_is_recorded_and_the_items_are_the_same(
 
 # --- the guard withholds the figure on both paths ------------------------------------------------------------------
 
-def cf(concept, name, current, prior, ytd=False):
+CUR_ACC = '0000320193-26-000001'      # the accession of the constructed filing (from its URL)
+
+
+def cf(concept, name, current, prior, ytd=False, current_accession=None):
     """The Company Facts path: records with no filer row label to inspect, for the same periods as the constructed filing."""
     records = []
     for year, amount in ((2025, prior), (2026, current)):
-        accession = f'0000320193-{str(year)[-2:]}-000001'
+        accession = (current_accession if year == 2026 and current_accession else f'0000320193-{str(year)[-2:]}-000001')
         records.append(SecFactRecord(cik='320193', taxonomy='us-gaap', concept=concept, label=concept, unit='USD', value=amount,
                                      start=f"{year}-{'01' if ytd else '04'}-01", end=f'{year}-06-30', filed=f'{year}-08-01', form='10-Q', accession=accession,
                                      filing_url=f'https://www.sec.gov/Archives/edgar/data/320193/{accession.replace("-", "")}/{accession}-index.htm'))
     return comparable_metric_evidence(records, ticker='AAPL', expected_cik='320193', concepts=(concept,), metric_name=name)
 
 
-def cf_operating_income(current=-148, prior=-599):
-    return cf('OperatingIncomeLoss', 'operating income', current, prior)
+def cf_operating_income(current=-148, prior=-599, current_accession=None):
+    return cf('OperatingIncomeLoss', 'operating income', current, prior, current_accession=current_accession)
 
 
 def with_labels(doc):
@@ -215,7 +218,9 @@ def test_a_disputed_operating_income_removes_the_margin_and_no_other_figure_repl
     cash = cf('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow', -30, -20, ytd=True)
     items = [revenue, cf_operating_income(), net, cash]
     refs = [reference(item, f'E{i}') for i, item in enumerate(items, 1)]
+    settings.row_label_check_enabled = False                                                          # monkeypatch in the fixture restores it
     plain = build_financial_foundation('AAPL', items, refs, expected_cik='320193')
+    settings.row_label_check_enabled = True
     assert any(row['kind'] == 'operating_margin_calculation' for row in plain['inferences'])            # the defect: a margin from an expense row
     notes = with_labels(document(statement(EXPENSE_ROW_LIKE)))
     guarded = eo.bind_outcome_notes(lambda: build_financial_foundation('AAPL', items, refs, expected_cik='320193'), notes, None)()
@@ -232,7 +237,7 @@ def test_the_answer_says_the_figure_was_withheld_and_why(row_check):
     record = next(r for r in build_evidence_outcomes(delivered, notes=notes, references=[{'id': 'E1', 'source': eo._SEC_FACT}]) if r['need'] == 'reported_financials')
     assert record['state'] == 'available' and record['missing_parts'][0]['reason'] == 'row_label_disputed'
     text = render_unknown_block([record])
-    assert 'also missing: operating income: Not used. The filing' in text and 'OPERATING EXPENSES' in text and 'No replacement figure' in text
+    assert 'also missing: operating income: Not used. The cited filing' in text and 'OPERATING EXPENSES' in text and 'No replacement figure' in text
     assert 'operating income: operating income' not in text
     none_delivered = {'status': 'insufficient_claim_evidence', 'claims': [], 'unanswered_parts': ['operating income']}
     notes.facts_requests.append({'cik': '320193', 'ok': True, 'taxonomies': {'us-gaap': 5}, 'currencies': {'us-gaap': ['USD']}, 'requested': [], 'present': ['OperatingIncomeLoss'],
@@ -339,3 +344,161 @@ def test_the_threshold_notice_flag_is_off_by_default_and_read_live(monkeypatch):
     assert afacts.threshold_notice_enabled() is False
     monkeypatch.setattr(settings, 'threshold_later_reports_notice_enabled', True)
     assert afacts.threshold_notice_enabled() is True
+
+
+# --- bound labels: issuer, taxonomy, unit, period, accession and document ----------------------------------------------
+
+from app.integrity.row_label_check import assess, binding_from_claim
+
+AMENDED = '0000320193-26-000009'
+
+
+def label_row(label='OPERATING EXPENSES', *, accession=CUR_ACC, form='10-Q', concept='OperatingIncomeLoss', abs_value='148', start='2026-04-01',
+              end='2026-06-30', cik='320193', taxonomy='us-gaap', unit='USD', content_hash='a' * 64):
+    return {'cik': cik, 'taxonomy': taxonomy, 'unit': unit, 'concept': concept, 'start': start, 'end': end, 'abs_value': abs_value, 'signed_value': '-' + abs_value,
+            'label': label, 'accession': accession, 'form': form, 'document_url': URL, 'content_hash': content_hash, 'fact_id': 'f'}
+
+
+def notes_with_rows(*rows):
+    notes = OutcomeNotes()
+    notes.add_row_labels(rows)
+    return notes
+
+
+def judge(notes, item):
+    """_rebuild with the row-label check on, the notes bound; (kept?, the statuses it recorded, the withheld rows)."""
+    kept = rebuild_in(notes, item) is not None
+    # one entry per claim of the comparison; the current period is the one the constructed filing carries
+    return kept, [c['status'] for c in notes.label_checks if '|2026-06-30|' in c['key']], notes.withheld_figures
+
+
+def test_the_cited_row_is_judged_and_a_consistent_one_is_a_completed_check(row_check):
+    kept, statuses, withheld = judge(notes_with_rows(label_row('Operating income (loss)')), cf_operating_income())
+    assert kept and 'clear' in statuses and withheld == []
+    kept, statuses, withheld = judge(notes_with_rows(label_row()), cf_operating_income())
+    assert not kept and 'contradicted' in statuses and withheld[0]['status'] == 'contradicted'
+    assert 'cited filing\'s own row (accession 0000320193-26-000001)' in withheld[0]['text']
+
+
+def test_a_row_from_another_filing_is_a_stated_cross_filing_conflict_not_the_cited_row(row_check):
+    notes = notes_with_rows(label_row(accession='0000320193-26-000077', form='10-K'))
+    kept, statuses, withheld = judge(notes, cf_operating_income())
+    assert not kept and 'cross_filing_conflict' in statuses and 'contradicted' not in statuses
+    [row] = withheld
+    assert row['status'] == 'cross_filing_conflict' and row['accession'] == CUR_ACC and row['other_filings'][0]['accession'] == '0000320193-26-000077'
+    assert 'No row of the cited filing (accession 0000320193-26-000001) was retained' in row['text']
+    assert 'accession 0000320193-26-000077, form 10-K' in row['text'] and 'conflict between filings, not the cited row' in row['text']
+    assert 'The cited filing\'s own row' not in row['text']
+
+
+def test_a_consistent_row_from_another_filing_does_not_count_as_checking_the_cited_row(row_check):
+    kept, statuses, withheld = judge(notes_with_rows(label_row('Operating income (loss)', accession='0000320193-26-000077')), cf_operating_income())
+    assert kept and statuses == ['other_filing_only'] and 'clear' not in statuses and withheld == []
+    kept, statuses, _ = judge(notes_with_rows(), cf_operating_income())
+    assert kept and statuses == ['no_evidence']
+
+
+@pytest.mark.parametrize('field,value', [('cik', '999'), ('taxonomy', 'ifrs-full'), ('unit', 'EUR'), ('concept', 'NetIncomeLoss'), ('end', '2026-03-31'),
+                                          ('start', '2026-01-01'), ('abs_value', '149')])
+def test_a_row_for_another_issuer_taxonomy_unit_concept_period_or_amount_is_not_evidence(row_check, field, value):
+    kept, statuses, withheld = judge(notes_with_rows(label_row(**{field: value})), cf_operating_income())
+    assert kept and statuses == ['no_evidence'] and withheld == []
+
+
+def test_the_same_accession_with_a_different_document_hash_is_not_the_cited_document(row_check):
+    item = cf_operating_income()
+    claim = item.verified_claims[0]
+    binding = binding_from_claim({**claim, 'inline_binding': {'accession': CUR_ACC, 'content_hash': 'b' * 64}}, '320193')
+    assert assess(binding, [label_row(content_hash='a' * 64)])['status'] == 'cross_filing_conflict'
+    assert assess(binding, [label_row(content_hash='b' * 64)])['status'] == 'contradicted'
+
+
+def test_a_correction_in_an_amendment_clears_the_amendment_but_not_the_original(row_check):
+    original, amendment = label_row('OPERATING EXPENSES'), label_row('Operating income (loss)', accession=AMENDED, form='10-Q/A')
+    rows = (original, amendment)
+    kept, statuses, withheld = judge(notes_with_rows(*rows), cf_operating_income(current_accession=AMENDED))      # cites the amendment
+    assert kept and 'clear' in statuses and withheld == []
+    assert next(c for c in statuses_detail(notes_with_rows(*rows), cf_operating_income(current_accession=AMENDED)) if c['status'] == 'clear')['detail']['other_filings'][0]['contradicts'] == 'expense_row'
+    kept, statuses, withheld = judge(notes_with_rows(*rows), cf_operating_income())                               # cites the original
+    assert not kept and 'contradicted' in statuses and withheld[0]['accession'] == CUR_ACC
+
+
+def statuses_detail(notes, item):
+    rebuild_in(notes, item)
+    return notes.label_checks
+
+
+def test_when_only_the_amendment_is_retained_the_original_is_neither_cleared_nor_condemned_by_a_corrected_label(row_check):
+    kept, statuses, _ = judge(notes_with_rows(label_row('Operating income (loss)', accession=AMENDED, form='10-Q/A')), cf_operating_income())
+    assert kept and statuses == ['other_filing_only']                      # not a completed check
+    kept, statuses, withheld = judge(notes_with_rows(label_row('OPERATING EXPENSES', accession=AMENDED, form='10-Q/A')), cf_operating_income())
+    assert not kept and statuses == ['cross_filing_conflict'] and withheld[0]['other_filings'][0]['form'] == '10-Q/A'
+
+
+# --- rebuilds outside the bound request notes ----------------------------------------------------------------------------
+
+def test_a_rebuild_outside_any_request_context_is_not_a_completed_check(row_check):
+    before = len(eo.CONTEXT_MISSING)
+    assert _rebuild(cf_operating_income(), ticker='AAPL', cik='320193', name='operating income', concepts=('OperatingIncomeLoss',)) is None
+    assert len(eo.CONTEXT_MISSING) == before + 1 and 'operating income' in eo.CONTEXT_MISSING[-1]
+
+
+def test_measures_the_check_does_not_judge_need_no_context(row_check):
+    before = len(eo.CONTEXT_MISSING)
+    revenue = cf('Revenues', 'revenue', 511781, 480000)
+    assert _rebuild(revenue, ticker='AAPL', cik='320193', name='revenue', concepts=('Revenues',)) is not None and len(eo.CONTEXT_MISSING) == before
+
+
+def test_with_the_flag_off_a_rebuild_without_context_is_unchanged_and_nothing_is_recorded():
+    before = len(eo.CONTEXT_MISSING)
+    assert _rebuild(cf_operating_income(), ticker='AAPL', cik='320193', name='operating income', concepts=('OperatingIncomeLoss',)) is not None
+    assert len(eo.CONTEXT_MISSING) == before
+
+
+def test_the_request_scope_gives_the_request_thread_its_context_and_does_not_leak(row_check):
+    notes = notes_with_rows(label_row())
+    assert eo.current_notes() is None
+    with eo.request_scope():
+        assert eo.current_notes() is None and eo.label_rows() is None            # a scope with no notes yet is still "no context"
+        eo.set_scope_notes(notes)
+        assert eo.current_notes() is notes
+        assert _rebuild(cf_operating_income(), ticker='AAPL', cik='320193', name='operating income', concepts=('OperatingIncomeLoss',)) is None
+        assert notes.withheld_figures and notes.label_checks[0]['status'] == 'contradicted'          # judged against the retained row, not "missing"
+    assert eo.current_notes() is None
+
+
+def test_a_worker_thread_does_not_inherit_the_scope_but_a_bound_one_has_the_context(row_check):
+    import concurrent.futures
+    notes = notes_with_rows(label_row('Operating income (loss)'))
+    item = cf_operating_income()
+    call = lambda: _rebuild(item, ticker='AAPL', cik='320193', name='operating income', concepts=('OperatingIncomeLoss',))
+    with eo.request_scope():
+        eo.set_scope_notes(notes)
+        with concurrent.futures.ThreadPoolExecutor(1) as pool:
+            assert pool.submit(call).result() is None                                           # unbound worker: missing context, fails closed
+            assert pool.submit(eo.bind_outcome_notes(call, notes, 'sec_metrics')).result() is not None
+
+
+def test_two_requests_do_not_share_a_scope(row_check):
+    import concurrent.futures
+    def request(label):
+        with eo.request_scope():
+            eo.set_scope_notes(notes_with_rows(label_row(label)))
+            return _rebuild(cf_operating_income(), ticker='AAPL', cik='320193', name='operating income', concepts=('OperatingIncomeLoss',)) is not None
+    with concurrent.futures.ThreadPoolExecutor(2) as pool:
+        bad, good = pool.submit(request, 'OPERATING EXPENSES'), pool.submit(request, 'Operating income (loss)')
+        assert (bad.result(), good.result()) == (False, True)
+
+
+def test_the_evidence_list_filter_removes_the_figure_from_every_downstream_field(row_check):
+    from app.services.financial_thesis_foundation import withhold_disputed_items
+    items = [cf('Revenues', 'revenue', 511781, 480000), cf_operating_income(), cf('NetIncomeLoss', 'net income', 90, 40)]
+    with eo.request_scope():
+        notes = notes_with_rows(label_row())
+        eo.set_scope_notes(notes)
+        kept = withhold_disputed_items(items, ticker='AAPL', cik='320193')
+    assert [i.verified_claims[0]['metric'] for i in kept] == ['us-gaap:Revenues', 'us-gaap:NetIncomeLoss']
+    assert [r['measure'] for r in notes.withheld_figures] == ['operating income']
+    assert withhold_disputed_items(items, ticker='AAPL', cik='320193') != items            # no context: income figures fail closed, never pass as checked
+    settings.row_label_check_enabled = False
+    assert withhold_disputed_items(items, ticker='AAPL', cik='320193') == items

@@ -1308,6 +1308,9 @@ def _run_investment_pipeline(
     _outcome_notes = (_outcome_notes_mod.OutcomeNotes()
                       if any(getattr(_evidence_settings, _flag, False) is True for _flag in (
                           "evidence_outcomes_enabled", "row_label_check_enabled", "sign_conflict_guard_enabled")) else None)
+    # The request thread holds the notes for its whole run (workers are bound explicitly), so every later rebuild has the
+    # verification context; a rebuild outside it is recorded as such, never passed as a completed check.
+    _outcome_notes_mod.set_scope_notes(_outcome_notes)
     _filing_scratch = _afacts.Scratch() if (_afacts.enabled() or _afacts.later_reports_enabled()) else None
     _filing_conflicts: list = []
     if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
@@ -1385,6 +1388,12 @@ def _run_investment_pipeline(
         [item for item in _ev_results.get("filing_metrics", []) if not _stage_context_item(item)],
         ticker=ticker, question=question,
     )
+    if getattr(_evidence_settings, "row_label_check_enabled", False) is True:
+        # Withheld figures leave the evidence list itself, so no response field (references, structured facts, text) carries them.
+        from .financial_thesis_foundation import withhold_disputed_items
+        _cik_for_labels = _sec_provider._load_ticker_cik_map().get(ticker) if ticker else None
+        if isinstance(_cik_for_labels, str) and _cik_for_labels.isdigit():
+            _sec_metric_evidence = withhold_disputed_items(_sec_metric_evidence, ticker=ticker, cik=_cik_for_labels)
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
@@ -2026,6 +2035,11 @@ def _run_investment_pipeline(
 
 
 def route_question(request: QuestionRequest) -> AgentAnswerResponse:
+    with _outcome_notes_mod.request_scope():
+        return _route_question(request)
+
+
+def _route_question(request: QuestionRequest) -> AgentAnswerResponse:
     """Route verified company scope to the modern evidence-backed pipeline.
 
     Structured company selections are authoritative and require exact identity.

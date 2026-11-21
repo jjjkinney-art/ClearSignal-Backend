@@ -303,9 +303,7 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
             return None
     except (KeyError, TypeError, ValueError, ArithmeticError):
         return None
-    if _row_label_check_enabled() and (dispute := _row_label_dispute(rebuilt, name)):
-        from .evidence_outcomes import note_withheld_figure
-        note_withheld_figure(dispute)
+    if _row_label_check_enabled() and not _row_label_ok(rebuilt, name, cik):
         return None
     return rebuilt
 
@@ -315,28 +313,65 @@ def _row_label_check_enabled() -> bool:
     return getattr(settings, "row_label_check_enabled", False) is True
 
 
-def _row_label_dispute(rebuilt, name: str) -> dict | None:
-    """The first figure of this comparison whose retained filing row label contradicts its tag, as a withheld-figure row.
+def _dispute_text(result: dict, name: str) -> str:
+    from ..integrity.row_label_check import MEANING
+    binding, row = result["binding"], result["row"]
+    why = ("is an expense line, not a result" if result["code"] == "expense_row" else "names a loss while the tagged value is a positive income")
+    margin = " No operating margin that depends on it is calculated." if binding["concept"] == "OperatingIncomeLoss" else ""
+    meaning = MEANING.get(binding["concept"], binding["concept"])
+    if result["status"] == "contradicted":
+        return (f"Not used. The cited filing's own row (accession {binding['accession']}) for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
+                f"so it does not match the tag it carries ({meaning}) and the figure is disputed. No replacement figure is substituted.{margin}")
+    return (f"Not used. No row of the cited filing (accession {binding['accession']}) was retained for this figure. A different retained filing "
+            f"(accession {row.get('accession')}, form {row.get('form')}) labels the same period and amount \u201c{row['label']}\u201d, which {why}. "
+            f"That is a conflict between filings, not the cited row: the figure can be neither confirmed nor cleared, so it is not used. "
+            f"No replacement figure is substituted.{margin}")
 
-    Applies to every figure however it was obtained (Company Facts or the filing's inline facts): the label comes from a
-    filing this request already read. With no retained label there is nothing to check and nothing changes."""
-    from ..integrity.row_label_check import MEANING, label_contradicts
-    from .evidence_outcomes import row_labels_for
-    for claim in rebuilt.verified_claims:
-        concept = str(claim.get("metric", "")).split(":")[-1]
-        for row in row_labels_for(concept, claim.get("period_start"), claim.get("period_end"), claim.get("raw_value")):
-            code = label_contradicts(concept, row.get("label"), claim.get("raw_value"))
-            if code:
-                meaning = MEANING.get(concept, concept)
-                why = ("is an expense line, not a result" if code == "expense_row" else
-                       "names a loss while the tagged value is a positive income")
-                margin = (" No operating margin that depends on it is calculated." if concept == "OperatingIncomeLoss" else "")
-                return {"measure": name, "reason": "row_label_disputed", "concept": concept, "code": code,
-                        "label": row["label"], "period_end": claim.get("period_end"), "accession": row.get("accession"),
-                        "text": (f"Not used. The filing's own row for this figure is labelled \u201c{row['label']}\u201d, which {why}, "
-                                 f"so it does not match the tag it carries ({meaning}) and the figure is disputed. No replacement figure is "
-                                 f"substituted.{margin}")}
-    return None
+
+def _row_label_ok(rebuilt, name: str, cik: str) -> bool:
+    """False when the figure must not be used. Every income-concept claim is judged only against labels bound to its own issuer,
+    taxonomy, unit, period, accession and document. A rebuild with no verification context (no request notes bound or held) is not a
+    completed check: it is recorded as such and fails closed rather than passing silently."""
+    from ..integrity.row_label_check import LABELLED_CONCEPTS, WITHHOLD, assess, binding_from_claim
+    from .evidence_outcomes import label_rows, note_label_check, note_withheld_figure, record_context_missing
+    claims = [c for c in rebuilt.verified_claims if str(c.get("metric", "")).split(":")[-1] in LABELLED_CONCEPTS]
+    if not claims:
+        return True
+    rows = label_rows()
+    if rows is None:
+        record_context_missing(f"{name} ({str(claims[0].get('metric'))})")
+        return False
+    for claim in claims:
+        binding = binding_from_claim(claim, cik)
+        key = f"{claim.get('metric')}|{claim.get('period_end')}|{claim.get('raw_value')}"
+        if binding is None:
+            note_label_check(key, "unbound_claim")
+            continue
+        result = assess(binding, rows)
+        note_label_check(f"{binding['concept']}|{binding['end']}|{binding['abs_value']}|{binding['accession']}", result["status"],
+                         {"other_filings": result["other_filings"]} if result["other_filings"] else None)
+        if result["status"] in WITHHOLD:
+            note_withheld_figure({"measure": name, "reason": "row_label_disputed", "status": result["status"], "concept": binding["concept"],
+                                  "code": result["code"], "label": result["row"]["label"], "period_end": binding["end"],
+                                  "accession": binding["accession"], "other_filings": result["other_filings"], "text": _dispute_text(result, name)})
+            return False
+    return True
+
+
+def withhold_disputed_items(items: list, *, ticker: str, cik: str) -> list:
+    """The evidence list without the comparisons the row-label check withholds, so a withheld figure is absent from every
+    response field (answer text, evidence references and structured facts), not only from the narrative."""
+    if not _row_label_check_enabled():
+        return list(items)
+    kept = []
+    for item in items:
+        claims = getattr(item, "verified_claims", None) or []
+        concept = str(claims[0].get("metric", "")).split(":")[-1] if claims else ""
+        name = next((n for n, aliases in {**CORE_METRICS, **SUPPLEMENTARY_METRICS}.items() if concept in aliases), concept)
+        if claims and not _row_label_ok(item, name, cik):
+            continue
+        kept.append(item)
+    return kept
 
 
 def build_financial_foundation(ticker: str, items: list, references: list[dict] | None,

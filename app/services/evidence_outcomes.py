@@ -21,6 +21,9 @@ from __future__ import annotations
 
 import re
 import threading
+import contextlib
+import collections
+import logging
 from contextvars import ContextVar
 from typing import Iterable, Optional
 
@@ -92,6 +95,7 @@ class OutcomeNotes:
         self.pair_outcomes: list[dict] = []  # per measure and concept: the comparison was built, or the rule that stopped it
         self.row_labels: list[dict] = []  # labels of the rows the retained filing's inline core facts sit on
         self.withheld_figures: list[dict] = []  # figures set aside because the evidence disputes them (never replaced)
+        self.label_checks: list[dict] = []  # per bound figure: what the row-label check concluded (completed or not)
 
     # Once the request has given up on a task, that task's outcome is final: a worker that keeps
     # running in the background cannot add, change or complete anything. ``task`` is the writer
@@ -144,6 +148,12 @@ class OutcomeNotes:
         with self._lock:
             if not self._late(task):
                 self.row_labels.extend(dict(row) for row in rows)
+
+    def add_label_check(self, row: dict, task: Optional[str] = None):
+        """One entry per figure and status: the foundation rechecks the same figure many times."""
+        with self._lock:
+            if not self._late(task) and not any(r["key"] == row["key"] and r["status"] == row["status"] for r in self.label_checks):
+                self.label_checks.append(dict(row))
 
     def add_withheld_figure(self, row: dict, task: Optional[str] = None):
         """Idempotent: the same measure and reason is kept once (the foundation rechecks a figure many times)."""
@@ -288,19 +298,68 @@ def note_row_labels(rows) -> None:
 
 
 def note_withheld_figure(row: dict) -> None:
-    _safe(lambda notes: notes.add_withheld_figure(row, _task.get()))
+    _scoped(lambda notes: notes.add_withheld_figure(row, _task.get()))
 
 
-def row_labels_for(concept: str, start: str, end: str, value) -> list:
-    """Labels recorded in this request for the same concept, period and absolute amount (any filing's own row)."""
-    from ..integrity.row_label_check import normalize_amount
-    notes = _notes.get()
-    amount = normalize_amount(value)
-    if notes is None or amount is None:
-        return []
+# The request scope: the request thread holds the request's notes for its whole run (worker threads are bound
+# explicitly by ``bind_outcome_notes``). A rebuild with neither is OUTSIDE the verification context.
+_scope: ContextVar[Optional[dict]] = ContextVar("evidence_outcome_scope", default=None)
+CONTEXT_MISSING: "collections.deque" = collections.deque(maxlen=200)
+_logger = logging.getLogger(__name__)
+
+
+@contextlib.contextmanager
+def request_scope():
+    holder = {"notes": None}
+    token = _scope.set(holder)
+    try:
+        yield holder
+    finally:
+        _scope.reset(token)
+
+
+def set_scope_notes(notes: Optional[OutcomeNotes]) -> None:
+    holder = _scope.get()
+    if holder is not None:
+        holder["notes"] = notes
+
+
+def current_notes() -> Optional[OutcomeNotes]:
+    """The notes of the request this code runs in: bound to this worker, else held by the request scope; None outside both."""
+    bound = _notes.get()
+    if bound is not None:
+        return bound
+    holder = _scope.get()
+    return holder["notes"] if holder else None
+
+
+def record_context_missing(what: str) -> None:
+    """A check that needed the verification context ran without it. This is not a completed check; it is counted and logged."""
+    CONTEXT_MISSING.append(what)
+    _logger.warning("row-label verification context missing: %s", what)
+
+
+def _scoped(action) -> None:
+    notes = current_notes()
+    if notes is None:
+        return
+    try:
+        action(notes)
+    except Exception:  # pragma: no cover - defensive
+        pass
+
+
+def label_rows() -> Optional[list]:
+    """The row labels retained in this request, or None when there is no verification context (distinct from an empty list)."""
+    notes = current_notes()
+    if notes is None:
+        return None
     with notes._lock:
-        return [dict(row) for row in notes.row_labels if row["concept"] == concept and row["start"] == start
-                and row["end"] == end and row["abs_value"] == amount]
+        return [dict(row) for row in notes.row_labels]
+
+
+def note_label_check(key: str, status: str, detail: Optional[dict] = None) -> None:
+    _scoped(lambda notes: notes.add_label_check({"key": key, "status": status, **({"detail": detail} if detail else {})}))
 
 
 def note_pair_dropped(measure: str, period_end, reason: str) -> None:

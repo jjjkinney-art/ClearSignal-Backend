@@ -49,3 +49,78 @@ def label_contradicts(concept: str, label: str | None, value) -> str | None:
     if positive and _LOSS_WORD.search(label) and not _INCOME_WORD.search(_TAX_PHRASE.sub(" ", label)):
         return "loss_row_positive_value"
     return None
+
+
+# --------------------------------------------------------------------------------------------------
+# Binding: a label judges a figure only when it belongs to the same issuer, taxonomy, concept, unit, period,
+# accession and retained document. Evidence from another filing is a separate, named kind of evidence.
+# --------------------------------------------------------------------------------------------------
+
+_ACCESSION = re.compile(r"sec:(\d+):(\d{10}-\d{2}-\d{6}):([A-Za-z0-9-]+):([A-Za-z0-9]+)\Z")
+
+
+def binding_from_claim(claim: dict, cik: str) -> dict | None:
+    """What a verified claim is: issuer, taxonomy, concept, unit, period, amount, cited accession and (inline) document hash.
+    None when the claim does not carry enough to be bound (it is then never judged against a label)."""
+    try:
+        metric = str(claim["metric"])
+        taxonomy, _, concept = metric.partition(":")
+        ref = claim.get("document_ref") or {}
+        inline = claim.get("inline_binding")
+        if isinstance(inline, dict):
+            accession, content_hash = inline.get("accession"), inline.get("content_hash")
+        else:
+            match = _ACCESSION.fullmatch(str(ref.get("reference_id", "")))
+            accession, content_hash = (match.group(2) if match else None), None
+            if match and int(match.group(1)) != int(cik):
+                return None
+        if not (taxonomy and concept and accession and claim.get("unit") and claim.get("period_end")):
+            return None
+        return {"cik": str(int(cik)), "taxonomy": taxonomy, "concept": concept, "unit": claim["unit"], "start": claim.get("period_start"),
+                "end": claim["period_end"], "amount": claim.get("raw_value"), "abs_value": normalize_amount(claim.get("raw_value")),
+                "accession": accession, "content_hash": content_hash}
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _same_fact(binding: dict, row: dict) -> bool:
+    return (str(row.get("cik")) == binding["cik"] and row.get("taxonomy") == binding["taxonomy"] and row.get("concept") == binding["concept"]
+            and row.get("unit") == binding["unit"] and row.get("start") == binding["start"] and row.get("end") == binding["end"]
+            and row.get("abs_value") == binding["abs_value"])
+
+
+def assess(binding: dict, rows) -> dict:
+    """Judge one bound figure against the label rows retained in the request.
+
+    status
+      contradicted           the cited filing's own retained row (same accession, same document) contradicts the figure.
+      cross_filing_conflict  no retained row of the cited filing, and a different retained filing labels the same fact in a way that
+                             contradicts it. That row is not the cited row; the conflict is stated as such and the figure is not used.
+      clear                  the cited filing's own retained row is consistent: the check was completed.
+      other_filing_only      only other filings' rows were retained and none contradicts: the cited row was NOT checked.
+      no_evidence            nothing retained for this fact: the cited row was NOT checked.
+    ``other_filings`` lists what other filings said (never used as the cited row)."""
+    same = [row for row in rows if _same_fact(binding, row)]
+    cited = [row for row in same if row.get("accession") == binding["accession"]
+             and (not binding.get("content_hash") or not row.get("content_hash") or row["content_hash"] == binding["content_hash"])]
+    others = [row for row in same if row not in cited]
+
+    def judged(row):
+        return {"row": row, "code": label_contradicts(binding["concept"], row.get("label"), binding["amount"])}
+    cited_j, other_j = [judged(r) for r in cited], [judged(r) for r in others]
+    result = {"binding": binding, "other_filings": [{"accession": j["row"].get("accession"), "form": j["row"].get("form"),
+                                                       "label": j["row"].get("label"), "contradicts": j["code"]} for j in other_j]}
+    if any(j["code"] for j in cited_j):
+        first = next(j for j in cited_j if j["code"])
+        return {**result, "status": "contradicted", "code": first["code"], "row": first["row"]}
+    if cited_j:
+        return {**result, "status": "clear", "row": cited_j[0]["row"]}
+    if any(j["code"] for j in other_j):
+        first = next(j for j in other_j if j["code"])
+        return {**result, "status": "cross_filing_conflict", "code": first["code"], "row": first["row"]}
+    return {**result, "status": "other_filing_only" if other_j else "no_evidence"}
+
+
+# Statuses that withhold the figure; the rest let it stand, and only "clear" means the cited row was actually checked.
+WITHHOLD = frozenset({"contradicted", "cross_filing_conflict"})
+COMPLETED = frozenset({"clear", "contradicted"})
